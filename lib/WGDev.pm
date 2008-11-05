@@ -28,7 +28,6 @@ sub new {
             my $dir = Cwd::getcwd();
             while (1) {
                 if (-e File::Spec->catfile($dir, 'etc', 'WebGUI.conf.original')) {
-                    $self->{config_file} = File::Spec->catfile($dir, 'etc', $config);
                     $self->{root} = $dir;
                     last;
                 }
@@ -40,7 +39,18 @@ sub new {
         }
     }
     if ($self->{root}) {
-        $self->{config_file} ||= File::Spec->catfile($self->{root}, 'etc', $config);
+        if (!$config) {
+            opendir my $dh, File::Spec->catdir($self->{root}, 'etc');
+            my @configs = readdir $dh;
+            closedir $dh;
+            @configs = grep { /\.conf$/ && ! /^(?:spectre|log).conf$/ } @configs;
+            if (@configs == 1) {
+                $config = $configs[0];
+            }
+        }
+        if ($config) {
+            $self->{config_file} ||= File::Spec->catfile($self->{root}, 'etc', $config);
+        }
         $self->{lib}    = File::Spec->catdir($self->{root}, 'lib');
     }
     else {
@@ -96,14 +106,15 @@ sub session {
     require WebGUI::Session;
     if ($self->{session}) {
         my $dbh = $self->{session}->db->dbh;
-        local $dbh->{PrintWarn} = 0;
-        local $dbh->{PrintError} = 0;
-        local $dbh->{RaiseError} = 1;
+        # evil, but we have to detect if the database handle died somehow
         eval {
+            local $dbh->{PrintWarn} = 0;
+            local $dbh->{PrintError} = 0;
+            local $dbh->{RaiseError} = 1;
             $dbh->do('SELECT 1');
         };
         if ($@) {
-            delete $self->{session};
+            (delete $self->{session})->close;
         }
     }
     return $self->{session} ||= do {

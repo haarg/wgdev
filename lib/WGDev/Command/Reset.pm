@@ -24,11 +24,13 @@ sub run {
         'delcache!'     => \(my $opt_delcache), # clear the cache
         'import!'       => \(my $opt_import),   # import a db script
 
-        'd|dev'         => \(my $opt_dev),      # --no-starter --debug --clear --upgrade --uploads
-        'b|build'       => \(my $opt_build),    # --verbose --starter --no-debug --upgrade --purge --cleantags --index --runwf
+        't|test'        => \(my $opt_test),     # --backup --import
+        'd|dev'         => \(my $opt_dev),      # --backup --import --no-starter --debug --clear --upgrade --uploads
+        'b|build'       => \(my $opt_build),    # --verbose --backup --import --starter --no-debug --upgrade --purge
+                                                # --cleantags --index --runwf
 
         'uploads!'      => \(my $opt_uploads),  # recreate the uploads dir
-        'up|upgrade!'   => \(my $opt_upgrade),  # use create.sql vs use previousVersion.sql and run the upgrade script
+        'upgrade!'      => \(my $opt_upgrade),  # use create.sql vs use previousVersion.sql and run the upgrade script
 
         'debug!'        => \(my $opt_debug),    # enable debug
         'starter!'      => \(my $opt_starter),  # enable site starter
@@ -40,22 +42,28 @@ sub run {
     );
 
     if ($opt_fast) {
-        $opt_uploads = 0
-            unless defined $opt_uploads;
-        $opt_backup = 0
+        $opt_backup     = 1
             unless defined $opt_backup;
-        $opt_delcache = 0
+        $opt_uploads    = 0
+            unless defined $opt_uploads;
+        $opt_backup     = 0
+            unless defined $opt_backup;
+        $opt_delcache   = 0
             unless defined $opt_delcache;
-        $opt_purge = 0
+        $opt_purge      = 0
             unless defined $opt_purge;
-        $opt_cleantags = 0
+        $opt_cleantags  = 0
             unless defined $opt_cleantags;
-        $opt_index = 0
+        $opt_index      = 0
             unless defined $opt_index;
-        $opt_runwf = 0
+        $opt_runwf      = 0
             unless defined $opt_runwf;
     }
     if ($opt_dev) {
+        $opt_backup     = 1
+            unless defined $opt_backup;
+        $opt_import     = 1
+            unless defined $opt_import;
         $opt_starter    = 0
             unless defined $opt_starter;
         $opt_debug      = 1
@@ -69,6 +77,10 @@ sub run {
     }
     if ($opt_build) {
         $opt_verbose++;
+        $opt_backup     = 1
+            unless defined $opt_backup;
+        $opt_import     = 1
+            unless defined $opt_import;
         $opt_starter    = 1
             unless defined $opt_starter;
         $opt_debug      = 0
@@ -84,12 +96,8 @@ sub run {
         $opt_runwf      = 1
             unless defined $opt_runwf;
     }
-    $opt_backup = 1
-        unless defined $opt_backup;
     $opt_delcache = 1
         unless defined $opt_delcache;
-    $opt_import = 1
-        unless defined $opt_import;
 
     require File::Spec;
 
@@ -311,7 +319,7 @@ END_SQL
         print "Rebuilding lineage... " if $opt_verbose >= 1;
         my $pid = fork;
         unless ($pid) {
-            if ($opt_verbose < 2) {
+            if ($opt_verbose < 3) {
                 open STDIN,  '<', File::Spec->devnull;
                 open STDOUT, '>', File::Spec->devnull;
                 open STDERR, '>', File::Spec->devnull;
@@ -319,7 +327,8 @@ END_SQL
             print "\n\n";
             chdir File::Spec->catdir($wgd->root, 'sbin');
             @ARGV = ('--configFile=' . $wgd->config_file_relative);
-            do './rebuildLineage.pl';
+            $0 = './rebuildLineage.pl';
+            do $0;
             exit;
         }
         waitpid $pid, 0;
@@ -328,7 +337,7 @@ END_SQL
         print "Rebuilding search index... " if $opt_verbose >= 1;
         $pid = fork;
         unless ($pid) {
-            if ($opt_verbose < 2) {
+            if ($opt_verbose < 3) {
                 open STDIN,  '<', File::Spec->devnull;
                 open STDOUT, '>', File::Spec->devnull;
                 open STDERR, '>', File::Spec->devnull;
@@ -336,7 +345,8 @@ END_SQL
             print "\n\n";
             chdir File::Spec->catdir($wgd->root, 'sbin');
             @ARGV = ('--configFile=' . $wgd->config_file_relative, '--indexsite');
-            do './search.pl';
+            $0 = './search.pl';
+            do $0;
             exit;
         }
         waitpid $pid, 0;

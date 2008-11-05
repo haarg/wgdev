@@ -10,13 +10,22 @@ sub run {
     my $class = shift;
     my $wgd = shift;
     Getopt::Long::Configure(qw(default gnu_getopt));
-    Getopt::Long::GetOptions(
-        'e|echo'            => \(my $opt_echo),
+    Getopt::Long::GetOptionsFromArray(\@_,
+        'p|print'           => \(my $opt_print),
         'd|dump'            => \(my $opt_dump),
     );
     my $db = $wgd->db;
+    my @command_line = $db->command_line(@_);
 
-    exec {'mysql'} 'mysql', $db->command_line(@ARGV);
+    if ($opt_print) {
+        print join " ", map {"'$_'"} @command_line
+    }
+    elsif ($opt_dump) {
+        exec {'mysqldump'} 'mysqldump', @command_line;
+    }
+    else {
+        exec {'mysql'} 'mysql', @command_line;
+    }
 }
 
 1;

@@ -15,7 +15,7 @@ sub run {
 
     my $opt_verbose = 0;
     Getopt::Long::Configure(qw(default gnu_getopt));
-    Getopt::Long::GetOptionsFromArray(\@_
+    Getopt::Long::GetOptionsFromArray(\@_,
         'v|verbose'         => sub { $opt_verbose++ },
         'q|quiet'           => sub { $opt_verbose-- },
 
@@ -52,7 +52,7 @@ sub run {
         my $db_file = File::Spec->catfile($wgd->root, 'docs', 'create.sql');
         open my $out, '>', $db_file;
 
-        open my $in, '-|', 'mysql', $wgd->db->command_line('--compact', '--no-data');
+        open my $in, '-|', 'mysqldump', $wgd->db->command_line('--compact', '--no-data');
         while (my $line = <$in>) {
             print {$out} $line;
         }
@@ -63,8 +63,9 @@ sub run {
             webguiVersion   userLoginLog
             assetHistory    cache
         );
-        open my $in, '-|', 'mysql', $wgd->db->command_line('--compact', '--no-create-info',
-            map { "--ignore-table=$db_name.$_" } @skip_data_tables,
+        open $in, '-|', 'mysqldump', $wgd->db->command_line('--compact', '--no-create-info',
+            map { "--ignore-table=" . $wgd->db->database . '.' . $_ } @skip_data_tables
+            );
         while (my $line = <$in>) {
             print {$out} $line;
         }
@@ -85,7 +86,7 @@ sub run {
         print "Loading uploads from site... " if $opt_verbose >= 1;
         my $wg_uploads = File::Spec->catdir($wgd->root, 'www', 'uploads');
         File::Path::mkpath($wg_uploads);
-        my $site_uploads = $config->get('uploadsPath');
+        my $site_uploads = $wgd->config->get('uploadsPath');
         File::Find::find({
             no_chdir    => 1,
             wanted      => sub {
