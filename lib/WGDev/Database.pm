@@ -48,7 +48,7 @@ sub command_line {
         '-P' . $self->port,
         $self->database,
         '-u' . $self->username,
-        '-p' . $self->password,
+        ($self->password ? '-p' . $self->password : ()),
         @_
     );
     return wantarray ? @params : join (' ', map {"'$_'"} @params);

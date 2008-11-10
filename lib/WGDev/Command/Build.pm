@@ -23,39 +23,28 @@ sub run {
         'u|uploads!'        => \(my $opt_uploads),
     );
 
-    $opt_sql        = defined $opt_sql      ? $opt_sql
-                    : defined $opt_uploads  ? !$opt_uploads
-                                            : 1;
-    $opt_uploads    = defined $opt_uploads  ? $opt_uploads
-                                            : 0;
+    unless (defined $opt_sql || defined $opt_uploads) {
+        $opt_sql = 1;
+        $opt_uploads = 1;
+    }
+
     # Autoflush
     local $| = 1;
 
     require version;
 
     print "Finding current version number... " if $opt_verbose >= 1;
-    my $dbh = $wgd->db->connect;
-    my $sth = $dbh->prepare('SELECT webguiVersion FROM webguiVersion');
-    $sth->execute;
-    my @versions =
-        map { $_->[0] }
-        sort { $a->[1] <=> $b->[1]}
-        map { [$_, version->new($_)] }
-        map {@$_} @{$sth->fetchall_arrayref([0])};
-    $sth->finish;
-    $dbh->disconnect;
-    my $version = pop @versions;
+    my $version = $wgd->version->database($wgd->db->connect);
     print "$version. Done.\n" if $opt_verbose >= 1;
 
     if ($opt_sql) {
+        require File::Copy;
         print "Creating database dump... " if $opt_verbose >= 1;
         my $db_file = File::Spec->catfile($wgd->root, 'docs', 'create.sql');
         open my $out, '>', $db_file;
 
         open my $in, '-|', 'mysqldump', $wgd->db->command_line('--compact', '--no-data');
-        while (my $line = <$in>) {
-            print {$out} $line;
-        }
+        File::Copy::copy($in, $out);
         close $in;
 
         my @skip_data_tables = qw(
@@ -66,9 +55,7 @@ sub run {
         open $in, '-|', 'mysqldump', $wgd->db->command_line('--compact', '--no-create-info',
             map { "--ignore-table=" . $wgd->db->database . '.' . $_ } @skip_data_tables
             );
-        while (my $line = <$in>) {
-            print {$out} $line;
-        }
+        File::Copy::copy($in, $out);
         close $in;
 
         print {$out} "INSERT INTO webguiVersion (webguiVersion,versionType,dateApplied) VALUES ('$version','Initial Install',UNIX_TIMESTAMP());\n";
@@ -106,7 +93,6 @@ sub run {
                 else {
                     unlink $wg_path;
                 }
-
             },
         }, $wg_uploads);
         File::Find::find({
@@ -129,6 +115,25 @@ sub run {
         }, $site_uploads);
         print "Done\n" if $opt_verbose >= 1;
     }
+}
+
+sub usage {
+    my $class = shift;
+    return __PACKAGE__ . " - Builds database script and uploads\n" . <<'END_HELP';
+
+Uses the current database and uploads to build a new create.sql and update
+the local uploads directory.  With no options, builds both sql and uploads.
+
+arguments:
+    -s
+    --sql           make create.sql based on current database contents
+    -u
+    --uploads       make uploads based on current site's uploads
+
+END_HELP
+}
+sub usage {
+
 }
 
 1;

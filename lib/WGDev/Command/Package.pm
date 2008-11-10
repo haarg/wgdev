@@ -27,5 +27,17 @@ sub run {
     }
 }
 
+sub usage {
+    my $class = shift;
+    return __PACKAGE__ . " - Export assets for upgrade\n" . <<'END_HELP';
+
+Exports assets as packages to the current version's upgrade location.
+
+arguments:
+    <asset urls>    list of asset urls
+
+END_HELP
+}
+
 1;
 

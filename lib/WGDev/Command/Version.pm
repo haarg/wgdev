@@ -103,23 +103,35 @@ END_REPORT
 
 }
 
-sub colored {$_[0]}
-BEGIN {
+sub colored {
+    no warnings 'redefine';
     if (eval { require Term::ANSIColor; 1 }) {
-        no warnings 'redefine';
         *colored = \&Term::ANSIColor::colored;
     }
+    else {
+        *colored = sub {$_[0]};
+    }
+    goto &colored;
 }
 
+sub usage {
+    my $class = shift;
+    return __PACKAGE__ . " - Reports and updates version numbers\n" . <<'END_HELP';
 
+Reports the current versions of the WebGUI.pm module, create.sql database
+script, changelog, and upgrade file.  Non-matching versions will be noted
+in red if possible.
+
+arguments:
+    <version number>    the expected version number to compare with
+    -c
+    --create            change the version number to a new one in the changelog,
+                        WebGUI.pm, and creates a new upgrade script.  If the
+                        version number isn't otherwise specified, increments
+                        the patch level by one.
+
+END_HELP
+}
 
 1;
-
-__END__
-
-=head2 wg-version
-
-WebGUI version reporting and updating
-
-=cut
 

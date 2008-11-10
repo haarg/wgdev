@@ -83,5 +83,23 @@ END_FILE
     }
     return;
 }
+
+sub usage {
+    my $class = shift;
+    return __PACKAGE__ . " - Edit templates\n" . <<'END_HELP';
+
+Exports templates to temporary files, then opens them in your prefered editor.
+If modifications are made, the templates are updated.  Only changes to the
+template and head block are used - any modifications to the other fields are
+ignored.
+
+arguments:
+    <template urls> list of template urls
+    --command       Command to be executed.  If not specified, uses the EDITOR
+                    environment variable.  If that is not specified, uses vi.
+
+END_HELP
+}
+
 1;
 

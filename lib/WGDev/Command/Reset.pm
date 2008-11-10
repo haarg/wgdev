@@ -5,7 +5,6 @@ use warnings;
 our $VERSION = '0.1.1';
 
 use Getopt::Long ();
-use Pod::Usage;
 
 sub run {
     my $class = shift;
@@ -353,6 +352,64 @@ END_SQL
         print "Done.\n" if $opt_verbose >= 1;
     }
     return;
+}
+
+sub usage {
+    my $class = shift;
+    my $message = __PACKAGE__ . "\n" . <<'END_HELP';
+
+arguments:
+    -v
+    --verbose       Output more information
+    -q
+    --quiet         Output less information
+
+    -f
+    --fast          Fast mode - equivalent to:
+                    --no-upload --no-backup --no-delcache --no-purge
+                    --no-cleantags --no-index --no-runwf
+
+    -t
+    --test          Test mode - equivalent to:
+                    --backup --import
+    -d
+    --dev           Developer mode - equivalent to:
+                    --backup --import --no-starter --debug --clear
+                    --upgrade --uploads
+    -b
+    --build         Build mode - equivalent to:
+                    --verbose --backup --import --starter --no-debug
+                    --upgrade --purge --cleantags --index --runwf
+
+    --backup
+    --no-backup     Backup database before doing any other operations.  Defaults to on.
+    --delcache
+    --no-delcache   Delete the site's cache.  Defaults to on.
+    --import
+    --no-import     Import a database script
+    --uploads
+    --no-uploads    Recreate uploads directory
+    --upgrade
+    --no-upgrade    Perform an upgrade - also controls which DB script to import
+    --debug
+    --no-debug      Enable debug mode and increase session timeout
+    --starter
+    --no-starter    Enable the site starter
+    --clear
+    --no-clear      Clear the content off the home page and its children
+    --purge
+    --no-purge      Purge all old revisions
+    --cleantags
+    --no-cleantags  Removes all version tags and sets all asset revisions to be
+                    under a new version tag marked with the current version number
+    --index
+    --no-index      Rebuild the site lineage and reindex all of the content
+    --runwf
+    --no-runwf      Attempt to finish any running workflows
+
+END_HELP
+
+    return $message;
 }
 
 1;
