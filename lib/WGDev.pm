@@ -149,3 +149,26 @@ sub DESTROY {
 
 1;
 
+__END__
+
+=head1 NAME
+
+WGDev - WebGUI Developer Utilities
+
+=head1 DESCRIPTION
+
+Performs common actions needed by WebGUI developers, such as recreating their
+site from defaults, checking version numbers, exporting packages, and more.
+
+=head1 AUTHOR
+
+Graham Knop <graham@plainblack.com>
+
+=head1 COPYRIGHT
+
+Copyright (c) 2008 Graham Knop.  All rights reserved.
+
+This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+
+=cut
+

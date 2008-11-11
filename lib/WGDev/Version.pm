@@ -4,7 +4,6 @@ use warnings;
 
 our $VERSION = '0.1.0';
 
-use version;
 use File::Spec;
 
 sub new {
@@ -68,6 +67,7 @@ sub database {
 
 sub changelog {
     my $dir = ${ +shift };
+    require version;
     my @changelogs;
     opendir my $dh, File::Spec->catdir($dir, 'docs', 'changelog') or die;
     while (my $file = readdir($dh)) {
@@ -93,6 +93,7 @@ sub changelog {
 # returns ($upgrade_file, $from_version, $to_version, $to_version_file)
 sub upgrade {
     my $dir = ${ +shift };
+    require version;
     my @upgrades;
     opendir my $dh, File::Spec->catdir($dir, 'docs', 'upgrades') or die;
     while (my $file = readdir($dh)) {
