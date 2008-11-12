@@ -132,9 +132,6 @@ arguments:
 
 END_HELP
 }
-sub usage {
-
-}
 
 1;
 

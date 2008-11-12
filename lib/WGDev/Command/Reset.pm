@@ -116,8 +116,15 @@ sub run {
             my $cache_dir = $wgd->config->get('fileCacheRoot') || '/tmp/WebGUICache';
             File::Path::rmtree($cache_dir);
         }
+        elsif ($wgd->config->get('cacheType') eq 'WebGUI::Cache::Database') {
+            # Don't clear the DB cache if we are importing, as that will wipe it anyway
+            unless ($opt_import) {
+                my $dsn = $wgd->db->connect;
+                $dsn->do('DELETE FROM cache');
+            }
+        }
         else {
-            # We'd clear the DB cache here, but the whole database will be cleared in a later step
+            # Can't clear a cache we don't know anything about
         }
         print "Done.\n" if $opt_verbose >= 1;
     }

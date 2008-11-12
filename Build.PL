@@ -31,5 +31,8 @@ if ($build->args('compact')) {
     $build->notes(compact => 1);
     $build->pm_files({});
 }
+else {
+    $build->notes(compact => 0);
+}
 $build->create_build_script;
 

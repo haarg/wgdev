@@ -20,7 +20,7 @@ END_FILE
 else {
     print {$fh} <<'END_FILE';
 #!/usr/bin/env perl
-WGDev::Command->run(\@ARGV);
+WGDev::Command->run(@ARGV);
 BEGIN {
 END_FILE
 
@@ -50,8 +50,8 @@ END_FILE
         close $in;
         print {$fh} "}\n";
     }
-    close $fh;
 }
+close $fh;
 
 chmod 0755, $outfile;
 
