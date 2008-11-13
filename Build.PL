@@ -1,5 +1,6 @@
-use Module::Build;
-my $build = Module::Build->new(
+use lib 'inc';
+use WGDev::Builder;
+my $build = WGDev::Builder->new(
     module_name     => 'WGDev',
     license         => 'perl',
     create_readme   => 1,
@@ -14,25 +15,6 @@ my $build = Module::Build->new(
         'version'       => 0,
         'DBI'           => 0,
     },
-    add_to_cleanup => [
-        'bin/wgd',
-    ],
-    PL_files => {
-        'bin/wgd.PL'   => 'bin/wgd',
-    },
-    get_options => {
-        compact => {},
-    },
-    script_files => [
-        'bin/wgd',
-    ],
 );
-if ($build->args('compact')) {
-    $build->notes(compact => 1);
-    $build->pm_files({});
-}
-else {
-    $build->notes(compact => 0);
-}
 $build->create_build_script;
 

@@ -1,0 +1,4 @@
+#!/usr/bin/env perl
+require WGDev::Command;
+WGDev::Command->run(@_);
+
