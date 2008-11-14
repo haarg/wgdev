@@ -1,4 +1,6 @@
 #!/usr/bin/env perl
-require WGDev::Command;
-WGDev::Command->run(@_);
+unless (caller) {
+    require WGDev::Command;
+    WGDev::Command->run(@ARGV);
+}
 
