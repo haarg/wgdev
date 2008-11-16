@@ -57,7 +57,7 @@ sub process_script_files {
                     print {$fh} "{\n";
                     open my $in, '<', $pm_file;
                     while (my $line = <$in>) {
-                        next
+                        last
                             if $line =~ /^__(?:END|DATA)__$/ms;
                         print {$fh} $line;
                     }
