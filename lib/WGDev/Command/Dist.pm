@@ -94,7 +94,6 @@ sub generate_docs {
             File::Path::mkpath($directory);
             Pod::Html::pod2html(
                 '--quiet',
-                '--css=http://files.plainblack.com/downloads/builds/api.css',
                 '--noindex',
                 '--infile=' . $code_file,
                 '--outfile=' . $doc_file,
