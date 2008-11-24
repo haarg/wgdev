@@ -63,21 +63,23 @@ sub run {
             unless defined $opt_backup;
         $opt_import     = 1
             unless defined $opt_import;
+        $opt_uploads    = 1
+            unless defined $opt_uploads;
+        $opt_upgrade    = 1
+            unless defined $opt_upgrade;
         $opt_starter    = 0
             unless defined $opt_starter;
         $opt_debug      = 1
             unless defined $opt_debug;
         $opt_clear      = 1
             unless defined $opt_clear;
-        $opt_uploads    = 1
-            unless defined $opt_uploads;
-        $opt_upgrade    = 1
-            unless defined $opt_upgrade;
     }
     if ($opt_build) {
         $opt_verbose++;
         $opt_backup     = 1
             unless defined $opt_backup;
+        $opt_uploads    = 1
+            unless defined $opt_uploads;
         $opt_import     = 1
             unless defined $opt_import;
         $opt_starter    = 1

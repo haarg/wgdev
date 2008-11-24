@@ -64,7 +64,7 @@ sub run {
         print "Done.\n" if $opt_verbose >= 1;
     }
 
-# Clear and recreate uploads
+    # Clear and recreate uploads
     if ($opt_uploads) {
         require File::Copy;
         require File::Find;
@@ -84,7 +84,7 @@ sub run {
                     return;
                 }
                 my $rel_path = File::Spec->abs2rel($wg_path, $wg_uploads);
-                my $site_path = File::Spec->rel2abs($rel_path, $wg_uploads);
+                my $site_path = File::Spec->rel2abs($rel_path, $site_uploads);
                 return
                     if -e $site_path;
                 if (-d $site_path) {
@@ -110,6 +110,8 @@ sub run {
                 my $wg_path = File::Spec->rel2abs($rel_path, $wg_uploads);
                 return
                     if -e $wg_path && (stat(_))[7] == (stat($site_path))[7];
+                my $wg_dir = File::Spec->catpath((File::Spec->splitpath($wg_path))[0,1]);
+                File::Path::mkpath($wg_dir);
                 File::Copy::copy($site_path, $wg_path);
             },
         }, $site_uploads);
