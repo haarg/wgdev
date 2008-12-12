@@ -2,6 +2,8 @@ package WGDev;
 use strict;
 use warnings;
 
+use 5.008008;
+
 our $VERSION = '0.1.0';
 
 use File::Spec ();
@@ -124,7 +126,7 @@ sub session {
         # evil, but we have to detect if the database handle died somehow
         if (
             !eval {
-                ## no critic (ProhibitLocalVars)
+                ## no critic (ProhibitLocalVars ProhibitAccessOfPrivateData)
                 local $dbh->{PrintWarn}  = 0;
                 local $dbh->{PrintError} = 0;
                 local $dbh->{RaiseError} = 1;

@@ -1,6 +1,6 @@
 severity    = 1
-exclude     = RequireRcsKeywords RequireUseOfExceptions
-theme       = core || strictersubs || pulp || nits || more
+exclude     = RequireRcsKeywords RequireUseOfExceptions RequireEmacsFileVariables ProhibitCallsToUnexportedSubs
+theme       = core || strictersubs || pulp || more
 
 [CodeLayout::RequireTidyCode]
 perltidyrc = .perltidyrc
