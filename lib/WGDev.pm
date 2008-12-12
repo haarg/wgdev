@@ -155,6 +155,70 @@ sub version {
     return $self->{version} ||= WGDev::Version->new( $self->root );
 }
 
+sub wgd_config {
+    my $self      = shift;
+    my $namespace = shift;
+    my $key       = shift;
+    my $config    = $self->{wgd_config};
+    if ( !$config ) {
+        for my $config_file ( '.wgdevcfg', $ENV{HOME} . '/.wgdevcfg' ) {
+            if ( -e $config_file ) {
+                open my $fh, '<', $config_file or next;
+                my $content = do { local $/ = undef; <$fh> };
+                close $fh or next;
+                $self->{wgd_config} = $config = yaml_decode($content);
+            }
+        }
+    }
+    if ( !$config ) {
+        return;
+    }
+    if ($namespace) {
+        my $ns_config = $config->{$namespace};
+        if ( !$ns_config ) {
+            return;
+        }
+        if ($key) {
+            return $ns_config->{$key};
+        }
+        return $ns_config;
+    }
+    else {
+        return $config;
+    }
+}
+
+sub my_config {    ## no critic (RequireArgUnpacking)
+    my ($self)   = shift;
+    my ($caller) = caller;
+    return $self->wgd_config( $caller, @_ );
+}
+
+sub yaml_decode {
+    ## no critic (RequireFinalReturn ProhibitCascadingIfElse ProhibitNoWarnings)
+    my $decode;
+    if ( eval { require YAML::XS } ) {
+        $decode = \&YAML::XS::Load;
+    }
+    elsif ( eval { require YAML::Syck } ) {
+        $decode = \&YAML::Syck::Load;
+    }
+    elsif ( eval { require YAML } ) {
+        $decode = \&YAML::Load;
+    }
+    elsif ( eval { require YAML::Tiny } ) {
+        $decode = \&YAML::Tiny::Load;
+    }
+    else {
+        $decode = sub {
+            die "No YAML library available!\n";
+        };
+    }
+    no warnings 'redefine';
+    *yaml_decode = $decode;
+    goto &{$decode};
+}
+
 sub DESTROY {
     my $self = shift;
 
