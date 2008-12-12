@@ -4,7 +4,6 @@ use warnings;
 
 our $VERSION = '0.0.1';
 
-
 sub new {
     my $class = shift;
     my $session = shift;
@@ -16,23 +15,27 @@ sub new {
 }
 
 sub root {
-    return WebGUI::Asset->getRoot(shift->{session});
+    my $self = shift;
+    return WebGUI::Asset->getRoot($self->{session});
 }
-sub import {
-    return WebGUI::Asset->getImportNode(shift->{session});
+sub import_node {
+    my $self = shift;
+    return WebGUI::Asset->getImportNode($self->{session});
 }
-sub default { goto &home }
+sub default_asset { goto &home }
 sub home {
-    return WebGUI::Asset->getDefault(shift->{session});
+    my $self = shift;
+    return WebGUI::Asset->getDefault($self->{session});
 }
-
 
 sub by_url {
-    return WebGUI::Asset->newByUrl(shift->{session}, @_);
+    my $self = shift;
+    return WebGUI::Asset->newByUrl($self->{session}, @_);
 }
 
 sub by_id {
-    return WebGUI::Asset->new(shift->{session}, @_);
+    my $self = shift;
+    return WebGUI::Asset->new($self->{session}, @_);
 }
 
 sub serialize {
@@ -53,4 +56,7 @@ sub deserialize {
 }
 
 1;
+
+__END__
+
 
