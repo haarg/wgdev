@@ -53,16 +53,28 @@ sub process_script_files {
                 }
                 print {$fh} "}\n\n";
 
+                my $end_data = '';
                 for my $pm_file ( sort keys %{ $self->notes('merge_pm_files') } ) {
+                    my $past_end;
                     print {$fh} "{\n";
                     open my $in, '<', $pm_file;
                     while (my $line = <$in>) {
-                        last
-                            if $line =~ /^__(?:END|DATA)__$/ms;
-                        print {$fh} $line;
+                        if ($line =~ /^__(?:END|DATA)__$/ms) {
+                            $past_end = 1;
+                            next;
+                        }
+                        if ($past_end) {
+                            $end_data .= $line;
+                        }
+                        else {
+                            print {$fh} $line;
+                        }
                     }
                     close $in;
                     print {$fh} "}\n";
+                }
+                if ($end_data) {
+                    print {$fh} "__END__\n" . $end_data;
                 }
                 close $fh;
                 chmod $mode, $to_path;
