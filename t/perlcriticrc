@@ -1,0 +1,15 @@
+severity    = 1
+exclude     = RequireRcsKeywords
+
+[CodeLayout::RequireTidyCode]
+perltidyrc = .perltidyrc
+
+[Variables::ProhibitPackageVars]
+packages = File::Find Data::Dumper Config
+
+[Variables::ProhibitPunctuationVars]
+allow = $@ $/ $|
+
+[Documentation::RequirePodSections]
+lib_sections = NAME | SYNOPSIS | DESCRIPTION | AUTHOR | LICENSE
+

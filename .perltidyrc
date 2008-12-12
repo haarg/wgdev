@@ -1,0 +1,18 @@
+--standard-out
+--standard-error-out
+--maximum-line-length=78
+--indent-columns=4
+--continuation-indentation=4
+--closing-token-indentation=0
+--nooutdent-long-quotes
+--nooutdent-labels
+--paren-tightness=1
+--square-bracket-tightness=1
+--brace-tightness=1
+--block-brace-tightness=1
+--nospace-for-semicolon
+--vertical-tightness=0
+--stack-opening-tokens
+--stack-closing-tokens
+--want-break-before="% + - * / x != == >= <= =~ !~ < > | & = **= += *= &= <<= &&= -= /= |= >>= ||= //= .= %= ^= x="
+
