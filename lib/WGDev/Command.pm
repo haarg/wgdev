@@ -30,7 +30,7 @@ sub run {
         (my $module = "WGDev::Command::\u$command_name") =~ s/-(.)/::\u$1/g;
         (my $module_file = "$module.pm") =~ s{::}{/}g;
         eval { require $module_file };
-        if ( $module->can('run') ) {
+        if ( $module->can('process') ) {
             $command_module = $module;
         }
     }
@@ -80,10 +80,12 @@ sub run {
         require WGDev;
         my $wgd = WGDev->new($opt_root, $opt_config);
         eval {
-            $command_module->run($wgd, @_);
+            my $command = $command_module->new($wgd);
+            $command->run(@_);
         };
         if ($@) {
-            die $@;
+            warn $@;
+            exit 1;
         }
         exit;
     }
@@ -91,39 +93,10 @@ sub run {
 
 sub usage {
     my $class = shift;
-    my %opts = @_;
-    my $command_name = (File::Spec->splitpath($0))[2];
-    my $message = $class . "\n";
-    $message .= $opts{message}
-        if $opts{message};
-    $message .= <<"END_HELP";
+    require WGDev::Help;
+    my $message = WGDev::Help::package_usage($class, 2);
 
-usage: $command_name [arguments] <subcommand> [subcommand arguments]
-
-arguments:
-    -h
-    -?
-    --help          Display this help
-
-    -V
-    --version       Display version information
-
-    -F
-    --config-file=  Specify WebGUI config file to use.  Can be absolute, relative to
-                    the current directory, or relative to WebGUI's config directory.
-                    If not specified, it will try to use the WEBGUI_CONFIG environment
-                    variable.  If that is not set and there is only one config file
-                    in WebGUI's config directory, that file will be used.
-
-    -R
-    --webgui-root   Specify WebGUI's root directory.  Can be absolute or relative.
-                    If not specified, first the WEBGUI_ROOT environment variable will
-                    be checked, then will search upward from the current path for a
-                    WebGUI installation.
-
-END_HELP
-
-    $message .= "subcommands available:\n";
+    $message .= "\nsubcommands available:\n";
     for my $command ($class->command_list) {
         $message .= "    $command\n";
     }
@@ -149,8 +122,11 @@ sub command_list {
                 no warnings;
                 my $file = File::Spec->abs2rel($File::Find::name, $command_root);
                 $file =~ s/\.pm$//;
-                my $command = join('-', map {lcfirst} File::Spec->splitdir($file));
-                $commands{$command} = 1;
+                my $package = 'WGDev::Command::' . join('::', File::Spec->splitdir($file));
+                if ( eval { require $File::Find::name; $package->can('process') } ) {
+                    my $command = join('-', map {lcfirst} File::Spec->splitdir($file));
+                    $commands{$command} = 1;
+                }
             },
         }, $command_root);
     }
@@ -171,4 +147,38 @@ sub command_list {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+WGDev::Command - Run WGDev commands
+
+=head1 DESCRIPTION
+
+usage: $command_name [arguments] <subcommand> [subcommand arguments]
+
+arguments:
+    -h
+    -?
+    --help          Display this help
+
+    -V
+    --version       Display version information
+
+    -F
+    --config-file=  Specify WebGUI config file to use.  Can be absolute, relative to
+                    the current directory, or relative to WebGUI's config directory.
+                    If not specified, it will try to use the WEBGUI_CONFIG environment
+                    variable.  If that is not set and there is only one config file
+                    in WebGUI's config directory, that file will be used.
+
+    -R
+    --webgui-root   Specify WebGUI's root directory.  Can be absolute or relative.
+                    If not specified, first the WEBGUI_ROOT environment variable will
+                    be checked, then will search upward from the current path for a
+                    WebGUI installation.
+    <subcommand>    
+
+=cut
 
