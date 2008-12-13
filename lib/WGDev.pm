@@ -124,15 +124,7 @@ sub session {
         my $dbh = $self->{session}->db->dbh;
 
         # evil, but we have to detect if the database handle died somehow
-        if (
-            !eval {
-                ## no critic (ProhibitLocalVars ProhibitAccessOfPrivateData)
-                local $dbh->{PrintWarn}  = 0;
-                local $dbh->{PrintError} = 0;
-                local $dbh->{RaiseError} = 1;
-                $dbh->do('SELECT 1');
-            } )
-        {
+        if ( ! $dbh->ping ) {
             ( delete $self->{session} )->close;
         }
     }
