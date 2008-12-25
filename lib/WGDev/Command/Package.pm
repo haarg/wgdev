@@ -4,15 +4,17 @@ use warnings;
 
 our $VERSION = '0.1.0';
 
-use Getopt::Long ();
+use WGDev::Command::Base;
+our @ISA = qw(WGDev::Command::Base);
 
-sub run {
-    my $class = shift;
-    my $wgd = shift;
+sub option_config {qw(
+    command=s
+)}
+
+sub process {
+    my $self = shift;
+    my $wgd = $self->wgd;
     require File::Copy;
-    Getopt::Long::Configure(qw(default gnu_getopt));
-    Getopt::Long::GetOptionsFromArray(\@_,
-    );
     my $package_dir = File::Spec->catdir($wgd->root, 'docs', 'upgrades', 'packages-' . $wgd->version->module);
     if (! -d $package_dir) {
         mkdir $package_dir;
@@ -25,19 +27,23 @@ sub run {
         File::Copy::copy($filepath, File::Spec->catfile($package_dir, $filename));
         print "Built package $filename.\n";
     }
+    return 1;
 }
 
-sub usage {
-    my $class = shift;
-    return __PACKAGE__ . " - Export assets for upgrade\n" . <<'END_HELP';
+1;
+
+__END__
+
+=head1 NAME
+
+WGDev::Command::Package - Export assets for upgrade
+
+=head1 DESCRIPTION
 
 Exports assets as packages to the current version's upgrade location.
 
 arguments:
     <asset urls>    list of asset urls
 
-END_HELP
-}
-
-1;
+=cut
 
