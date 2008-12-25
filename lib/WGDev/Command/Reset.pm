@@ -4,123 +4,125 @@ use warnings;
 
 our $VERSION = '0.1.1';
 
-use Getopt::Long ();
+use WGDev::Command::Base;
+our @ISA = qw(WGDev::Command::Base);
 
-sub run {
-    my $class = shift;
-    my $wgd = shift;
+sub option_config {
+    (shift->SUPER::option_config, qw(
+        fast|f
 
-    my $opt_verbose = 1;
-    Getopt::Long::Configure(qw(default gnu_getopt));
-    Getopt::Long::GetOptionsFromArray(\@_,
-        'v|verbose'     => sub { $opt_verbose++ },
-        'q|quiet'       => sub { $opt_verbose-- },
+        backup!
+        delcache!
+        import!
 
-        'f|fast'        => \(my $opt_fast),     # --no-upload --no-backup --no-delcache
-                                                # --no-purge --no-cleantags --no-index --no-runwf
+        test|t
+        dev|d
+        build|b
 
-        'backup!'       => \(my $opt_backup),   # take a backup
-        'delcache!'     => \(my $opt_delcache), # clear the cache
-        'import!'       => \(my $opt_import),   # import a db script
+        uploads!
+        upgrade!
 
-        't|test'        => \(my $opt_test),     # --backup --import
-        'd|dev'         => \(my $opt_dev),      # --backup --import --no-starter --debug --clear --upgrade --uploads
-        'b|build'       => \(my $opt_build),    # --verbose --backup --import --starter --no-debug --upgrade --purge
-                                                # --cleantags --index --runwf
+        debug!
+        starter!
+        clear!
+        purge!
+        cleantags!
+        index!
+        runwf!
+    ))
+}
 
-        'uploads!'      => \(my $opt_uploads),  # recreate the uploads dir
-        'upgrade!'      => \(my $opt_upgrade),  # use create.sql vs use previousVersion.sql and run the upgrade script
+sub parse_params {
+    my $self = shift;
+    my $result = $self->SUPER::parse_params(@_);
 
-        'debug!'        => \(my $opt_debug),    # enable debug
-        'starter!'      => \(my $opt_starter),  # enable site starter
-        'clear!'        => \(my $opt_clear),    # clear example content
-        'purge!'        => \(my $opt_purge),    # purge old asset revisions
-        'cleantags!'    => \(my $opt_cleantags),# clear version tags
-        'index!'        => \(my $opt_index),    # rebuild lineage and reindex search
-        'runwf!'        => \(my $opt_runwf),    # run all workflows
-    );
-
-    if ($opt_fast) {
-        $opt_backup     = 1
-            unless defined $opt_backup;
-        $opt_uploads    = 0
-            unless defined $opt_uploads;
-        $opt_backup     = 0
-            unless defined $opt_backup;
-        $opt_delcache   = 0
-            unless defined $opt_delcache;
-        $opt_purge      = 0
-            unless defined $opt_purge;
-        $opt_cleantags  = 0
-            unless defined $opt_cleantags;
-        $opt_index      = 0
-            unless defined $opt_index;
-        $opt_runwf      = 0
-            unless defined $opt_runwf;
+    if ($self->option('fast')) {
+        $self->option('backup', 1)
+            unless defined $self->option('backup');
+        $self->option('uploads', 0)
+            unless defined $self->option('uploads');
+        $self->option('backup', 0)
+            unless defined $self->option('backup');
+        $self->option('delcache', 0)
+            unless defined $self->option('delcache');
+        $self->option('purge', 0)
+            unless defined $self->option('purge');
+        $self->option('cleantags', 0)
+            unless defined $self->option('cleantags');
+        $self->option('index', 0)
+            unless defined $self->option('index');
+        $self->option('runwf', 0)
+            unless defined $self->option('runwf');
     }
-    if ($opt_dev) {
-        $opt_backup     = 1
-            unless defined $opt_backup;
-        $opt_import     = 1
-            unless defined $opt_import;
-        $opt_uploads    = 1
-            unless defined $opt_uploads;
-        $opt_upgrade    = 1
-            unless defined $opt_upgrade;
-        $opt_starter    = 0
-            unless defined $opt_starter;
-        $opt_debug      = 1
-            unless defined $opt_debug;
-        $opt_clear      = 1
-            unless defined $opt_clear;
+    if ($self->option('dev')) {
+        $self->option('backup', 1)
+            unless defined $self->option('backup');
+        $self->option('import', 1)
+            unless defined $self->option('import');
+        $self->option('uploads', 1)
+            unless defined $self->option('uploads');
+        $self->option('upgrade', 1)
+            unless defined $self->option('upgrade');
+        $self->option('starter', 0)
+            unless defined $self->option('starter');
+        $self->option('debug', 1)
+            unless defined $self->option('debug');
+        $self->option('clear', 1)
+            unless defined $self->option('clear');
     }
-    if ($opt_build) {
-        $opt_verbose++;
-        $opt_backup     = 1
-            unless defined $opt_backup;
-        $opt_uploads    = 1
-            unless defined $opt_uploads;
-        $opt_import     = 1
-            unless defined $opt_import;
-        $opt_starter    = 1
-            unless defined $opt_starter;
-        $opt_debug      = 0
-            unless defined $opt_debug;
-        $opt_upgrade    = 1
-            unless defined $opt_upgrade;
-        $opt_purge      = 1
-            unless defined $opt_purge;
-        $opt_cleantags  = 1
-            unless defined $opt_cleantags;
-        $opt_index      = 1
-            unless defined $opt_index;
-        $opt_runwf      = 1
-            unless defined $opt_runwf;
+    if ($self->option('build')) {
+        $self->verbosity($self->verbosity + 1);
+        $self->option('backup', 1)
+            unless defined $self->option('backup');
+        $self->option('uploads', 1)
+            unless defined $self->option('uploads');
+        $self->option('import', 1)
+            unless defined $self->option('import');
+        $self->option('starter', 1)
+            unless defined $self->option('starter');
+        $self->option('debug', 0)
+            unless defined $self->option('debug');
+        $self->option('upgrade', 1)
+            unless defined $self->option('upgrade');
+        $self->option('purge',1)
+            unless defined $self->option('purge');
+        $self->option('cleantags', 1)
+            unless defined $self->option('cleantags');
+        $self->option('index', 1)
+            unless defined $self->option('index');
+        $self->option('runwf', 1)
+            unless defined $self->option('runwf');
     }
-    $opt_delcache = 1
-        unless defined $opt_delcache;
+    $self->option('delcache', 1)
+        unless defined $self->option('delcache');
+    return $result;
+}
+
+sub process {
+    my $self = shift;
+    my $wgd = $self->wgd;
 
     require File::Spec;
 
     local $| = 1;
 
-    if ($opt_backup) {
-        print "Backing up current database... " if $opt_verbose >= 1;
+    if ($self->option('backup')) {
+        $self->report("Backing up current database... ");
         $wgd->db->dump('/tmp/WebGUI-reset-backup.sql');
-        print "Done.\n" if $opt_verbose >= 1;
+        $self->report("Done.\n");
     }
 
     # Clear cache
-    if ($opt_delcache) {
+    if ($self->option('delcache')) {
         require File::Path;
-        print "Clearing cache... " if $opt_verbose >= 1;
+        $self->report("Clearing cache... ");
         if ($wgd->config->get('cacheType') eq 'WebGUI::Cache::FileCache') {
             my $cache_dir = $wgd->config->get('fileCacheRoot') || '/tmp/WebGUICache';
             File::Path::rmtree($cache_dir);
         }
         elsif ($wgd->config->get('cacheType') eq 'WebGUI::Cache::Database') {
             # Don't clear the DB cache if we are importing, as that will wipe it anyway
-            unless ($opt_import) {
+            unless ($self->option('import')) {
                 my $dsn = $wgd->db->connect;
                 $dsn->do('DELETE FROM cache');
             }
@@ -128,15 +130,15 @@ sub run {
         else {
             # Can't clear a cache we don't know anything about
         }
-        print "Done.\n" if $opt_verbose >= 1;
+        $self->report("Done.\n");
     }
 
     # Clear and recreate uploads
-    if ($opt_uploads) {
+    if ($self->option('uploads')) {
         require File::Copy;
         require File::Find;
         require File::Path;
-        print "Recreating uploads... " if $opt_verbose >= 1;
+        $self->report("Recreating uploads... ");
 
         my $wg_uploads = File::Spec->catdir($wgd->root, 'www', 'uploads');
         my $site_uploads = $wgd->config->get('uploadsPath');
@@ -144,7 +146,7 @@ sub run {
         File::Find::find({
             no_chdir    => 1,
             wanted      => sub {
-                no warnings;
+                no warnings 'once';
                 my $wg_path = $File::Find::name;
                 my $site_path = File::Spec->rel2abs(File::Spec->abs2rel($wg_path, $wg_uploads), $site_uploads);
                 if (-d $wg_path) {
@@ -160,25 +162,25 @@ sub run {
                 }
             },
         }, $wg_uploads);
-        print "Done\n" if $opt_verbose >= 1;
+        $self->report("Done\n");
     }
 
-    if ($opt_import) {
+    if ($self->option('import')) {
         # Connect using dsn and clean out old tables
-        print "Clearing old database information... " if $opt_verbose >= 1;
+        $self->report("Clearing old database information... ");
         $wgd->db->clear;
-        print "Done.\n" if $opt_verbose >= 1;
+        $self->report("Done.\n");
 
         # If we aren't upgrading, we're using the current DB version
-        print "Importing clean database dump... " if $opt_verbose >= 1;
-        my $db_file = $opt_upgrade ? 'previousVersion.sql' : 'create.sql';
+        print "Importing clean database dump... " if $self->verbosity >= 1;
+        my $db_file = $self->option('upgrade') ? 'previousVersion.sql' : 'create.sql';
         $wgd->db->load(File::Spec->catfile($wgd->root, 'docs', $db_file));
-        print "Done.\n" if $opt_verbose >= 1;
+        print "Done.\n" if $self->verbosity >= 1;
     }
 
     # Run the upgrade in a fork
-    if ($opt_upgrade) {
-        print "Running upgrade script... " if $opt_verbose >= 1;
+    if ($self->option('upgrade')) {
+        print "Running upgrade script... " if $self->verbosity >= 1;
         # todo: only upgrade single site
         my $pid = fork;
         unless ($pid) {
@@ -186,7 +188,7 @@ sub run {
             chdir File::Spec->catdir($wgd->root, 'sbin');
             @ARGV = qw(--doit --override --skipBackup);
             push @ARGV, '--quiet'
-                if $opt_verbose < 2;
+                if $self->verbosity < 2;
             do 'upgrade.pl';
             die $@ if $@;
             exit;
@@ -195,37 +197,37 @@ sub run {
         if ($?) {
             die "Upgrade failed!\n";
         }
-        print "Done.\n" if $opt_verbose >= 1;
+        print "Done.\n" if $self->verbosity >= 1;
     }
 
-    print "Finding current version number... " if $opt_verbose >= 1;
+    print "Finding current version number... " if $self->verbosity >= 1;
     my $version = $wgd->version->database($wgd->db->connect);
-    print "$version. Done.\n" if $opt_verbose >= 1;
+    print "$version. Done.\n" if $self->verbosity >= 1;
 
-    if (defined $opt_debug || defined $opt_starter) {
-        print "Setting WebGUI settings... " if $opt_verbose >= 1;
+    if (defined $self->option('debug') || defined $self->option('starter')) {
+        print "Setting WebGUI settings... " if $self->verbosity >= 1;
         my $dbh = $wgd->db->connect;
         my $sth = $dbh->prepare("REPLACE INTO `settings` (`name`, `value`) VALUES (?,?)");
-        if ($opt_debug) {
+        if ($self->option('debug')) {
             $sth->execute('showDebug', 1);
             $sth->execute('sessionTimeout', 31536000);
         }
-        elsif (defined $opt_debug) {
+        elsif (defined $self->option('debug')) {
             $sth->execute('showDebug', 0);
             $sth->execute('sessionTimeout', 7200);
         }
-        if ($opt_starter) {
+        if ($self->option('starter')) {
             $sth->execute('specialState', 'init');
         }
-        elsif (defined $opt_starter) {
+        elsif (defined $self->option('starter')) {
             $dbh->do("DELETE FROM `settings` WHERE `name`='specialState'");
         }
-        print "Done.\n" if $opt_verbose >= 1;
+        print "Done.\n" if $self->verbosity >= 1;
     }
 
-    if ($opt_clear) {
-        print "Clearing example assets... " if $opt_verbose >= 1;
-        print "\n" if $opt_verbose >= 2;
+    if ($self->option('clear')) {
+        print "Clearing example assets... " if $self->verbosity >= 1;
+        print "\n" if $self->verbosity >= 2;
         my $home = $wgd->asset->home;
         my $children = $home->getLineage(['descendants'], {
             statesToInclude => ['published', 'trash', 'clipboard', 'clipboard-limbo', 'trash-limbo'],
@@ -236,16 +238,16 @@ sub run {
         });
         for my $child (@$children) {
             printf "\tRemoving \%-35s '\%s'\n", $child->getName, $child->get('title')
-                if $opt_verbose >= 2;
+                if $self->verbosity >= 2;
             $child->purge;
         }
-        print "Done.\n" if $opt_verbose >= 1;
+        print "Done.\n" if $self->verbosity >= 1;
     }
 
-    if ($opt_purge) {
+    if ($self->option('purge')) {
         require WebGUI::Asset;
-        print "Purging old Asset revisions... " if $opt_verbose >= 1;
-        print "\n" if $opt_verbose >= 2;
+        print "Purging old Asset revisions... " if $self->verbosity >= 1;
+        print "\n" if $self->verbosity >= 2;
         my $sth = $wgd->db->connect->prepare(<<END_SQL);
         SELECT assetData.assetId, asset.className, assetData.revisionDate
         FROM asset
@@ -253,24 +255,24 @@ sub run {
         ORDER BY assetData.revisionDate ASC
 END_SQL
         $sth->execute;
-        while (my ($id, $class, $version) = $sth->fetchrow_array) {
-            my $current_version = WebGUI::Asset->getCurrentRevisionDate($wgd->session, $id);
-            if (!defined $current_version || $current_version == $version) {
+        while (my ($id, $class, $revision) = $sth->fetchrow_array) {
+            my $current_revision = WebGUI::Asset->getCurrentRevisionDate($wgd->session, $id);
+            if (!defined $current_revision || $current_revision == $revision) {
                 next;
             }
-            my $asset = WebGUI::Asset->new($wgd->session, $id, $class, $version)
+            my $asset = WebGUI::Asset->new($wgd->session, $id, $class, $revision)
                 || next;
             if ($asset->getRevisionCount("approved") > 1) {
-                printf "\tPurging \%-35s \%s '\%s'\n", $asset->getName, $version, $asset->get('title')
-                    if $opt_verbose >= 2;
+                printf "\tPurging \%-35s \%s '\%s'\n", $asset->getName, $revision, $asset->get('title')
+                    if $self->verbosity >= 2;
                 $asset->purgeRevision;
             }
         }
-        print "Done.\n" if $opt_verbose >= 1;
+        print "Done.\n" if $self->verbosity >= 1;
     }
 
-    if ($opt_cleantags) {
-        print "Cleaning out versions Tags... " if $opt_verbose >= 1;
+    if ($self->option('cleantags')) {
+        print "Cleaning out versions Tags... " if $self->verbosity >= 1;
         my $tag_id = 'pbversion0000000000001';
         my $dbh = $wgd->db->connect;
         my $sth = $dbh->prepare("UPDATE `assetData` SET `tagId` = ?");
@@ -285,12 +287,12 @@ END_SQL
 END_SQL
         my $now = time;
         $sth->execute($tag_id, "Base $version Install", 1, $now, '3', $now, '3', 0, '', '3', '');
-        print "Done.\n" if $opt_verbose >= 1;
+        print "Done.\n" if $self->verbosity >= 1;
     }
 
-    if ($opt_runwf) {
-        print "Running all pending workflows... " if $opt_verbose >= 1;
-        print "\n" if $opt_verbose >= 2;
+    if ($self->option('runwf')) {
+        print "Running all pending workflows... " if $self->verbosity >= 1;
+        print "\n" if $self->verbosity >= 2;
         require WebGUI::Workflow::Instance;
         my $sth = $wgd->db->connect->prepare("SELECT instanceId FROM WorkflowInstance");
         $sth->execute;
@@ -320,14 +322,14 @@ END_SQL
                 last;
             }
         }
-        print "Done.\n" if $opt_verbose >= 1;
+        print "Done.\n" if $self->verbosity >= 1;
     }
 
-    if ($opt_index) {
-        print "Rebuilding lineage... " if $opt_verbose >= 1;
+    if ($self->option('index')) {
+        print "Rebuilding lineage... " if $self->verbosity >= 1;
         my $pid = fork;
         unless ($pid) {
-            if ($opt_verbose < 3) {
+            if ($self->verbosity < 3) {
                 open STDIN,  '<', File::Spec->devnull;
                 open STDOUT, '>', File::Spec->devnull;
                 open STDERR, '>', File::Spec->devnull;
@@ -340,12 +342,12 @@ END_SQL
             exit;
         }
         waitpid $pid, 0;
-        print "Done.\n" if $opt_verbose >= 1;
+        print "Done.\n" if $self->verbosity >= 1;
 
-        print "Rebuilding search index... " if $opt_verbose >= 1;
+        print "Rebuilding search index... " if $self->verbosity >= 1;
         $pid = fork;
         unless ($pid) {
-            if ($opt_verbose < 3) {
+            if ($self->verbosity < 3) {
                 open STDIN,  '<', File::Spec->devnull;
                 open STDOUT, '>', File::Spec->devnull;
                 open STDERR, '>', File::Spec->devnull;
@@ -358,14 +360,20 @@ END_SQL
             exit;
         }
         waitpid $pid, 0;
-        print "Done.\n" if $opt_verbose >= 1;
+        print "Done.\n" if $self->verbosity >= 1;
     }
     return;
 }
 
-sub usage {
-    my $class = shift;
-    my $message = __PACKAGE__ . "\n" . <<'END_HELP';
+1;
+
+__END__
+
+=head1 NAME
+
+WGDev::Command::Reset - Reset a site to defaults
+
+=head1 DESCRIPTION
 
 arguments:
     -v
@@ -416,10 +424,5 @@ arguments:
     --runwf
     --no-runwf      Attempt to finish any running workflows
 
-END_HELP
-
-    return $message;
-}
-
-1;
+=cut
 
