@@ -3,25 +3,28 @@ use strict;
 use warnings;
 
 our $VERSION = '0.0.1';
-use File::Spec;
 
-sub run {
-    my $class = shift;
-    my $wgd = shift;
-    exec @_;
+use WGDev::Command::Base;
+our @ISA = qw(WGDev::Command::Base);
+
+sub process {
+    my $self = shift;
+    exec $self->arguments;
 }
 
-sub usage {
-    my $class = shift;
-    return __PACKAGE__ . "\n" . <<'END_HELP';
-
-Runs parameters as a command.  Does nothing extra but providing the WEBGUI_ROOT and WEBGUI_CONFIG environment variables.
-
-arguments:
-    none        All arguments are forwarded to the command run
-
-END_HELP
+sub parse_params {
+    my $self = shift;
+    @{ $self->{arguments} } = @_;
+    return 1;
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+WGDev::Command::Run - Does things
+
+=cut
 
