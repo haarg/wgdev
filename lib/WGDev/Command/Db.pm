@@ -4,33 +4,35 @@ use warnings;
 
 our $VERSION = '0.1.0';
 
-use Getopt::Long ();
+use WGDev::Command::Base;
+our @ISA = qw(WGDev::Command::Base);
 
-sub run {
-    my $class = shift;
-    my $wgd = shift;
-    Getopt::Long::Configure(qw(default gnu_getopt));
-    Getopt::Long::GetOptionsFromArray(\@_,
-        'p|print'           => \(my $opt_print),
-        'd|dump:s'          => \(my $opt_dump),
-        'l|load=s'          => \(my $opt_load),
-        'c|clear'           => \(my $opt_clear),
-    );
-    my $db = $wgd->db;
+sub option_config { qw(
+    print|p
+    dump|d:s
+    load|l=s
+    clear|c
+)}
+
+sub option_parse_config { qw(gnu_getopt pass_through) }
+
+sub process {
+    my $self = shift;
+    my $db = $self->wgd->db;
     my @command_line = $db->command_line(@_);
-    if (  (defined $opt_print || 0)
-        + (defined $opt_dump || 0)
-        + (defined $opt_load || 0)
-        + (defined $opt_clear || 0) > 1) {
+    if (  (defined $self->option('print')   || 0)
+        + (defined $self->option('dump')    || 0)
+        + (defined $self->option('load')    || 0)
+        + (defined $self->option('clear')   || 0) > 1) {
         die "Multiple database operations specified!\n";
     }
 
-    if ($opt_print) {
+    if ($self->option('print')) {
         print join " ", map {"'$_'"} @command_line
     }
-    elsif (defined $opt_dump) {
-        if ($opt_dump && $opt_dump ne '-') {
-            $db->dump($opt_dump);
+    elsif (defined $self->option('dump')) {
+        if ($self->option('dump') && $self->option('dump') ne '-') {
+            $db->dump($self->option('dump'));
         }
         else {
             exec {'mysqldump'} 'mysqldump', @command_line;
@@ -41,9 +43,15 @@ sub run {
     }
 }
 
-sub usage {
-    my $class = shift;
-    my $message = __PACKAGE__ . "\n" . <<'END_HELP';
+1;
+
+__END__
+
+=head1 NAME
+
+WGDev::Command::Db - Connect to database with mysql
+
+=head1 DESCRIPTION
 
 arguments:
     -p
@@ -56,9 +64,5 @@ arguments:
 
 Any other options will be passed through to the mysql or mysqldump commands if applicable.
 
-END_HELP
-    return $message;
-}
-
-1;
+=cut
 
