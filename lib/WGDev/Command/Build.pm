@@ -4,28 +4,32 @@ use warnings;
 
 our $VERSION = '0.1.0';
 
-use Getopt::Long ();
+use WGDev::Command::Base::Verbosity;
+our @ISA = qw(WGDev::Command::Base::Verbosity);
 
-sub run {
-    my $class = shift;
-    my $wgd = shift;
+sub option_config {
+    (shift->SUPER::option_config, qw(
+        sql|s
+        uploads|u
+    ));
+}
+
+sub parse_params {
+    my $self = shift;
+    my $result = $self->SUPER::parse_params(@_);
+    if (!defined $self->option('sql') && !defined $self->option('uploads')) {
+        $self->option('sql', 1);
+        $self->option('uploads', 1);
+    }
+    return $result;
+}
+
+sub process {
+    my $self = shift;
+    my $wgd = $self->wgd;
+    require File::Copy;
     unless ($wgd->config_file) {
         die "Can't find WebGUI root!\n";
-    }
-
-    my $opt_verbose = 0;
-    Getopt::Long::Configure(qw(default gnu_getopt));
-    Getopt::Long::GetOptionsFromArray(\@_,
-        'v|verbose'         => sub { $opt_verbose++ },
-        'q|quiet'           => sub { $opt_verbose-- },
-
-        's|sql!'            => \(my $opt_sql),
-        'u|uploads!'        => \(my $opt_uploads),
-    );
-
-    unless (defined $opt_sql || defined $opt_uploads) {
-        $opt_sql = 1;
-        $opt_uploads = 1;
     }
 
     # Autoflush
@@ -33,13 +37,12 @@ sub run {
 
     require version;
 
-    print "Finding current version number... " if $opt_verbose >= 1;
+    $self->report("Finding current version number... ");
     my $version = $wgd->version->database($wgd->db->connect);
-    print "$version. Done.\n" if $opt_verbose >= 1;
+    $self->report("$version. Done.\n");
 
-    if ($opt_sql) {
-        require File::Copy;
-        print "Creating database dump... " if $opt_verbose >= 1;
+    if ($self->option('sql')) {
+        $self->report("Creating database dump... ");
         my $db_file = File::Spec->catfile($wgd->root, 'docs', 'create.sql');
         open my $out, '>', $db_file;
 
@@ -61,16 +64,15 @@ sub run {
         print {$out} "INSERT INTO webguiVersion (webguiVersion,versionType,dateApplied) VALUES ('$version','Initial Install',UNIX_TIMESTAMP());\n";
 
         close $out;
-        print "Done.\n" if $opt_verbose >= 1;
+        $self->report("Done.\n");
     }
 
     # Clear and recreate uploads
-    if ($opt_uploads) {
-        require File::Copy;
+    if ($self->option('uploads')) {
         require File::Find;
         require File::Path;
 
-        print "Loading uploads from site... " if $opt_verbose >= 1;
+        $self->report("Loading uploads from site... ");
         my $wg_uploads = File::Spec->catdir($wgd->root, 'www', 'uploads');
         File::Path::mkpath($wg_uploads);
         my $site_uploads = $wgd->config->get('uploadsPath');
@@ -115,13 +117,19 @@ sub run {
                 File::Copy::copy($site_path, $wg_path);
             },
         }, $site_uploads);
-        print "Done\n" if $opt_verbose >= 1;
+        $self->report("Done\n");
     }
 }
 
-sub usage {
-    my $class = shift;
-    return __PACKAGE__ . " - Builds database script and uploads\n" . <<'END_HELP';
+1;
+
+__END__
+
+=head1 NAME
+
+WGDev::Command::Build - Builds an SQL script and uploads for site creation
+
+=head1 DESCRIPTION
 
 Uses the current database and uploads to build a new create.sql and update
 the local uploads directory.  With no options, builds both sql and uploads.
@@ -132,8 +140,5 @@ arguments:
     -u
     --uploads       make uploads based on current site's uploads
 
-END_HELP
-}
-
-1;
+=cut
 
