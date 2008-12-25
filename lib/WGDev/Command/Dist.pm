@@ -2,31 +2,23 @@ package WGDev::Command::Dist;
 use strict;
 use warnings;
 
-use File::Spec;
+our $VERSION = '0.1.0';
 
-sub new {
-    my $class = shift;
-    my $wgd = shift;
-    my $self = bless {
-        wgd     => $wgd,
-    }, $class;
-    #GetOptionsFromArray(\@_,
-    #);
-    return $self;
-}
+use WGDev::Command::Base;
+our @ISA = qw(WGDev::Command::Base);
 
-sub run {
+sub process {
     require File::Temp;
     require File::Copy;
     require Cwd;
-    my $self = ref $_[0] ? shift : shift->new(@_);
+    my $self = shift;
+    my $wgd = $self->wgd;
 
-    my $wgd = $self->{wgd};
     my ($version, $status) = $wgd->version->module;
     my $build_root = File::Temp->newdir;
     my $build_webgui = File::Spec->catdir($build_root, 'WebGUI');
     my $build_docs = File::Spec->catdir($build_root, 'api');
-    my $cwd = Cwd::cwd;
+    my $cwd = Cwd::cwd();
 
     mkdir $build_webgui;
     $self->export_files($build_webgui);
@@ -37,7 +29,7 @@ sub run {
     wait;
 
     mkdir $build_docs;
-    $self->generate_docs($build_webgui, $build_docs);
+    $self->generate_docs($build_docs);
     unless (fork()) {
         chdir $build_root;
         exec 'tar', 'czf', File::Spec->catfile($cwd, "webgui-api-$version-$status.tar.gz"), 'api';
@@ -47,7 +39,7 @@ sub run {
 
 sub export_files {
     my $self = shift;
-    my $from = $self->{wgd}->root;
+    my $from = $self->wgd->root;
     my $to_root = shift;
 
     if (-e File::Spec->catdir($from, '.git')) {
@@ -73,10 +65,12 @@ sub generate_docs {
     require File::Find;
     require File::Path;
     require Pod::Html;
+    require File::Temp;
     my $self = shift;
-    my $build_webgui = shift;
-    my $build_docs = shift;
-    my $code_dir = File::Spec->catdir($build_webgui, 'lib', 'WebGUI');
+    my $from = $self->wgd->root;
+    my $to_root = shift;
+    my $code_dir = File::Spec->catdir($from, 'lib', 'WebGUI');
+    my $temp_dir = File::Temp->newdir;
     File::Find::find({
         no_chdir    => 1,
         wanted      => sub {
@@ -89,7 +83,7 @@ sub generate_docs {
                 if $doc_file =~ /\bOperation\.pm$/;
             return
                 unless $doc_file =~ s/\.pm$/.html/;
-            $doc_file = File::Spec->rel2abs(File::Spec->abs2rel($doc_file, $code_dir), $build_docs);
+            $doc_file = File::Spec->rel2abs(File::Spec->abs2rel($doc_file, $code_dir), $to_root);
             my $directory = File::Spec->catpath( (File::Spec->splitpath($doc_file))[0,1] );
             File::Path::mkpath($directory);
             Pod::Html::pod2html(
@@ -97,12 +91,30 @@ sub generate_docs {
                 '--noindex',
                 '--infile=' . $code_file,
                 '--outfile=' . $doc_file,
-                '--cachedir=' . $build_webgui,
+                '--cachedir=' . $temp_dir,
             );
         },
     }, $code_dir);
-    return 1;
+    return $to_root;
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+WGDev::Command::Dist - Create a distribution file for WebGUI
+
+=head1 DESCRIPTION
+
+By default, generates both a code and API documentation package.
+
+arguments:
+    -c
+    --code          Generates a code distrobution
+    -d
+    --documentation Generates an API documentation distrobution
+
+=cut
 
