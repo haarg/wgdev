@@ -2,21 +2,20 @@ package WGDev::Command::Edittmpl;
 use strict;
 use warnings;
 
-our $VERSION = '0.1.1';
+our $VERSION = '0.1.0';
 
-use Getopt::Long ();
+use WGDev::Command::Base;
+our @ISA = qw(WGDev::Command::Base);
 
-sub run {
-    my $class = shift;
-    my $wgd = shift;
-    Getopt::Long::Configure(qw(default gnu_getopt));
-    Getopt::Long::GetOptionsFromArray(\@_,
-        'command'          => \(my $opt_command),
-    );
-    exit unless @_;
+sub option_config {qw(
+    command=s
+)}
 
+sub process {
     require WebGUI::Asset;
     require File::Temp;
+    my $self = shift;
+    my $wgd = $self->wgd;
 
     my @files;
     for my $url (@_) {
@@ -48,8 +47,12 @@ END_FILE
             mtime       => (stat($filename))[9],
         };
     }
-    my $command = $opt_command || $ENV{EDITOR} || 'vi';
-    system("$command " . join(" ", map { $_->{filename} } @files));
+    unless (@_) {
+        die "No templates to edit!\n";
+    }
+
+    my $command = $self->option('command') || $ENV{EDITOR} || 'vi';
+    system($command . ' ' . join(' ', map { $_->{filename} } @files));
 
     my $versionTag;
     for my $file (@files) {
@@ -81,12 +84,18 @@ END_FILE
     if ($versionTag) {
         $versionTag->commit;
     }
-    return;
+    return 1;
 }
 
-sub usage {
-    my $class = shift;
-    return __PACKAGE__ . " - Edit templates\n" . <<'END_HELP';
+1;
+
+__END__
+
+=head1 NAME
+
+WGDev::Command::Edittmpl - Edits templates by URL
+
+=head1 DESCRIPTION
 
 Exports templates to temporary files, then opens them in your prefered editor.
 If modifications are made, the templates are updated.  Only changes to the
@@ -98,8 +107,5 @@ arguments:
     --command       Command to be executed.  If not specified, uses the EDITOR
                     environment variable.  If that is not specified, uses vi.
 
-END_HELP
-}
-
-1;
+=cut
 
