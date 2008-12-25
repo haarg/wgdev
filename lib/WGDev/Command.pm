@@ -30,7 +30,7 @@ sub run {
         (my $module = "WGDev::Command::\u$command_name") =~ s/-(.)/::\u$1/g;
         (my $module_file = "$module.pm") =~ s{::}{/}g;
         eval { require $module_file };
-        if ( $module->can('process') ) {
+        if ( $module->can('run') && $module->can('is_runnable') && $module->is_runnable ) {
             $command_module = $module;
         }
     }

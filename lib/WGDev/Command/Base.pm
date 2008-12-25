@@ -4,6 +4,11 @@ use warnings;
 
 our $VERSION = '0.0.1';
 
+sub is_runnable {
+    my $class = shift;
+    return $class->can('process');
+}
+
 sub new {
     my $class = shift;
     my $wgd = shift;
