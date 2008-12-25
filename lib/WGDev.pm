@@ -213,6 +213,32 @@ sub yaml_decode {
     goto &{$decode};
 }
 
+sub yaml_encode {
+    ## no critic (RequireFinalReturn ProhibitCascadingIfElse ProhibitNoWarnings)
+    my $encode;
+    if ( eval { require YAML::XS } ) {
+        $encode = \&YAML::XS::Dump;
+    }
+    elsif ( eval { require YAML::Syck } ) {
+        $encode = \&YAML::Syck::Dump;
+    }
+    elsif ( eval { require YAML } ) {
+        $encode = \&YAML::Dump;
+    }
+    elsif ( eval { require YAML::Tiny } ) {
+        $encode = \&YAML::Tiny::Dump;
+    }
+    else {
+        $encode = sub {
+            die "No YAML library available!\n";
+        };
+    }
+    no warnings 'redefine';
+    *yaml_encode = $encode;
+    goto &{$encode};
+}
+
+
 sub DESTROY {
     my $self = shift;
 
