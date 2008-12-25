@@ -4,21 +4,23 @@ use warnings;
 
 our $VERSION = '0.1.0';
 
-use Getopt::Long ();
+use WGDev::Command::Base;
+our @ISA = qw(WGDev::Command::Base);
 
-sub run {
-    my $class = shift;
-    my $wgd = shift;
-    Getopt::Long::Configure(qw(no_getopt_compat));
-    Getopt::Long::GetOptionsFromArray(\@_,
-        'c|create'      => \(my $opt_create),
-        'b|bare'        => \(my $opt_bare),
-    );
+sub option_parse_config { qw(no_getopt_compat) };
+sub option_config {qw(
+    create|c
+    bare|b
+)}
 
-    my $ver = shift @_;
+sub process {
+    my $self = shift;
+    my $wgd = $self->wgd;
+
+    my ($ver) = $self->arguments;
 
     my $wgv = $wgd->version;
-    if ($opt_create) {
+    if ($self->option('create')) {
         my $root = $wgd->root;
         my $old_version = $wgv->module;
         my $new_version = $ver || do {
@@ -58,9 +60,9 @@ sub run {
     }
 
     my ($perl_version, $perl_status) = $wgv->module;
-    if ($opt_bare) {
+    if ($self->option('bare')) {
         print $perl_version, "\n";
-        exit;
+        return 1;
     }
 
     my $db_version = $wgv->database_script;
@@ -100,7 +102,7 @@ END_REPORT
 
     print colored("\n  Version numbers don't match!\n", 'bold red')
         if $err_count;
-
+    return 1;
 }
 
 sub colored {
@@ -114,24 +116,47 @@ sub colored {
     goto &colored;
 }
 
-sub usage {
-    my $class = shift;
-    return __PACKAGE__ . " - Reports and updates version numbers\n" . <<'END_HELP';
+1;
+
+__END__
+
+
+=head1 NAME
+
+WGDev::Command::Version - Reports and updates version numbers
+
+=head1 SYNOPSIS
+
+version [options] [version]
+
+ Options:
+    version             version number to compare against or create
+
+    -c      --create    update version to next or specified version
+    -b      --bare      output bare version number only, from WebGUI.pm
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<--create>
+
+Adds a new section to the changelog for the new version, updates the version
+number in WebGUI.pm, and creates a new upgrade script.  The version number to
+update to can be specified on the command line.  If not specified, defaults
+to incrementing the patch level by one.
+
+=item B<--bare>
+
+Outputs the version number taken from WebGUI.pm only
+
+=back
+
+=head1 DESCRIPTION
 
 Reports the current versions of the WebGUI.pm module, create.sql database
 script, changelog, and upgrade file.  Non-matching versions will be noted
 in red if possible.
 
-arguments:
-    <version number>    the expected version number to compare with
-    -c
-    --create            change the version number to a new one in the changelog,
-                        WebGUI.pm, and creates a new upgrade script.  If the
-                        version number isn't otherwise specified, increments
-                        the patch level by one.
-
-END_HELP
-}
-
-1;
+=cut
 
