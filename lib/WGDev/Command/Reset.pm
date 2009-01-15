@@ -4,8 +4,8 @@ use warnings;
 
 our $VERSION = '0.1.1';
 
-use WGDev::Command::Base;
-our @ISA = qw(WGDev::Command::Base);
+use WGDev::Command::Base::Verbosity;
+our @ISA = qw(WGDev::Command::Base::Verbosity);
 
 sub option_config {
     (shift->SUPER::option_config, qw(
@@ -380,12 +380,10 @@ arguments:
     --verbose       Output more information
     -q
     --quiet         Output less information
-
     -f
     --fast          Fast mode - equivalent to:
                     --no-upload --no-backup --no-delcache --no-purge
                     --no-cleantags --no-index --no-runwf
-
     -t
     --test          Test mode - equivalent to:
                     --backup --import
@@ -397,7 +395,6 @@ arguments:
     --build         Build mode - equivalent to:
                     --verbose --backup --import --starter --no-debug
                     --upgrade --purge --cleantags --index --runwf
-
     --backup
     --no-backup     Backup database before doing any other operations.  Defaults to on.
     --delcache
@@ -423,6 +420,91 @@ arguments:
     --no-index      Rebuild the site lineage and reindex all of the content
     --runwf
     --no-runwf      Attempt to finish any running workflows
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-v --verbose>
+
+Output more information
+
+=item B<-q --quiet>
+
+Output less information
+
+=item B<-f --fast>
+
+Fast mode - equivalent to:
+--no-upload --no-backup --no-delcache --no-purge --no-cleantags --no-index
+--no-runwf
+
+=item B<-t --test>
+
+Test mode - equivalent to:
+--backup --import
+
+=item B<-d --dev>
+
+Developer mode - equivalent to:
+--backup --import --no-starter --debug --clear --upgrade --uploads
+
+=item B<-b --build>
+
+Build mode - equivalent to:
+--verbose --backup --import --starter --no-debug --upgrade --purge --cleantags
+--index --runwf
+
+=item B<--backup --no-backup>
+
+Backup database before doing any other operations.  Defaults to on.
+
+=item B<--delcache --no-delcache>
+
+Delete the site's cache.  Defaults to on.
+
+=item B<--import --no-import>
+
+Import a database script
+
+=item B<--uploads --no-uploads>
+
+Recreate uploads directory
+
+=item B<--upgrade --no-upgrade>
+
+Perform an upgrade - also controls which DB script to import
+
+=item B<--debug --no-debug>
+
+Enable debug mode and increase session timeout
+
+=item B<--starter --no-starter>
+
+Enable the site starter
+
+=item B<--clear --no-clear>
+
+Clear the content off the home page and its children
+
+=item B<--purge --no-purge>
+
+Purge all old revisions
+
+=item B<--cleantags --no-cleantags>
+
+Removes all version tags and sets all asset revisions to be
+under a new version tag marked with the current version number
+
+=item B<--index --no-index>
+
+Rebuild the site lineage and reindex all of the content
+
+=item B<--runwf --no-runwf>
+
+Attempt to finish any running workflows
+
+=back
 
 =cut
 

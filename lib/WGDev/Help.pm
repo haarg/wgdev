@@ -21,15 +21,15 @@ sub package_usage {
     ##no critic (RequireCarping)
     open my $out, '>', \$output or die "Can't open file handle to scalar : $!";
     open my $in, '<', \$pod or croak "Unable to read documentation file : $!";
-    my %params = (
+    my $params = {
         -input   => $in,
         -output  => $out,
         -exitval => 'NOEXIT',
         -verbose => $verbosity,
-    );
+    };
+    Pod::Usage::pod2usage( $params );
     close $in  or return q{};
     close $out or return q{};
-    Pod::Usage::pod2usage( \%params );
     return $output;
 }
 
@@ -42,7 +42,7 @@ sub filter_pod {
     my $content = do { local $/ = undef; <$fh> };
     close $fh or return q{};
     if ( $content
-        =~ /^(=head1 NAME\s+^\Q$wanted\E\s.*?)(?:^=head1 NAME\s|\z)/msx )
+        =~ /^(=head1 NAME\s+^\Q$wanted\E\s.*?)(?:^=head1 NAME\s|\z)/ms )
     {
         return $1;
     }

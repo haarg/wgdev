@@ -120,12 +120,15 @@ sub command_list {
                 return
                     unless /\.pm$/;
                 no warnings;
-                my $file = File::Spec->abs2rel($File::Find::name, $command_root);
-                $file =~ s/\.pm$//;
-                my $package = 'WGDev::Command::' . join('::', File::Spec->splitdir($file));
-                if ( eval { require $File::Find::name; $package->can('process') } ) {
-                    my $command = join('-', map {lcfirst} File::Spec->splitdir($file));
-                    $commands{$command} = 1;
+                my $lib_path = File::Spec->abs2rel($File::Find::name, $inc_path);
+                my $package = $lib_path;
+                $package =~ s/\.pm$//;
+                $package = join('::', File::Spec->splitdir($package));
+                my $command_name = $package;
+                $command_name =~ s/^\Q$class\E:://;
+                $command_name = join('-', map {lcfirst} split(/::/, $command_name));
+                if ( eval { require $lib_path; $package->can('process') } ) {
+                    $commands{$command_name} = 1;
                 }
             },
         }, $command_root);
