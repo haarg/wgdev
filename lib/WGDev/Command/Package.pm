@@ -19,7 +19,7 @@ sub process {
     if (! -d $package_dir) {
         mkdir $package_dir;
     }
-    for my $url (@_) {
+    for my $url ($self->arguments) {
         my $asset = $wgd->asset->by_url($url);
         my $storage = $asset->exportPackage;
         my $filename = $storage->getFiles->[0];
