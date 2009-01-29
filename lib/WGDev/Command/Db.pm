@@ -19,7 +19,7 @@ sub option_parse_config { qw(gnu_getopt pass_through) }
 sub process {
     my $self = shift;
     my $db = $self->wgd->db;
-    my @command_line = $db->command_line(@_);
+    my @command_line = $db->command_line($self->arguments);
     if (  (defined $self->option('print')   || 0)
         + (defined $self->option('dump')    || 0)
         + (defined $self->option('load')    || 0)
@@ -29,6 +29,17 @@ sub process {
 
     if ($self->option('print')) {
         print join " ", map {"'$_'"} @command_line
+    }
+    elsif ($self->option('clear')) {
+        $db->clear;
+    }
+    elsif (defined $self->option('load')) {
+        if ($self->option('load') && $self->option('load') ne '-') {
+            $db->load($self->option('load'));
+        }
+        else {
+            exec {'mysql'} 'mysql', @command_line;
+        }
     }
     elsif (defined $self->option('dump')) {
         if ($self->option('dump') && $self->option('dump') ne '-') {
