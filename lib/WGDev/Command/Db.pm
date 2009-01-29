@@ -62,18 +62,34 @@ __END__
 
 WGDev::Command::Db - Connect to database with mysql
 
-=head1 DESCRIPTION
+=head1 SYNOPSIS
 
-arguments:
-    -p
-    --print         Prints out the command options that would be passed to mysql
-    -d[file]
-    --dump[=file]   Dumps the database as an SQL script.  If a file is specified,
-                    dumps to that file.  Otherwise, dumps to standard out.
-    -c
-    --clear         Clears the database, removing all tables.
+wgd db [-p | -d | -l | -c] [mysql options]
 
-Any other options will be passed through to the mysql or mysqldump commands if applicable.
+=head1 OPTIONS
+
+Any arguments not recognized will be passed through to the mysql or mysqldump commands in applicable.
+
+=over 8
+
+=item B<-p --print>
+
+Prints out the command options that would be passed to mysql
+
+=item B<-d --dump>
+
+Dumps the database as an SQL script.  If a file is specified,
+dumps to that file.  Otherwise, dumps to standard out.
+
+=item B<-l --load>
+
+Loads a database script into the database.  Database script must be specified.
+
+=item B<-c --clear>
+
+Clears the database, removing all tables.
+
+=back
 
 =cut
 
