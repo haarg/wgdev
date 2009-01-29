@@ -1,7 +1,6 @@
 package WGDev;
 use strict;
 use warnings;
-
 use 5.008008;
 
 our $VERSION = '0.1.0';
@@ -124,7 +123,7 @@ sub session {
         my $dbh = $self->{session}->db->dbh;
 
         # evil, but we have to detect if the database handle died somehow
-        if ( ! $dbh->ping ) {
+        if ( !$dbh->ping ) {
             ( delete $self->{session} )->close;
         }
     }
@@ -238,7 +237,6 @@ sub yaml_encode {
     goto &{$encode};
 }
 
-
 sub DESTROY {
     my $self = shift;
 
@@ -284,6 +282,4 @@ Copyright (c) 2008 Graham Knop.  All rights reserved.
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 =cut
-
-
 

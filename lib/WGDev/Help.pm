@@ -1,6 +1,7 @@
 package WGDev::Help;
 use strict;
 use warnings;
+use 5.008008;
 
 our $VERSION = '0.0.1';
 
@@ -18,8 +19,9 @@ sub package_usage {
     my $actual_file = $INC{$file};
     my $pod         = filter_pod( $actual_file, $package );
     my $output      = q{};
-    ##no critic (RequireCarping)
-    open my $out, '>', \$output or die "Can't open file handle to scalar : $!";
+    ##no critic (RequireCarping RequireBriefOpen
+    open my $out, '>', \$output
+        or die "Can't open file handle to scalar : $!";
     open my $in, '<', \$pod or croak "Unable to read documentation file : $!";
     my $params = {
         -input   => $in,
@@ -27,7 +29,7 @@ sub package_usage {
         -exitval => 'NOEXIT',
         -verbose => $verbosity,
     };
-    Pod::Usage::pod2usage( $params );
+    Pod::Usage::pod2usage($params);
     close $in  or return q{};
     close $out or return q{};
     return $output;
@@ -42,7 +44,8 @@ sub filter_pod {
     my $content = do { local $/ = undef; <$fh> };
     close $fh or return q{};
     if ( $content
-        =~ /^(=head1 NAME\s+^\Q$wanted\E\s.*?)(?:^=head1 NAME\s|\z)/ms )
+        =~ /^(\Q=head1 NAME\E\s+^\Q$wanted\E\s.*?)(?:^\Q=head1 NAME\E\s|\z)/msx
+        )
     {
         return $1;
     }

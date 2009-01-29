@@ -1,5 +1,5 @@
 severity    = 1
-exclude     = RequireRcsKeywords RequireUseOfExceptions RequireEmacsFileVariables ProhibitCallsToUnexportedSubs
+exclude     = RequireRcsKeywords RequireUseOfExceptions RequireEmacsFileVariables ProhibitCallsToUnexportedSubs ProhibitConstantPragma
 theme       = core || strictersubs || pulp || more
 
 [CodeLayout::RequireTidyCode]
@@ -13,4 +13,10 @@ allow = $@ $/ $|
 
 [Documentation::RequirePodSections]
 lib_sections = NAME | SYNOPSIS | DESCRIPTION | AUTHOR | LICENSE
+
+[RegularExpressions::RequireExtendedFormatting]
+minimum_regex_length_to_complain_about = 5
+
+[InputOutput::RequireCheckedSyscalls]
+functions = open opendir read readline readdir close closedir
 
