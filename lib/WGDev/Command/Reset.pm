@@ -37,78 +37,49 @@ sub parse_params {
     my $result = $self->SUPER::parse_params(@_);
 
     if ($self->option('fast')) {
-        $self->option('backup', 1)
-            unless defined $self->option('backup');
-        $self->option('uploads', 0)
-            unless defined $self->option('uploads');
-        $self->option('backup', 0)
-            unless defined $self->option('backup');
-        $self->option('delcache', 0)
-            unless defined $self->option('delcache');
-        $self->option('purge', 0)
-            unless defined $self->option('purge');
-        $self->option('cleantags', 0)
-            unless defined $self->option('cleantags');
-        $self->option('index', 0)
-            unless defined $self->option('index');
-        $self->option('runwf', 0)
-            unless defined $self->option('runwf');
+        $self->option_default(backup    => 1);
+        $self->option_default(uploads   => 0);
+        $self->option_default(backup    => 0);
+        $self->option_default(delcache  => 0);
+        $self->option_default(purge     => 0);
+        $self->option_default(cleantags => 0);
+        $self->option_default(index     => 0);
+        $self->option_default(runwf     => 0);
     }
     if ($self->option('dev')) {
-        $self->option('backup', 1)
-            unless defined $self->option('backup');
-        $self->option('import', 1)
-            unless defined $self->option('import');
-        $self->option('uploads', 1)
-            unless defined $self->option('uploads');
-        $self->option('upgrade', 1)
-            unless defined $self->option('upgrade');
-        $self->option('starter', 0)
-            unless defined $self->option('starter');
-        $self->option('debug', 1)
-            unless defined $self->option('debug');
-        $self->option('clear', 1)
-            unless defined $self->option('clear');
+        $self->option_default(backup    => 1);
+        $self->option_default(import    => 1);
+        $self->option_default(uploads   => 1);
+        $self->option_default(upgrade   => 1);
+        $self->option_default(starter   => 0);
+        $self->option_default(debug     => 1);
+        $self->option_default(clear     => 1);
     }
     if ($self->option('build')) {
         $self->verbosity($self->verbosity + 1);
-        $self->option('backup', 1)
-            unless defined $self->option('backup');
-        $self->option('uploads', 1)
-            unless defined $self->option('uploads');
-        $self->option('import', 1)
-            unless defined $self->option('import');
-        $self->option('starter', 1)
-            unless defined $self->option('starter');
-        $self->option('debug', 0)
-            unless defined $self->option('debug');
-        $self->option('upgrade', 1)
-            unless defined $self->option('upgrade');
-        $self->option('purge',1)
-            unless defined $self->option('purge');
-        $self->option('cleantags', 1)
-            unless defined $self->option('cleantags');
-        $self->option('index', 1)
-            unless defined $self->option('index');
-        $self->option('runwf', 1)
-            unless defined $self->option('runwf');
+        $self->option_default(backup    => 1);
+        $self->option_default(uploads   => 1);
+        $self->option_default(import    => 1);
+        $self->option_default(starter   => 1);
+        $self->option_default(debug     => 0);
+        $self->option_default(upgrade   => 1);
+        $self->option_default(purge     => 1);
+        $self->option_default(cleantags => 1);
+        $self->option_default(index     => 1);
+        $self->option_default(runwf     => 1);
     }
-    $self->option('delcache', 1)
-        unless defined $self->option('delcache');
+    $self->option_default('delcache', 1);
     return $result;
 }
 
 sub process {
     my $self = shift;
     my $wgd = $self->wgd;
-
     require File::Spec;
-
-    local $| = 1;
 
     if ($self->option('backup')) {
         $self->report("Backing up current database... ");
-        $wgd->db->dump('/tmp/WebGUI-reset-backup.sql');
+        $wgd->db->dump(File::Spec->catfile(File::Spec->tmpdir, 'WebGUI-reset-backup.sql'));
         $self->report("Done.\n");
     }
 
@@ -172,15 +143,15 @@ sub process {
         $self->report("Done.\n");
 
         # If we aren't upgrading, we're using the current DB version
-        print "Importing clean database dump... " if $self->verbosity >= 1;
+        $self->report("Importing clean database dump... ");
         my $db_file = $self->option('upgrade') ? 'previousVersion.sql' : 'create.sql';
         $wgd->db->load(File::Spec->catfile($wgd->root, 'docs', $db_file));
-        print "Done.\n" if $self->verbosity >= 1;
+        $self->report("Done\n");
     }
 
     # Run the upgrade in a fork
     if ($self->option('upgrade')) {
-        print "Running upgrade script... " if $self->verbosity >= 1;
+        $self->report("Running upgrade script... ");
         # todo: only upgrade single site
         my $pid = fork;
         unless ($pid) {
@@ -197,15 +168,15 @@ sub process {
         if ($?) {
             die "Upgrade failed!\n";
         }
-        print "Done.\n" if $self->verbosity >= 1;
+        $self->report("Done\n");
     }
 
-    print "Finding current version number... " if $self->verbosity >= 1;
+    $self->report("Finding current version number...\n");
     my $version = $wgd->version->database($wgd->db->connect);
-    print "$version. Done.\n" if $self->verbosity >= 1;
+    $self->report("$version. Done\n");
 
     if (defined $self->option('debug') || defined $self->option('starter')) {
-        print "Setting WebGUI settings... " if $self->verbosity >= 1;
+        $self->report("Setting WebGUI settings... ");
         my $dbh = $wgd->db->connect;
         my $sth = $dbh->prepare("REPLACE INTO `settings` (`name`, `value`) VALUES (?,?)");
         if ($self->option('debug')) {
@@ -222,12 +193,12 @@ sub process {
         elsif (defined $self->option('starter')) {
             $dbh->do("DELETE FROM `settings` WHERE `name`='specialState'");
         }
-        print "Done.\n" if $self->verbosity >= 1;
+        $self->report("Done\n");
     }
 
     if ($self->option('clear')) {
-        print "Clearing example assets... " if $self->verbosity >= 1;
-        print "\n" if $self->verbosity >= 2;
+        $self->report("Clearing example assets... ");
+        $self->report(2, "\n");
         my $home = $wgd->asset->home;
         my $children = $home->getLineage(['descendants'], {
             statesToInclude => ['published', 'trash', 'clipboard', 'clipboard-limbo', 'trash-limbo'],
@@ -237,17 +208,16 @@ sub process {
             invertTree      => 1,
         });
         for my $child (@$children) {
-            printf "\tRemoving \%-35s '\%s'\n", $child->getName, $child->get('title')
-                if $self->verbosity >= 2;
+            $self->report(2, sprintf "\tRemoving \%-35s '\%s'\n", $child->getName, $child->get('title'));
             $child->purge;
         }
-        print "Done.\n" if $self->verbosity >= 1;
+        $self->report("Done\n");
     }
 
     if ($self->option('purge')) {
         require WebGUI::Asset;
-        print "Purging old Asset revisions... " if $self->verbosity >= 1;
-        print "\n" if $self->verbosity >= 2;
+        $self->report("Purging old Asset revisions... ");
+        $self->report(2, "\n");
         my $sth = $wgd->db->connect->prepare(<<END_SQL);
         SELECT assetData.assetId, asset.className, assetData.revisionDate
         FROM asset
@@ -263,16 +233,15 @@ END_SQL
             my $asset = WebGUI::Asset->new($wgd->session, $id, $class, $revision)
                 || next;
             if ($asset->getRevisionCount("approved") > 1) {
-                printf "\tPurging \%-35s \%s '\%s'\n", $asset->getName, $revision, $asset->get('title')
-                    if $self->verbosity >= 2;
+                $self->report(2, sprintf "\tPurging \%-35s \%s '\%s'\n", $asset->getName, $revision, $asset->get('title'));
                 $asset->purgeRevision;
             }
         }
-        print "Done.\n" if $self->verbosity >= 1;
+        $self->report("Done\n");
     }
 
     if ($self->option('cleantags')) {
-        print "Cleaning out versions Tags... " if $self->verbosity >= 1;
+        $self->report("Cleaning out versions Tags... ");
         my $tag_id = 'pbversion0000000000001';
         my $dbh = $wgd->db->connect;
         my $sth = $dbh->prepare("UPDATE `assetData` SET `tagId` = ?");
@@ -287,12 +256,12 @@ END_SQL
 END_SQL
         my $now = time;
         $sth->execute($tag_id, "Base $version Install", 1, $now, '3', $now, '3', 0, '', '3', '');
-        print "Done.\n" if $self->verbosity >= 1;
+        $self->report("Done\n");
     }
 
     if ($self->option('runwf')) {
-        print "Running all pending workflows... " if $self->verbosity >= 1;
-        print "\n" if $self->verbosity >= 2;
+        $self->report("Running all pending workflows... ");
+        $self->report(2, "\n");
         require WebGUI::Workflow::Instance;
         my $sth = $wgd->db->connect->prepare("SELECT instanceId FROM WorkflowInstance");
         $sth->execute;
@@ -322,11 +291,11 @@ END_SQL
                 last;
             }
         }
-        print "Done.\n" if $self->verbosity >= 1;
+        $self->report("Done\n");
     }
 
     if ($self->option('index')) {
-        print "Rebuilding lineage... " if $self->verbosity >= 1;
+        $self->report("Rebuilding lineage... ");
         my $pid = fork;
         unless ($pid) {
             if ($self->verbosity < 3) {
@@ -342,9 +311,9 @@ END_SQL
             exit;
         }
         waitpid $pid, 0;
-        print "Done.\n" if $self->verbosity >= 1;
+        $self->report("Done\n");
 
-        print "Rebuilding search index... " if $self->verbosity >= 1;
+        $self->report("Rebuilding search index... ");
         $pid = fork;
         unless ($pid) {
             if ($self->verbosity < 3) {
@@ -360,7 +329,7 @@ END_SQL
             exit;
         }
         waitpid $pid, 0;
-        print "Done.\n" if $self->verbosity >= 1;
+        $self->report("Done\n");
     }
     return;
 }

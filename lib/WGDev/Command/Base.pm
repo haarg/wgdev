@@ -43,6 +43,14 @@ sub option {
     }
     return $self->{options}{$option};
 }
+sub option_default {
+    my $self = shift;
+    my $option = shift || return;
+    if (!defined $self->option($option)) {
+        return $self->option($option, @_);
+    }
+    return;
+}
 
 sub arguments {
     return @{ $_[0]->{arguments} };
@@ -51,6 +59,7 @@ sub arguments {
 sub run {
     my $self = shift;
     my @params = (@_ == 1 && ref $_[0] eq 'ARRAY') ? @{ +shift } : @_;
+    local $| = 1;
     if ( ! $self->parse_params(@params) ) {
         my $usage = $self->usage(0);
         warn $usage;
