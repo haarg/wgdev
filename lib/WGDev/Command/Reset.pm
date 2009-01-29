@@ -342,53 +342,9 @@ __END__
 
 WGDev::Command::Reset - Reset a site to defaults
 
-=head1 DESCRIPTION
+=head1 SYNOPSIS
 
-arguments:
-    -v
-    --verbose       Output more information
-    -q
-    --quiet         Output less information
-    -f
-    --fast          Fast mode - equivalent to:
-                    --no-upload --no-backup --no-delcache --no-purge
-                    --no-cleantags --no-index --no-runwf
-    -t
-    --test          Test mode - equivalent to:
-                    --backup --import
-    -d
-    --dev           Developer mode - equivalent to:
-                    --backup --import --no-starter --debug --clear
-                    --upgrade --uploads
-    -b
-    --build         Build mode - equivalent to:
-                    --verbose --backup --import --starter --no-debug
-                    --upgrade --purge --cleantags --index --runwf
-    --backup
-    --no-backup     Backup database before doing any other operations.  Defaults to on.
-    --delcache
-    --no-delcache   Delete the site's cache.  Defaults to on.
-    --import
-    --no-import     Import a database script
-    --uploads
-    --no-uploads    Recreate uploads directory
-    --upgrade
-    --no-upgrade    Perform an upgrade - also controls which DB script to import
-    --debug
-    --no-debug      Enable debug mode and increase session timeout
-    --starter
-    --no-starter    Enable the site starter
-    --clear
-    --no-clear      Clear the content off the home page and its children
-    --purge
-    --no-purge      Purge all old revisions
-    --cleantags
-    --no-cleantags  Removes all version tags and sets all asset revisions to be
-                    under a new version tag marked with the current version number
-    --index
-    --no-index      Rebuild the site lineage and reindex all of the content
-    --runwf
-    --no-runwf      Attempt to finish any running workflows
+wgd reset [-v] [-q] [-f] [-d | -b | -t]
 
 =head1 OPTIONS
 
