@@ -31,7 +31,7 @@ sub run {    ##no critic (RequireArgUnpacking)
         if ($command_exec) {
             require WGDev;
             WGDev->new( $opt_root, $opt_config )->set_environment;
-            exec {$execpath} $execpath, $opt_help ? '--help' : (),
+            exec {$command_exec} $command_exec, $opt_help ? '--help' : (),
                 $opt_version ? '--version' : (), @_;
         }
         else {
@@ -164,7 +164,7 @@ sub command_list {
             return
                 if !/\Q.pm\E$/msx;
 
-            #no warnings;
+            no warnings;    ##no critic (ProhibitNoWarnings)
             my $lib_path
                 = File::Spec->abs2rel( $File::Find::name, $inc_path );
             my $package = $lib_path;

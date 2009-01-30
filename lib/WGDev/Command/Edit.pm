@@ -20,7 +20,7 @@ sub process {
     require File::Temp;
 
     my @files;
-    for my $url (@self->arguments) {
+    for my $url ($self->arguments) {
         my $asset = WebGUI::Asset->newByUrl($wgd->session, $url);
         unless ($asset) {
             warn "$url is not a valid asset!\n";

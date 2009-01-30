@@ -138,7 +138,7 @@ sub upgrade {
             last;
         }
     }
-    close $fh or "Unable to close filehandle: $!";
+    close $fh or croak "Unable to close filehandle: $!";
     return @{$latest};
 }
 
