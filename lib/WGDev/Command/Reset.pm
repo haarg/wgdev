@@ -5,7 +5,8 @@ use warnings;
 our $VERSION = '0.1.1';
 
 use WGDev::Command::Base::Verbosity;
-our @ISA = qw(WGDev::Command::Base::Verbosity);
+BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
+
 use File::Spec ();
 
 sub option_config {

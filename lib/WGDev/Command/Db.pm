@@ -5,7 +5,7 @@ use warnings;
 our $VERSION = '0.1.0';
 
 use WGDev::Command::Base;
-our @ISA = qw(WGDev::Command::Base);
+BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
 sub option_config { qw(
     print|p

@@ -6,7 +6,7 @@ use 5.008008;
 our $VERSION = '0.1.0';
 
 use WGDev::Command::Base;
-our @ISA = qw(WGDev::Command::Base);
+BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
 sub process {
     require File::Temp;

@@ -5,7 +5,7 @@ use warnings;
 our $VERSION = '0.0.1';
 
 use WGDev::Command::Base;
-our @ISA = qw(WGDev::Command::Base);
+BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
 sub process {
     my $self = shift;
