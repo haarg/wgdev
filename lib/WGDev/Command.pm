@@ -141,7 +141,7 @@ sub usage {
     require WGDev::Help;
     my $message = WGDev::Help::package_usage( $class, 2 );
 
-    $message .= "\nsubcommands available:\n";
+    $message .= "SUBCOMMANDS\n";
     for my $command ( $class->command_list ) {
         $message .= "    $command\n";
     }
@@ -155,6 +155,7 @@ sub command_list {
     ( my $fn_prefix = $class ) =~ s{::}{/}msxg;
 
     require File::Find;
+    my %lib_check;
     for my $inc_path (@INC) {
         ##no critic (ProhibitParensWithBuiltins)
         my $command_root
@@ -168,34 +169,32 @@ sub command_list {
             no warnings;    ##no critic (ProhibitNoWarnings)
             my $lib_path
                 = File::Spec->abs2rel( $File::Find::name, $inc_path );
-            my $package = $lib_path;
-            $package =~ s/\Q.pm\E$//msx;
-            $package = join q{::}, File::Spec->splitdir($package);
-            my $command_name = $package;
-            $command_name =~ s/^\Q$class\E:://msx;
-            $command_name = join q{-}, map {lcfirst} split /::/msx,
-                $command_name;
-
-            if (
-                eval {
-                    require $lib_path;
-                    $package->can('run')
-                        && $package->can('is_runnable')
-                        && $package->is_runnable;
-                } )
-            {
-                $commands{$command_name} = 1;
-            }
+            $lib_check{$lib_path} = 1;
         };
         File::Find::find( { no_chdir => 1, wanted => $find_callback },
             $command_root );
     }
     for my $module ( grep {m{^$fn_prefix/}msx} keys %INC ) {
-        ( my $command = $module ) =~ s/\Q.pm\E$//msx;
-        $command =~ s{^$fn_prefix/}{}msx;
-        $command = join q{-}, map {lcfirst} split m{/}msx, $command;
-        $commands{$command} = 1;
+        $lib_check{$module} = 1;
     }
+    for my $module ( keys %lib_check ) {
+        my $package = $module;
+        $package =~ s/\Q.pm\E$//msx;
+        $package = join q{::}, File::Spec->splitdir($package);
+        if (
+            eval {
+                require $module;
+                $package->can('run')
+                    && $package->can('is_runnable')
+                    && $package->is_runnable;
+            } )
+        {
+            ( my $command = $package ) =~ s/^\Q$class\E:://msx;
+            $command = join q{-}, map {lcfirst} split m{::}msx, $command;
+            $commands{$command} = 1;
+        }
+    }
+
     for my $command ( map { glob "$_/wgd-*" } File::Spec->path ) {
         next
             if !-x $command;
