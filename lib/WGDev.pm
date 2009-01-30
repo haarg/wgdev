@@ -48,13 +48,18 @@ sub new {
     }
     if ( $self->{root} ) {
         if ( !$config ) {
-            opendir my $dh, File::Spec->catdir( $self->{root}, 'etc' );
-            my @configs = readdir $dh;
-            closedir $dh;
-            @configs = grep { /\.conf$/msx && !/^(?:spectre|log).conf$/msx }
-                @configs;
-            if ( @configs == 1 ) {
-                $config = $configs[0];
+            if ( opendir my $dh, File::Spec->catdir( $self->{root}, 'etc' ) )
+            {
+                my @configs = readdir $dh;
+                closedir $dh
+                    or croak "Unable to close directory handle: $!";
+                @configs = grep {
+                    /\Q.conf\E$/msx
+                        && !/^(?:spectre|log)\Q.conf\E$/msx
+                } @configs;
+                if ( @configs == 1 ) {
+                    $config = $configs[0];
+                }
             }
         }
         if ($config) {
@@ -64,7 +69,7 @@ sub new {
         $self->{lib} = File::Spec->catdir( $self->{root}, 'lib' );
     }
     else {
-        croak 'unable to determine webgui root!';
+        croak 'Unable to determine webgui root!';
     }
 
     $self->set_environment;

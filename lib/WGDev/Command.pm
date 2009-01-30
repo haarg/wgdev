@@ -9,6 +9,7 @@ use Getopt::Long ();
 use File::Spec   ();
 use Cwd          ();
 use Carp qw(croak carp);
+##no critic (RequireCarping)
 
 sub run {    ##no critic (RequireArgUnpacking)
     my $class = shift;
@@ -20,7 +21,7 @@ sub run {    ##no critic (RequireArgUnpacking)
 
         'F|config-file=s' => \( my $opt_config = $ENV{WEBGUI_CONFIG} ),
         'R|webgui-root=s' => \( my $opt_root   = $ENV{WEBGUI_ROOT} ),
-    ) || carp $class->usage && exit 1;
+    ) || warn $class->usage && exit 1;
     my @params = @ARGV;
 
     my $command_name = shift @params;
@@ -35,7 +36,7 @@ sub run {    ##no critic (RequireArgUnpacking)
                 $opt_version ? '--version' : (), @_;
         }
         else {
-            carp $class->usage(
+            warn $class->usage(
                 message          => "Can't find command $command_name!\n",
                 include_cmd_list => 1
             );
@@ -50,7 +51,7 @@ sub run {    ##no critic (RequireArgUnpacking)
         $class->report_help( $command_name, $command_module );
     }
     elsif ( !$command_name ) {
-        carp $class->usage(
+        warn $class->usage(
             message          => "No command specified!\n",
             include_cmd_list => 1
         );
@@ -175,7 +176,14 @@ sub command_list {
             $command_name = join q{-}, map {lcfirst} split /::/msx,
                 $command_name;
 
-            if ( eval { require $lib_path; $package->can('process') } ) {
+            if (
+                eval {
+                    require $lib_path;
+                    $package->can('run')
+                        && $package->can('is_runnable')
+                        && $package->is_runnable;
+                } )
+            {
                 $commands{$command_name} = 1;
             }
         };

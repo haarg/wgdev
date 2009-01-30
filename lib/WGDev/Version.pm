@@ -75,9 +75,8 @@ sub database {
     require version;
     my $sth = $dbh->prepare('SELECT webguiVersion FROM webguiVersion');
     $sth->execute;
-    my @versions
-        = map { $_->[0] }
-        sort  { $a->[1] <=> $b->[1] }
+    my @versions = map { $_->[0] }
+        sort { $a->[1] <=> $b->[1] }
         map { [ $_, version->new($_) ] }
         map { @{$_} } @{ $sth->fetchall_arrayref( [0] ) };
     $sth->finish;
@@ -97,7 +96,8 @@ sub changelog {
             push @changelogs, [ $file, version->new($v) ];
         }
     }
-    closedir $dh;
+    closedir $dh
+        or croak "Unable to close directory handle: $!";
     @changelogs = sort { $a->[1] <=> $b->[1] } @changelogs;
     my $latest = pop @changelogs;
     open my $fh, '<',
@@ -125,10 +125,11 @@ sub upgrade {
             push @upgrades, [ $file, version->new($1), version->new($2) ];
         }
     }
-    closedir $dh;
+    closedir $dh
+        or croak "Unable to close directory handle: $!";
     @upgrades = sort { $a->[2] <=> $b->[2] } @upgrades;
     my $latest = pop @upgrades;
-    open my $fh, '<',
+    open my $fh, '<',    ##no critic (RequireBriefOpen)
         File::Spec->catfile( $dir, 'docs', 'upgrades', $latest->[0] )
         or croak "Unable to read upgrade script: $!";
     while ( my $line = <$fh> ) {
@@ -145,6 +146,31 @@ sub upgrade {
 1;
 
 __END__
+
+=head1 NAME
+
+WGDev::Version - Extract version information from WebGUI
+
+=head1 SYNOPSIS
+
+    my $wgv = WGDev::Version->new('/data/WebGUI');
+    print "You have WebGUI " . $wgv->module . "\n";
+
+=head1 DESCRIPTION
+
+Extracts version information from various places in WebGUI: the changelog, the
+upgrade script, the WebGUI module, the database creation script, or a live
+database.
+
+=head1 METHODS
+
+=head2 new ( $webgui_root )
+
+Creates a new WGDev::Version object.  Needs a WebGUI directory to be specified.
+
+=head3 $webgui_root
+
+The root of the WebGUI directory to use for finding each file.
 
 =head1 AUTHOR
 

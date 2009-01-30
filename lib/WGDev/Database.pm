@@ -121,6 +121,31 @@ sub dump {    ## no critic (ProhibitBuiltinHomonyms)
 
 __END__
 
+=head1 NAME
+
+WGDev::Database - Database connectivity and DSN parsing for WGDev
+
+=head1 SYNOPSIS
+
+    my $dsn = $wgd->database->connect;
+    my $username = $wgd->database->username;
+
+=head1 DESCRIPTION
+
+Has methods to access various parts of the DSN that can be used for other
+programs such as command line mysql.  Also has methods to easily connect and
+reuse a database connection.
+
+=head1 METHODS
+
+=head2 new ( $wgd )
+
+Creates a new WGDev::Database object.
+
+=head3 $wgd
+
+An instatiated WGDev object.
+
 =head1 AUTHOR
 
 Graham Knop <graham@plainblack.com>

@@ -19,7 +19,7 @@ sub package_usage {
     my $actual_file = $INC{$file};
     my $pod         = filter_pod( $actual_file, $package );
     my $output      = q{};
-    ##no critic (RequireCarping RequireBriefOpen
+    ##no critic (RequireCarping RequireBriefOpen)
     open my $out, '>', \$output
         or die "Can't open file handle to scalar : $!";
     open my $in, '<', \$pod or croak "Unable to read documentation file : $!";
@@ -55,6 +55,36 @@ sub filter_pod {
 1;
 
 __END__
+
+=head1 NAME
+
+WGDev::Help - Generate help text for WGDev
+
+=head1 SYNOPSIS
+
+    use WGDev::Help;
+
+    my $usage = WGDev::Help::package_usage( 'My::Class' );
+
+=head1 DESCRIPTION
+
+Reads help information from modules but filters to only pick relevant
+sections when multiple POD documents exist in a single file.
+
+=head1 SUBROUTINES
+
+=head2 package_usage ( $package, $verbosity )
+
+Returns usage information for a package, using L<Pod::Usage>.  Can be used on
+packages that have been combined into a single file.
+
+=head3 $package
+
+Package to return usage documentation for
+
+=head3 $verbosity
+
+Verbosity level as documented in L<Pod::Usage>
 
 =head1 AUTHOR
 
