@@ -81,3 +81,46 @@ sub usage {
 
 1;
 
+__END__
+
+=head1 NAME
+
+WGDev::Command::Base - Super-class for implementing WGDev commands
+
+=head1 SYNOPSIS
+
+    package WGDev::Command::Mine;
+    use WGDev::Command::Base;
+    @ISA = qw(WGDev::Command::Base);
+
+    sub process {
+        my $self = shift;
+        print "Running my command\n";
+        return 1;
+    }
+
+=head1 DESCRIPTION
+
+A super-class useful for implementing WGDev command modules.  Includes simple
+methods to override for parameter parsing and provides help text via
+Pod::Usage.
+
+=head1 METHODS
+
+=head2 is_runnable
+
+Must return true for the command to be run by WGDev::Command.
+
+=head1 AUTHOR
+
+Graham Knop <graham@plainblack.com>
+
+=head1 LICENSE
+
+Copyright (c) Graham Knop.  All rights reserved.
+
+This library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
+
+=cut
+

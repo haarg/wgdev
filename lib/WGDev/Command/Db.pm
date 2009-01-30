@@ -66,6 +66,10 @@ WGDev::Command::Db - Connect to database with mysql
 
 wgd db [-p | -d | -l | -c] [mysql options]
 
+=head1 DESCRIPTION
+
+Opens the mysql client to your WebGUI database, loads or dumps a database script, or clears a database's contents.
+
 =head1 OPTIONS
 
 Any arguments not recognized will be passed through to the mysql or mysqldump commands in applicable.
@@ -90,6 +94,17 @@ Loads a database script into the database.  Database script must be specified.
 Clears the database, removing all tables.
 
 =back
+
+=head1 AUTHOR
+
+Graham Knop <graham@plainblack.com>
+
+=head1 LICENSE
+
+Copyright (c) Graham Knop.  All rights reserved.
+
+This library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
 
 =cut
 

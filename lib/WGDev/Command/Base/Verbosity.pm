@@ -50,3 +50,38 @@ sub report {
 
 __END__
 
+=head1 NAME
+
+WGDev::Command::Base::Verbosity - Super-class for implementing WGDev commands with verbosity levels
+
+=head1 SYNOPSIS
+
+    package WGDev::Command::Mine;
+    use WGDev::Command::Base::Verbisity;
+    @ISA = qw(WGDev::Command::Base::Verbosity);
+
+    sub process {
+        my $self = shift;
+        $self->report("Running my command\n");
+        return 1;
+    }
+
+=head1 DESCRIPTION
+
+A super-class useful for implementing WGDev command modules.  Includes simple
+methods to override for parameter parsing and provides help text via
+Pod::Usage.
+
+=head1 AUTHOR
+
+Graham Knop <graham@plainblack.com>
+
+=head1 LICENSE
+
+Copyright (c) Graham Knop.  All rights reserved.
+
+This library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
+
+=cut
+

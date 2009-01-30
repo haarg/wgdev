@@ -171,7 +171,7 @@ sub process {
         $self->report("Done\n");
     }
 
-    $self->report("Finding current version number...\n");
+    $self->report("Finding current version number... ");
     my $version = $wgd->version->database($wgd->db->connect);
     $self->report("$version. Done\n");
 
@@ -346,6 +346,12 @@ WGDev::Command::Reset - Reset a site to defaults
 
 wgd reset [-v] [-q] [-f] [-d | -b | -t]
 
+=head1 DESCRIPTION
+
+Resets a site to defaults, including multiple cleanup options for setting up
+a site for development or for a build.  Can also perform the cleanup functions
+without resetting a site.
+
 =head1 OPTIONS
 
 =over 8
@@ -430,6 +436,17 @@ Rebuild the site lineage and reindex all of the content
 Attempt to finish any running workflows
 
 =back
+
+=head1 AUTHOR
+
+Graham Knop <graham@plainblack.com>
+
+=head1 LICENSE
+
+Copyright (c) Graham Knop.  All rights reserved.
+
+This library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
 
 =cut
 

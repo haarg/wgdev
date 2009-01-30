@@ -1,6 +1,7 @@
 package WGDev::Command::Dist;
 use strict;
 use warnings;
+use 5.008008;
 
 our $VERSION = '0.1.0';
 
@@ -106,15 +107,40 @@ __END__
 
 WGDev::Command::Dist - Create a distribution file for WebGUI
 
+=head1 SYNOPSIS
+
+wgd dist [-c] [-d]
+
 =head1 DESCRIPTION
+
+Generates distribution files containing WebGUI or the WebGUI API.
+
+=head1 OPTIONS
 
 By default, generates both a code and API documentation package.
 
-arguments:
-    -c
-    --code          Generates a code distrobution
-    -d
-    --documentation Generates an API documentation distrobution
+=over 8
+
+=item B<-c --code>
+
+Generates a code distrobution
+
+=item B<-d --documentation>
+
+Generates an API documentation distribution
+
+=back
+
+=head1 AUTHOR
+
+Graham Knop <graham@plainblack.com>
+
+=head1 LICENSE
+
+Copyright (c) Graham Knop.  All rights reserved.
+
+This library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
 
 =cut
 

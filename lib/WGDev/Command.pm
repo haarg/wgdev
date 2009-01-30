@@ -246,7 +246,7 @@ WebGUI installation.
 
 Subcommand to run or get help for.
 
-=cut
+=back
 
 =head1 AUTHOR
 
@@ -254,9 +254,10 @@ Graham Knop <graham@plainblack.com>
 
 =head1 LICENSE
 
-Copyright (c) 2008 Graham Knop.  All rights reserved.
+Copyright (c) Graham Knop.  All rights reserved.
 
-This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
 
 =cut
 

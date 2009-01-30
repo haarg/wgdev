@@ -129,16 +129,39 @@ __END__
 
 WGDev::Command::Build - Builds an SQL script and uploads for site creation
 
+=head1 SYNOPSIS
+
+wgd build [-s] [-u]
+
 =head1 DESCRIPTION
 
 Uses the current database and uploads to build a new create.sql and update
 the local uploads directory.  With no options, builds both sql and uploads.
 
-arguments:
-    -s
-    --sql           make create.sql based on current database contents
-    -u
-    --uploads       make uploads based on current site's uploads
+=head1 OPTIONS
+
+=over 8
+
+=item B<-s --sql>
+
+make create.sql based on current database contents
+
+=item B<-u --uploads>
+
+make uploads based on current site's uploads
+
+=back
+
+=head1 AUTHOR
+
+Graham Knop <graham@plainblack.com>
+
+=head1 LICENSE
+
+Copyright (c) Graham Knop.  All rights reserved.
+
+This library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
 
 =cut
 

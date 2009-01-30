@@ -1,15 +1,12 @@
 package WGDev::Command::Package;
 use strict;
 use warnings;
+use 5.008008;
 
 our $VERSION = '0.1.0';
 
 use WGDev::Command::Base;
 our @ISA = qw(WGDev::Command::Base);
-
-sub option_config {qw(
-    command=s
-)}
 
 sub process {
     my $self = shift;
@@ -38,12 +35,32 @@ __END__
 
 WGDev::Command::Package - Export assets for upgrade
 
+=head1 SYNOPSIS
+
+wgd package <asset url> [<asset url> ...]
+
 =head1 DESCRIPTION
 
 Exports assets as packages to the current version's upgrade location.
 
-arguments:
-    <asset urls>    list of asset urls
+=head1 OPTIONS
+
+=over 8
+
+=item B<E<lt>asset urlE<gt>>
+
+URL of asset to export as package.  As many as desired can be specified.
+
+=head1 AUTHOR
+
+Graham Knop <graham@plainblack.com>
+
+=head1 LICENSE
+
+Copyright (c) Graham Knop.  All rights reserved.
+
+This library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
 
 =cut
 

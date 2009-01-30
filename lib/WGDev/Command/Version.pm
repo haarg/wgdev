@@ -127,13 +127,13 @@ WGDev::Command::Version - Reports and updates version numbers
 
 =head1 SYNOPSIS
 
-version [options] [version]
+wgd version [-b | -c] [<version>]
 
- Options:
-    version             version number to compare against or create
+=head1 DESCRIPTION
 
-    -c      --create    update version to next or specified version
-    -b      --bare      output bare version number only, from WebGUI.pm
+Reports the current versions of the WebGUI.pm module, create.sql database
+script, changelog, and upgrade file.  Non-matching versions will be noted
+in red if possible.
 
 =head1 OPTIONS
 
@@ -150,13 +150,22 @@ to incrementing the patch level by one.
 
 Outputs the version number taken from WebGUI.pm only
 
+=item B<E<lt>versionE<gt>>
+
+version number to compare against or create
+
 =back
 
-=head1 DESCRIPTION
+=head1 AUTHOR
 
-Reports the current versions of the WebGUI.pm module, create.sql database
-script, changelog, and upgrade file.  Non-matching versions will be noted
-in red if possible.
+Graham Knop <graham@plainblack.com>
+
+=head1 LICENSE
+
+Copyright (c) Graham Knop.  All rights reserved.
+
+This library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
 
 =cut
 

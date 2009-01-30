@@ -2,6 +2,7 @@ package WGDev::Asset;
 use strict;
 use warnings;
 use 5.008008;
+
 our $VERSION = '0.0.1';
 
 use constant LINE_LENGTH => 78;
@@ -163,4 +164,28 @@ sub deserialize {
 
 __END__
 
+=head1 NAME
+
+WGDev::Asset - Asset utility functions
+
+=head1 SYNOPSIS
+
+    my $root_node = $wgd->asset->root;
+
+=head1 DESCRIPTION
+
+Performs common actions on assets
+
+=head1 AUTHOR
+
+Graham Knop <graham@plainblack.com>
+
+=head1 LICENSE
+
+Copyright (c) Graham Knop.  All rights reserved.
+
+This library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
+
+=cut
 
