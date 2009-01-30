@@ -1,5 +1,5 @@
 severity    = 1
-exclude     = RequireRcsKeywords RequireUseOfExceptions RequireEmacsFileVariables ProhibitCallsToUnexportedSubs ProhibitConstantPragma
+exclude     = RequireRcsKeywords RequireUseOfExceptions RequireEmacsFileVariables ProhibitCallsToUnexportedSubs ProhibitConstantPragma ProhibitExplicitISA
 theme       = core || strictersubs || pulp || more
 
 [CodeLayout::RequireTidyCode]

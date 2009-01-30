@@ -1,32 +1,36 @@
 package WGDev::Command::Base::Verbosity;
 use strict;
 use warnings;
+use 5.008008;
 
 our $VERSION = '0.1.0';
 
 use WGDev::Command::Base;
 our @ISA = qw(WGDev::Command::Base);
 
-sub new {
+sub new {    ##no critic (RequireArgUnpacking)
     my $class = shift;
-    my $self = $class->SUPER::new(@_);
+    my $self  = $class->SUPER::new(@_);
     $self->{verbosity} = 1;
     return $self;
 }
 
-sub option_config {qw(
-    verbose|v+
-    quiet|q+
-)}
+sub option_config {
+    return qw(
+        verbose|v+
+        quiet|q+
+    );
+}
 
-sub parse_params {
-    my $self = shift;
+sub parse_params {    ##no critic (RequireArgUnpacking)
+    my $self   = shift;
     my $result = $self->SUPER::parse_params(@_);
-    $self->{verbosity} += ($self->option('verbose') || 0) - ($self->option('quiet') || 0);
+    $self->{verbosity} += ( $self->option('verbose') || 0 )
+        - ( $self->option('quiet') || 0 );
     return $result;
 }
 
-sub verbosity {
+sub verbosity {       ##no critic (RequireArgUnpacking)
     my $self = shift;
     if (@_) {
         return $self->{verbosity} = shift;
@@ -35,11 +39,12 @@ sub verbosity {
 }
 
 sub report {
-    my $self = shift;
-    my $message = pop;
+    my $self          = shift;
+    my $message       = pop;
     my $verbose_limit = shift;
-    $verbose_limit = 1
-        if !defined $verbose_limit;
+    if ( !defined $verbose_limit ) {
+        $verbose_limit = 1;
+    }
     return
         if $verbose_limit > $self->verbosity;
     print $message;
