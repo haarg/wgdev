@@ -1,119 +1,154 @@
 package WGDev::Command::Build;
 use strict;
 use warnings;
+use 5.008008;
 
 our $VERSION = '0.1.0';
 
 use WGDev::Command::Base::Verbosity;
 our @ISA = qw(WGDev::Command::Base::Verbosity);
 
+use File::Spec ();
+use Carp qw(croak);
+
 sub option_config {
-    (shift->SUPER::option_config, qw(
-        sql|s
-        uploads|u
-    ));
+    return (
+        shift->SUPER::option_config, qw(
+            sql|s
+            uploads|u
+            ) );
 }
 
-sub parse_params {
-    my $self = shift;
+sub parse_params {    ##no critic (RequireArgUnpacking)
+    my $self   = shift;
     my $result = $self->SUPER::parse_params(@_);
-    if (!defined $self->option('sql') && !defined $self->option('uploads')) {
-        $self->option('sql', 1);
-        $self->option('uploads', 1);
+    if ( !defined $self->option('sql') && !defined $self->option('uploads') )
+    {
+        $self->option( 'sql',     1 );
+        $self->option( 'uploads', 1 );
     }
     return $result;
 }
 
 sub process {
     my $self = shift;
-    my $wgd = $self->wgd;
+    my $wgd  = $self->wgd;
     require File::Copy;
-    unless ($wgd->config_file) {
+    if ( !$wgd->config_file ) {
         die "Can't find WebGUI root!\n";
     }
 
-    $self->report("Finding current version number... ");
-    my $version = $wgd->version->database($wgd->db->connect);
+    if ( $self->option('sql') ) {
+        $self->create_db_script;
+    }
+
+    if ( $self->option('uploads') ) {
+        $self->update_local_uploads;
+    }
+    return 1;
+}
+
+sub create_db_script {
+    my $self = shift;
+    my $wgd  = $self->wgd;
+    require File::Copy;
+
+    $self->report('Finding current version number... ');
+    my $version = $wgd->version->database( $wgd->db->connect );
     $self->report("$version. Done.\n");
 
-    if ($self->option('sql')) {
-        $self->report("Creating database dump... ");
-        my $db_file = File::Spec->catfile($wgd->root, 'docs', 'create.sql');
-        open my $out, '>', $db_file;
+    $self->report('Creating database dump... ');
+    my $db_file = File::Spec->catfile( $wgd->root, 'docs', 'create.sql' );
+    ##no critic (RequireBriefOpen)
+    open my $out, q{>}, $db_file
+        or croak "Unable to output database script: $!";
+    open my $in, q{-|}, 'mysqldump',
+        $wgd->db->command_line( '--compact', '--no-data' )
+        or croak "Unable to run mysqldump: $!";
+    File::Copy::copy( $in, $out );
+    close $in or croak "Unable to close filehandle: $!";
 
-        open my $in, '-|', 'mysqldump', $wgd->db->command_line('--compact', '--no-data');
-        File::Copy::copy($in, $out);
-        close $in;
+    my @skip_data_tables = qw(
+        userSession     userSessionScratch
+        webguiVersion   userLoginLog
+        assetHistory    cache
+    );
+    open $in, q{-|}, 'mysqldump', $wgd->db->command_line(
+        '--compact',
+        '--no-create-info',
+        map { '--ignore-table=' . $wgd->db->database . q{.} . $_ }
+            @skip_data_tables
+    ) or croak "Unable to run mysqldunp command: $!";
+    File::Copy::copy( $in, $out );
+    close $in or croak "Unable to close filehandle: $!";
 
-        my @skip_data_tables = qw(
-            userSession     userSessionScratch
-            webguiVersion   userLoginLog
-            assetHistory    cache
-        );
-        open $in, '-|', 'mysqldump', $wgd->db->command_line('--compact', '--no-create-info',
-            map { "--ignore-table=" . $wgd->db->database . '.' . $_ } @skip_data_tables
-            );
-        File::Copy::copy($in, $out);
-        close $in;
+    print {$out} 'INSERT INTO webguiVersion '
+        . '(webguiVersion,versionType,dateApplied) '
+        . "VALUES ('$version','Initial Install',UNIX_TIMESTAMP());\n";
 
-        print {$out} "INSERT INTO webguiVersion (webguiVersion,versionType,dateApplied) VALUES ('$version','Initial Install',UNIX_TIMESTAMP());\n";
+    close $out or croak "Unable to close filehandle: $!";
+    $self->report("Done.\n");
+    return 1;
+}
 
-        close $out;
-        $self->report("Done.\n");
-    }
+sub update_local_uploads {
+    my $self = shift;
+    my $wgd  = $self->wgd;
+    require File::Find;
+    require File::Path;
+    require File::Copy;
 
-    # Clear and recreate uploads
-    if ($self->option('uploads')) {
-        require File::Find;
-        require File::Path;
+    $self->report('Loading uploads from site... ');
+    my $wg_uploads = File::Spec->catdir( $wgd->root, 'www', 'uploads' );
+    File::Path::mkpath($wg_uploads);
+    my $site_uploads    = $wgd->config->get('uploadsPath');
+    my $remove_files_cb = sub {
+        no warnings 'once';    ##no critic (ProhibitNoWarnings)
+        my $wg_path = $File::Find::name;
+        my ( undef, undef, $filename ) = File::Spec->splitpath($wg_path);
+        if ( $filename eq '.svn' || $filename eq 'temp' ) {
+            $File::Find::prune = 1;
+            return;
+        }
+        my $rel_path = File::Spec->abs2rel( $wg_path, $wg_uploads );
+        my $site_path = File::Spec->rel2abs( $rel_path, $site_uploads );
+        return
+            if -e $site_path;
+        if ( -d $site_path ) {
+            File::Path::rmtree($wg_path);
+        }
+        else {
+            unlink $wg_path;
+        }
+    };
+    File::Find::find( { no_chdir => 1, wanted => $remove_files_cb },
+        $wg_uploads );
+    my $copy_files_cb = sub {
+        no warnings 'once';    ##no critic (ProhibitNoWarnings)
+        my $site_path = $File::Find::name;
+        my ( undef, undef, $filename ) = File::Spec->splitpath($site_path);
+        if ( $filename eq '.svn' || $filename eq 'temp' ) {
+            $File::Find::prune = 1;
+            return;
+        }
+        return
+            if -d $site_path;
+        my $rel_path = File::Spec->abs2rel( $site_path, $site_uploads );
+        my $wg_path = File::Spec->rel2abs( $rel_path, $wg_uploads );
 
-        $self->report("Loading uploads from site... ");
-        my $wg_uploads = File::Spec->catdir($wgd->root, 'www', 'uploads');
-        File::Path::mkpath($wg_uploads);
-        my $site_uploads = $wgd->config->get('uploadsPath');
-        File::Find::find({
-            no_chdir    => 1,
-            wanted      => sub {
-                my $wg_path = $File::Find::name;
-                my (undef, undef, $filename) = File::Spec->splitpath($wg_path);
-                if ($filename eq '.svn' || $filename eq 'temp') {
-                    $File::Find::prune = 1;
-                    return;
-                }
-                my $rel_path = File::Spec->abs2rel($wg_path, $wg_uploads);
-                my $site_path = File::Spec->rel2abs($rel_path, $site_uploads);
-                return
-                    if -e $site_path;
-                if (-d $site_path) {
-                    File::Path::rmtree($wg_path);
-                }
-                else {
-                    unlink $wg_path;
-                }
-            },
-        }, $wg_uploads);
-        File::Find::find({
-            no_chdir    => 1,
-            wanted      => sub {
-                my $site_path = $File::Find::name;
-                my (undef, undef, $filename) = File::Spec->splitpath($site_path);
-                if ($filename eq '.svn' || $filename eq 'temp') {
-                    $File::Find::prune = 1;
-                    return;
-                }
-                return
-                    if -d $site_path;
-                my $rel_path = File::Spec->abs2rel($site_path, $site_uploads);
-                my $wg_path = File::Spec->rel2abs($rel_path, $wg_uploads);
-                return
-                    if -e $wg_path && (stat(_))[7] == (stat($site_path))[7];
-                my $wg_dir = File::Spec->catpath((File::Spec->splitpath($wg_path))[0,1]);
-                File::Path::mkpath($wg_dir);
-                File::Copy::copy($site_path, $wg_path);
-            },
-        }, $site_uploads);
-        $self->report("Done\n");
-    }
+        # stat[7] is file size
+        ##no critic (ProhibitMagicNumbers)
+        return
+            if -e $wg_path && ( stat _ )[7] == ( stat $site_path )[7];
+        my $wg_dir = File::Spec->catpath(
+            ( File::Spec->splitpath($wg_path) )[ 0, 1 ] );
+        File::Path::mkpath($wg_dir);
+        File::Copy::copy( $site_path, $wg_path );
+    };
+    File::Find::find( { no_chdir => 1, wanted => $copy_files_cb },
+        $site_uploads );
+    $self->report("Done\n");
+    return 1;
 }
 
 1;
