@@ -4,4 +4,8 @@
 /README
 /MANIFEST
 /WGDev-*
+/META.yml
+/Makefile
+/Makefile.PL
+/pm_to_blib
 
