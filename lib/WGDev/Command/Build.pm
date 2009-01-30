@@ -32,11 +32,6 @@ sub process {
         die "Can't find WebGUI root!\n";
     }
 
-    # Autoflush
-    local $| = 1;
-
-    require version;
-
     $self->report("Finding current version number... ");
     my $version = $wgd->version->database($wgd->db->connect);
     $self->report("$version. Done.\n");
