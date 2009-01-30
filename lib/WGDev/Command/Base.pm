@@ -1,8 +1,10 @@
 package WGDev::Command::Base;
 use strict;
 use warnings;
+use 5.008008;
 
 our $VERSION = '0.0.1';
+##no critic (RequireArgUnpacking);
 
 sub is_runnable {
     my $class = shift;
@@ -10,31 +12,31 @@ sub is_runnable {
 }
 
 sub new {
-    my $class = shift;
-    my $wgd = shift;
+    my ( $class, $wgd ) = @_;
     my $self = bless {
-        wgd         => $wgd,
-        options     => {},
-        arguments   => [],
+        wgd       => $wgd,
+        options   => {},
+        arguments => [],
     }, $class;
-    return $self
+    return $self;
 }
 
-sub wgd { $_[0]->{wgd} }
+sub wgd { return $_[0]->{wgd} }
 
 sub parse_params {
-    require Getopt::Long;
     my $self = shift;
     local @ARGV = @_;
-    my %parsed;
-    Getopt::Long::Configure('default', $self->option_parse_config);
-    my $result = Getopt::Long::GetOptions($self->{options}, $self->option_config);
+    require Getopt::Long;
+    Getopt::Long::Configure( 'default', $self->option_parse_config );
+    my $result
+        = Getopt::Long::GetOptions( $self->{options}, $self->option_config );
     @{ $self->{arguments} } = @ARGV;
     return $result;
 }
 
-sub option_parse_config { qw(gnu_getopt) };
-sub option_config {}
+sub option_parse_config { return qw(gnu_getopt) }
+sub option_config       { }
+
 sub option {
     my $self = shift;
     my $option = shift || return;
@@ -43,11 +45,12 @@ sub option {
     }
     return $self->{options}{$option};
 }
+
 sub option_default {
     my $self = shift;
     my $option = shift || return;
-    if (!defined $self->option($option)) {
-        return $self->option($option, @_);
+    if ( !defined $self->option($option) ) {
+        return $self->option( $option, @_ );
     }
     return;
 }
@@ -58,24 +61,25 @@ sub arguments {
 
 sub run {
     my $self = shift;
-    my @params = (@_ == 1 && ref $_[0] eq 'ARRAY') ? @{ +shift } : @_;
+    my @params = ( @_ == 1 && ref $_[0] eq 'ARRAY' ) ? @{ +shift } : @_;
     local $| = 1;
-    if ( ! $self->parse_params(@params) ) {
+    if ( !$self->parse_params(@params) ) {
         my $usage = $self->usage(0);
-        warn $usage;
+        warn $usage;    ##no critic (RequireCarping)
         exit 1;
     }
-    my $result = $self->process;
-    exit ($result ? 0 : 1);
+    my $result = $self->process ? 0 : 1;
+    exit $result;
 }
 
 sub usage {
-    my $class = shift;
-    $class = ref $class
-        if ref $class;
+    my $class     = shift;
     my $verbosity = shift;
+    if ( ref $class ) {
+        $class = ref $class;
+    }
     require WGDev::Help;
-    my $usage = WGDev::Help::package_usage($class, $verbosity);
+    my $usage = WGDev::Help::package_usage( $class, $verbosity );
     return $usage;
 }
 
