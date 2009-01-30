@@ -48,7 +48,6 @@ sub database_script {
     open my $fh, '<', File::Spec->catfile( $dir, 'docs', 'create.sql' )
         or croak "Unable to read create.sql script: $!";
     while ( my $line = <$fh> ) {
-        ##no critic (ProhibitComplexRegexes)
         if (
             $line =~ m{
             (?:(?i)\QINSERT INTO\E) \s+

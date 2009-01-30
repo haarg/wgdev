@@ -166,7 +166,7 @@ sub command_list {
             return
                 if !/\Q.pm\E$/msx;
 
-            no warnings 'once'; ##no critic (ProhibitNoWarnings)
+            no warnings 'once';    ##no critic (ProhibitNoWarnings)
             my $lib_path
                 = File::Spec->abs2rel( $File::Find::name, $inc_path );
             $lib_check{$lib_path} = 1;
