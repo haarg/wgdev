@@ -51,11 +51,11 @@ sub database_script {
         ##no critic (ProhibitComplexRegexes)
         if (
             $line =~ m{
-            (?:(?i)INSERT INTO)  \s+
-            (`?)webguiVersion\1  \s+
-            .+?                  \s+?
-            (?i)VALUES           \s+
-            \Q('\E ( [^']+ ) \Q')\E
+            (?:(?i)\QINSERT INTO\E) \s+
+            (`?)webguiVersion\1     \s+
+            .+?                     \s+?
+            (?i)VALUES              \s+
+            \Q('\E ( [^']+ )        [']
             }msx
             )
         {
