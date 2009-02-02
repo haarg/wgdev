@@ -105,6 +105,17 @@ sub config {
     };
 }
 
+sub close_config {
+    my $self = shift;
+    delete $self->{config};
+    # if we're closing the config, we probably want new sessions to pick up
+    # changes to the file
+    if (WebGUI::Config->can('clearCache')) {
+        WebGUI::Config->clearCache;
+    }
+    return 1;
+}
+
 sub config_file_relative {
     my $self = shift;
     return $self->{config_file_relative} ||= do {
@@ -139,6 +150,17 @@ sub session {
         $self->{session_id} = $session->getId;
         $session;
     };
+}
+
+sub close_session {
+    my $self = shift;
+    if ( $self->{session} ) {    # if we have a cached session
+        my $session = $self->session;  # get the session, recreating if needed
+        $session->var->end;            # close the session
+        $session->close;
+        delete $self->{session};
+    }
+    return 1;
 }
 
 sub asset {
@@ -244,13 +266,7 @@ sub yaml_encode {
 
 sub DESTROY {
     my $self = shift;
-
-    if ( $self->{session} ) {    # if we have a cached session
-        my $session = $self->session;  # get the session, recreating if needed
-        $session->var->end;            # close the session
-        $session->close;
-        delete $self->{session};
-    }
+    $self->close_session;
     return;
 }
 
