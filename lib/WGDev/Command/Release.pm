@@ -19,12 +19,12 @@ sub process {
 }
 
 sub post_advisory {
-    require LWP::UserAgent;
-    require HTTP::Request::Common
-    require HTML::Entities;
     my $self = shift;
     my $summary = shift;
     my $wgd = $self->wgd;
+    require LWP::UserAgent;
+    require URI;
+    require HTML::Entities;
     my ($version, $status) = $wgd->version->module;
     my $content = "<p>" . HTML::Entities::encode($summary) . "</p>\n";
 
@@ -47,18 +47,25 @@ sub post_advisory {
         content     => $content,
         subscribe   => 0,
     };
+    my $post_to = URI->new($wgd->my_config('advosory')->{url});
     my $ua = LWP::UserAgent->new;
-    $ua->credentials('www.webgui.org:80', 'WebGUI',
+    $ua->credentials($post_to->host_port, 'WebGUI',
         $wgd->my_config('advisory')->{username}, $wgd->my_config('advisory')->{password});
-    $ua->request(HTTP::Request::Common::POST('http://www.webgui.org/getwebgui/advisories', [%submit]));
-    return 1;
+    my $response = $ua->post(
+        $post_to->canonical,
+        Content_Type    => 'form-data',
+        Content         => $submit,
+    );
+    return $response->is_success;
 }
 
 sub post_freshmeat {
-    require LWP;
     my $self = shift;
     my $summary = shift;
     my $wgd = $self->wgd;
+    require LWP::UserAgent;
+    require URI;
+    require HTML::Entities;
     my $version = '';
     my $submit = {
         version => '',
