@@ -37,7 +37,7 @@ sub process {
             mtime       => (stat($filename))[9],
         };
     }
-    unless (@_) {
+    unless (@files) {
         die "No assets to edit!\n";
     }
 
