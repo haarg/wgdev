@@ -30,6 +30,7 @@ sub option_config {
             debug!
             starter!
             clear!
+            config!
             purge!
             cleantags!
             index!
@@ -102,6 +103,10 @@ sub process {
     # Run the upgrade in a fork
     if ( $self->option('upgrade') ) {
         $self->upgrade;
+    }
+
+    if ( $self->option('config') ) {
+        $self->reset_config;
     }
 
     if ( defined $self->option('debug') || defined $self->option('starter') )
@@ -252,6 +257,39 @@ sub upgrade {
     if ($?) {    ##no critic (ProhibitPunctuationVars)
         die "Upgrade failed!\n";
     }
+    $self->report("Done\n");
+    return 1;
+}
+
+sub reset_config {
+    my $self = shift;
+    my $wgd  = $self->wgd;
+    require File::Copy;
+
+    $self->report('Resetting config file... ');
+    my $reset_config = $wgd->my_config('config');
+    my %set_config   = %{ $reset_config->{override} };
+    for my $key (
+        @{ $reset_config->{copy} }, qw(
+        dsn dbuser dbpass uploadsPath uploadsUrl
+        exportPath extrasPath extrasUrl cacheType
+        sitename spectreIp spectrePort spectreSubnets
+        ) )
+    {
+        $set_config{$key} = $wgd->config->get($key);
+    }
+
+    $wgd->close_config;
+    unlink $wgd->config_file;
+    File::Copy::copy(
+        File::Spec->catfile( $wgd->root, 'etc', 'WebGUI.conf.original' ),
+        $wgd->config_file );
+
+    my $config = $wgd->config;
+    while ( my ( $key, $value ) = each %set_config ) {
+        $config->set( $key, $value );
+    }
+
     $self->report("Done\n");
     return 1;
 }
