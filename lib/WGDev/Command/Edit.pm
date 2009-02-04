@@ -10,6 +10,7 @@ BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
 sub option_config {qw(
     command=s
+    assetid|a
 )}
 
 sub process {
@@ -21,7 +22,13 @@ sub process {
 
     my @files;
     for my $url ($self->arguments) {
-        my $asset = WebGUI::Asset->newByUrl($wgd->session, $url);
+        my $asset;
+        if ($self->option('assetid')) {
+            $asset = WebGUI::Asset->newByDynamicClass($wgd->session, $url);
+        }
+        else {
+            $asset = WebGUI::Asset->newByUrl($wgd->session, $url);
+        }
         unless ($asset) {
             warn "$url is not a valid asset!\n";
             next;
