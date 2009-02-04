@@ -144,7 +144,7 @@ Creates a new WGDev::Database object.
 
 =head3 $wgd
 
-An instatiated WGDev object.
+An instantiated WGDev object.
 
 =head1 AUTHOR
 

@@ -108,9 +108,11 @@ sub config {
 sub close_config {
     my $self = shift;
     delete $self->{config};
+
     # if we're closing the config, we probably want new sessions to pick up
     # changes to the file
-    if (WebGUI::Config->can('clearCache')) {
+    ## no critic (Modules::RequireExplicitInclusion)
+    if ( WebGUI::Config->can('clearCache') ) {
         WebGUI::Config->clearCache;
     }
     return 1;

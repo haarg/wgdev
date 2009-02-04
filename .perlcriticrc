@@ -20,3 +20,6 @@ minimum_regex_length_to_complain_about = 5
 [InputOutput::RequireCheckedSyscalls]
 functions = open opendir read readline readdir close closedir
 
+[Documentation::PodSpelling]
+stop_words = Knop WGDev wgd subcommand subcommands namespace config WebGUI WebGUI's DSN mysql changelog webgui
+
