@@ -20,22 +20,23 @@ sub process {
     require File::Temp;
 
     my @files;
-    for my $url ($self->arguments) {
-        my $asset = WebGUI::Asset->newByUrl($wgd->session, $url);
-        unless ($asset) {
-            warn "$url is not a valid asset!\n";
+    for my $asset_spec ( $self->arguments ) {
+        my $asset;
+        if (! $asset_spec =~ m{/}msx) {
+            $asset = $wgd->asset->by_id($asset_spec);
+        }
+        if (! $asset) {
+            $asset = $wgd->asset->by_url($asset_spec);
+        }
+        if (! $asset) {
+            warn "$asset_spec is not a valid asset!\n";
             next;
         }
-
-        my ($fh, $filename) = File::Temp::tempfile();
-        binmode $fh, ':utf8';
-        print {$fh} $wgd->asset->serialize($asset);
-        close $fh;
-        push @files, {
-            asset       => $asset,
-            filename    => $filename,
-            mtime       => (stat($filename))[9],
-        };
+        my $file_data = $self->write_temp($asset);
+        if (! $file_data) {
+            next;
+        }
+        push @files, $file_data;
     }
     unless (@files) {
         die "No assets to edit!\n";
@@ -70,6 +71,21 @@ sub process {
     return 1;
 }
 
+sub write_temp {
+    my $self = shift;
+    my $asset = shift;
+
+    my ($fh, $filename) = File::Temp::tempfile();
+    binmode $fh, ':utf8';
+    print {$fh} $self->wgd->asset->serialize($asset);
+    close $fh or return;
+    return {
+        asset       => $asset,
+        filename    => $filename,
+        mtime       => (stat($filename))[9],
+    };
+}
+
 1;
 
 __END__
@@ -80,7 +96,7 @@ WGDev::Command::Edit - Edits assets by URL
 
 =head1
 
-wgd edit [--command=<command>] <asset url> [<asset url> ...]
+wgd edit [--command=<command>] <asset> [<asset> ...]
 
 =head1 DESCRIPTION
 
@@ -96,10 +112,10 @@ If modifications are made, the assets are updated.
 Command to be executed.  If not specified, uses the EDITOR environment
 variable.  If that is not specified, uses vi.
 
-=item B<E<lt>asset urlE<gt>>
+=item B<E<lt>assetE<gt>>
 
-URL of an asset.  As many can be specified as desired.  Will all be used as
-parameters to your command.
+Either a URL or an asset ID of an asset.  As many can be specified as desired.
+Prepending with a slash will force it to be interpreted as a URL.
 
 =back
 
