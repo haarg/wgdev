@@ -90,6 +90,11 @@ END_COMMON
         }
     }
     while ( my ( $field, $value ) = each %text ) {
+        if ( !defined $value ) {
+            $value = q{~};
+        }
+        $value =~ s/\r\n/\n/msxg;
+        $value =~ s/\r/\n/msxg;
         $header = "==== $field ";
         $header .= ( q{=} x ( LINE_LENGTH - length $header ) ) . "\n";
         $output .= $header . ( defined $value ? $value : q{~} ) . "\n";
@@ -99,7 +104,7 @@ END_COMMON
     $output .= $header;
     my $meta_yaml = WGDev::yaml_encode( \%meta );
     $meta_yaml =~ s/\A---(?:\Q {}\E)?\n?//msx;
-    $output .= $meta_yaml;
+    $output .= $meta_yaml . "\n";
     return $output;
 }
 
