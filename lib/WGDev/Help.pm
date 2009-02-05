@@ -44,7 +44,7 @@ sub filter_pod {
     my $content = do { local $/ = undef; <$fh> };
     close $fh or return q{};
     if ( $content
-        =~ /^(\Q=head1 NAME\E\s+^\Q$wanted\E\s.*?)(?:^\Q=head1 NAME\E\s|\z)/msx
+        =~ /^(=head1[ ]NAME\s+^\Q$wanted\E\s.*?)(?:^=head1[ ]NAME\E\s|\z)/msx
         )
     {
         return $1;
