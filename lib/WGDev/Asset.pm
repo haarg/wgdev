@@ -112,7 +112,7 @@ sub deserialize {
     my $self          = shift;
     my $asset_data    = shift;
     my @text_sections = split m{
-        ^\Q==== \E  # line start, plus equal signs
+        ^====[ ]    # line start, plus equal signs
         ((?:\w|:)+) # word chars or colons (Perl namespace)
         [ ]=+       # space + equals
         (?:\n|\z)   # end of line or end of string
