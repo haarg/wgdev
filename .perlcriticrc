@@ -1,25 +1,31 @@
 severity    = 1
-exclude     = RequireRcsKeywords RequireUseOfExceptions RequireEmacsFileVariables ProhibitCallsToUnexportedSubs ProhibitConstantPragma ProhibitExplicitISA
 theme       = core || strictersubs || pulp || more
+
+[-ClassHierarchies::ProhibitExplicitISA]
+[-Editor::RequireEmacsFileVariables]
+[-ErrorHandling::RequireUseOfExceptions]
+[-Miscellanea::RequireRcsKeywords]
+[-Subroutines::ProhibitCallsToUnexportedSubs]
+[-ValuesAndExpressions::ProhibitConstantPragma]
 
 [CodeLayout::RequireTidyCode]
 perltidyrc = .perltidyrc
+
+[Documentation::PodSpelling]
+stop_words = Knop WGDev wgd subcommand subcommands namespace config WebGUI WebGUI's DSN mysql changelog webgui SQL sql
+
+[Documentation::RequirePodSections]
+lib_sections = NAME | SYNOPSIS | DESCRIPTION | AUTHOR | LICENSE
+
+[InputOutput::RequireCheckedSyscalls]
+functions = open opendir read readline readdir close closedir
+
+[RegularExpressions::RequireExtendedFormatting]
+minimum_regex_length_to_complain_about = 5
 
 [Variables::ProhibitPackageVars]
 packages = File::Find Data::Dumper Config
 
 [Variables::ProhibitPunctuationVars]
 allow = $@ $/ $|
-
-[Documentation::RequirePodSections]
-lib_sections = NAME | SYNOPSIS | DESCRIPTION | AUTHOR | LICENSE
-
-[RegularExpressions::RequireExtendedFormatting]
-minimum_regex_length_to_complain_about = 5
-
-[InputOutput::RequireCheckedSyscalls]
-functions = open opendir read readline readdir close closedir
-
-[Documentation::PodSpelling]
-stop_words = Knop WGDev wgd subcommand subcommands namespace config WebGUI WebGUI's DSN mysql changelog webgui
 
