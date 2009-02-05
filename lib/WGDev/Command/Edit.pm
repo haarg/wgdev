@@ -22,7 +22,7 @@ sub process {
     my @files;
     for my $asset_spec ( $self->arguments ) {
         my $asset;
-        if (! $asset_spec =~ m{/}msx) {
+        if (! ($asset_spec =~ m{/}msx)) {
             $asset = $wgd->asset->by_id($asset_spec);
         }
         if (! $asset) {
