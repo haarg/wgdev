@@ -8,81 +8,88 @@ our $VERSION = '0.1.0';
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
-sub option_config {qw(
-    command=s
-)}
+use constant STAT_MTIME => 9;
+
+sub option_config {
+    return qw(
+        command=s
+    );
+}
 
 sub process {
     my $self = shift;
-    my $wgd = $self->wgd;
-
-    require WebGUI::Asset;
-    require File::Temp;
+    my $wgd  = $self->wgd;
 
     my @files;
     for my $asset_spec ( $self->arguments ) {
         my $asset;
-        if (! ($asset_spec =~ m{/}msx)) {
+        if ( !( $asset_spec =~ m{/}msx ) ) {
             $asset = $wgd->asset->by_id($asset_spec);
         }
-        if (! $asset) {
+        if ( !$asset ) {
             $asset = $wgd->asset->by_url($asset_spec);
         }
-        if (! $asset) {
+        if ( !$asset ) {
             warn "$asset_spec is not a valid asset!\n";
             next;
         }
         my $file_data = $self->write_temp($asset);
-        if (! $file_data) {
+        if ( !$file_data ) {
             next;
         }
         push @files, $file_data;
     }
-    unless (@files) {
+    if ( !@files ) {
         die "No assets to edit!\n";
     }
 
     my $command = $self->option('command') || $ENV{EDITOR} || 'vi';
-    system($command . ' ' . join(' ', map { $_->{filename} } @files));
+    ##no critic (ProhibitParensWithBuiltins)
+    system join( q{ }, $command, map { $_->{filename} } @files );
 
-    my $versionTag;
+    my $version_tag;
     for my $file (@files) {
-        if ((stat($file->{filename}))[9] <= $file->{mtime}) {
-            warn "Skipping " . $file->{asset}->get('url') . ", not changed.\n";
+        if ( ( stat $file->{filename} )[STAT_MTIME] <= $file->{mtime} ) {
+            warn 'Skipping '
+                . $file->{asset}->get('url')
+                . ", not changed.\n";
             unlink $file->{filename};
             next;
         }
-        $versionTag ||= do {
-            my $vt = WebGUI::VersionTag->getWorking($wgd->session);
-            $vt->set({name=>"WGDev Asset Editor"});
+        $version_tag ||= do {
+            require WebGUI::VersionTag;
+            my $vt = WebGUI::VersionTag->getWorking( $wgd->session );
+            $vt->set( { name => 'WGDev Asset Editor' } );
             $vt;
         };
-        open my $fh, '<:utf8', $file->{filename} || next;
-        my $asset_text = do { local $/; <$fh> };
-        close $fh;
+        open my $fh, '<:utf8', $file->{filename} or next;
+        my $asset_text = do { local $/ = undef; <$fh> };
+        close $fh or next;
         unlink $file->{filename};
         my $asset_data = $wgd->asset->deserialize($asset_text);
         $file->{asset}->addRevision($asset_data);
     }
 
-    if ($versionTag) {
-        $versionTag->commit;
+    if ($version_tag) {
+        $version_tag->commit;
     }
     return 1;
 }
 
 sub write_temp {
-    my $self = shift;
+    my $self  = shift;
     my $asset = shift;
 
-    my ($fh, $filename) = File::Temp::tempfile();
+    require File::Temp;
+
+    my ( $fh, $filename ) = File::Temp::tempfile();
     binmode $fh, ':utf8';
     print {$fh} $self->wgd->asset->serialize($asset);
     close $fh or return;
     return {
-        asset       => $asset,
-        filename    => $filename,
-        mtime       => (stat($filename))[9],
+        asset    => $asset,
+        filename => $filename,
+        mtime    => ( stat $filename )[STAT_MTIME],
     };
 }
 
@@ -94,7 +101,7 @@ __END__
 
 WGDev::Command::Edit - Edits assets by URL
 
-=head1
+=head1 SYNOPSIS
 
 wgd edit [--command=<command>] <asset> [<asset> ...]
 
