@@ -1,6 +1,7 @@
 package WGDev::Command::Test;
 use strict;
 use warnings;
+use 5.008008;
 
 our $VERSION = '0.0.1';
 
@@ -9,36 +10,38 @@ BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
 use File::Spec ();
 
-sub option_parse_config { qw(gnu_getopt pass_through) }
+sub option_parse_config { return qw(gnu_getopt pass_through) }
 
-sub option_config {qw(
-    all|A
-    slow|S
-)}
-
+sub option_config {
+    return qw(
+        all|A
+        slow|S
+    );
+}
 
 sub process {
     my $self = shift;
-    my $wgd = $self->wgd;
+    my $wgd  = $self->wgd;
     require Cwd;
     require App::Prove;
-    if ($self->option('slow')) {
-        $ENV{CODE_COP}      = 1;
-        $ENV{TEST_SYNTAX}   = 1;
-        $ENV{TEST_POD}      = 1;
+    if ( $self->option('slow') ) {
+        $ENV{CODE_COP}    = 1;
+        $ENV{TEST_SYNTAX} = 1;
+        $ENV{TEST_POD}    = 1;
     }
     my $prove = App::Prove->new;
-    my @args = $self->arguments;
+    my @args  = $self->arguments;
     my $orig_dir;
-    if ($self->option('slow')) {
+    if ( $self->option('slow') ) {
         $orig_dir = Cwd::cwd();
         chdir $wgd->root;
         unshift @args, '-r', 't';
     }
     $prove->process_args(@args);
     my $result = $prove->run;
-    chdir $orig_dir
-        if $orig_dir;
+    if ($orig_dir) {
+        chdir $orig_dir;
+    }
     return $result;
 }
 
