@@ -8,63 +8,71 @@ our $VERSION = '0.2.0';
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
+use File::Spec ();
 use Carp qw(croak);
 
-sub option_config { qw(
-    import|i=s@
-    parent=s
+sub option_config {
+    return qw(
+        import|i=s@
+        parent=s
 
-    upgrade|u
-    output-dir|out-dir=s
-)}
+        upgrade|u
+        output-dir|out-dir=s
+    );
+}
 
 sub process {
     my $self = shift;
-    my $wgd = $self->wgd;
+    my $wgd  = $self->wgd;
     require File::Copy;
-    if ($self->arguments) {
-        my $package_dir = $self->option('output-dir') || '.';
-        if ($self->option('upgrade')) {
-            $package_dir = File::Spec->catdir($wgd->root, 'docs', 'upgrades', 'packages-' . $wgd->version->module);
-            if (! -d $package_dir) {
+    if ( $self->arguments ) {
+        my $package_dir = $self->option('output-dir') || q{.};
+        if ( $self->option('upgrade') ) {
+            $package_dir = File::Spec->catdir( $wgd->root, 'docs', 'upgrades',
+                'packages-' . $wgd->version->module );
+            if ( !-d $package_dir ) {
                 mkdir $package_dir;
             }
         }
-        if (! -d $package_dir) {
+        if ( !-d $package_dir ) {
             croak "$package_dir does not exist!\n";
         }
-        for my $asset_spec ($self->arguments) {
+        for my $asset_spec ( $self->arguments ) {
             my $asset = eval { $wgd->asset->find($asset_spec) } || do {
                 warn "Unable to find asset $asset_spec!\n";
                 next;
             };
 
-            my $storage = $asset->exportPackage;
+            my $storage  = $asset->exportPackage;
             my $filename = $storage->getFiles->[0];
             my $filepath = $storage->getPath($filename);
-            File::Copy::copy($filepath, File::Spec->catfile($package_dir, $filename));
-            printf "Building package %27s for %27s.\n", $filename, $asset->get('title');
+            File::Copy::copy( $filepath,
+                File::Spec->catfile( $package_dir, $filename ) );
+            printf "Building package %27s for %27s.\n", $filename,
+                $asset->get('title');
         }
     }
-    if ($self->option('import')) {
-        require WebGUI::Storage;
-        my $parent 
-            = $self->option('parent')   ? eval { $wgd->asset->find($self->option('parent')) }
-            : $wgd->asset->import_node
-            ;
-        if (! $parent) {
+    if ( $self->option('import') ) {
+        my $parent
+            = $self->option('parent')
+            ? eval { $wgd->asset->find( $self->option('parent') ) }
+            : $wgd->asset->import_node;
+        if ( !$parent ) {
             warn "Unable to find parent node!\n";
             return 0;
         }
-        my $versionTag = WebGUI::VersionTag->getWorking($wgd->session);
-        $versionTag->set({name => 'WGDev package import'});
-        for my $package (@{ $self->option('import')}) {
-            my $storage = WebGUI::Storage->createTemp($wgd->session);
+        require WebGUI::Storage;
+        require WebGUI::VersionTag;
+
+        my $version_tag = WebGUI::VersionTag->getWorking( $wgd->session );
+        $version_tag->set( { name => 'WGDev package import' } );
+        for my $package ( @{ $self->option('import') } ) {
+            my $storage = WebGUI::Storage->createTemp( $wgd->session );
             $storage->addFileFromFilesystem($package);
             my $asset = $parent->importPackage($storage);
             print "Imported '$package' to " . $asset->get('url') . "\n";
         }
-        $versionTag->commit;
+        $version_tag->commit;
     }
     return 1;
 }
@@ -89,7 +97,7 @@ upgrade path.
 
 =head1 OPTIONS
 
-Assets specified as standalong arguments are exported as packages.
+Assets specified as standalone arguments are exported as packages.
 
 =over 8
 
