@@ -8,56 +8,69 @@ our $VERSION = '0.1.0';
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
+use File::Spec ();
+
 sub process {
     require File::Temp;
     require File::Copy;
     require Cwd;
     my $self = shift;
-    my $wgd = $self->wgd;
+    my $wgd  = $self->wgd;
 
-    my ($version, $status) = $wgd->version->module;
-    my $build_root = File::Temp->newdir;
-    my $build_webgui = File::Spec->catdir($build_root, 'WebGUI');
-    my $build_docs = File::Spec->catdir($build_root, 'api');
-    my $cwd = Cwd::cwd();
+    my ( $version, $status ) = $wgd->version->module;
+    my $build_root   = File::Temp->newdir;
+    my $build_webgui = File::Spec->catdir( $build_root, 'WebGUI' );
+    my $build_docs   = File::Spec->catdir( $build_root, 'api' );
+    my $cwd          = Cwd::cwd();
 
     mkdir $build_webgui;
     $self->export_files($build_webgui);
-    unless (fork()) {
+    if ( !fork ) {
         chdir $build_root;
-        exec 'tar', 'czf', File::Spec->catfile($cwd, "webgui-$version-$status.tar.gz"), 'WebGUI';
+        exec 'tar', 'czf',
+            File::Spec->catfile( $cwd, "webgui-$version-$status.tar.gz" ),
+            'WebGUI';
     }
     wait;
 
     mkdir $build_docs;
     $self->generate_docs($build_docs);
-    unless (fork()) {
+    if ( !fork ) {
         chdir $build_root;
-        exec 'tar', 'czf', File::Spec->catfile($cwd, "webgui-api-$version-$status.tar.gz"), 'api';
+        exec 'tar', 'czf',
+            File::Spec->catfile( $cwd, "webgui-api-$version-$status.tar.gz" ),
+            'api';
     }
     wait;
+    return 1;
 }
 
 sub export_files {
-    my $self = shift;
-    my $from = $self->wgd->root;
+    my $self    = shift;
+    my $from    = $self->wgd->root;
     my $to_root = shift;
 
-    if (-e File::Spec->catdir($from, '.git')) {
-        system 'git', '--git-dir=' . File::Spec->catdir($from, '.git'), 'checkout-index', '-a', '--prefix=' . $to_root . '/';
+    if ( -e File::Spec->catdir( $from, '.git' ) ) {
+        system 'git', '--git-dir=' . File::Spec->catdir( $from, '.git' ),
+            'checkout-index', '-a', '--prefix=' . $to_root . q{/};
     }
-    elsif (-e File::Spec->catdir($from, '.svn')) {
+    elsif ( -e File::Spec->catdir( $from, '.svn' ) ) {
         system 'svn', 'export', $from, $to_root;
     }
     else {
         system 'cp', '-r', $from, $to_root;
     }
 
-    for my $file ( ['docs', 'previousVersion.sql'], ['etc', '*.conf'],
-                   ['sbin', 'preload.custom'], ['sbin', 'preload.exclude'] ) {
-        my $file_path = File::Spec->catfile($to_root, @$file);
-        unlink $_
-            for glob $file_path;
+    for my $file (
+        [ 'docs', 'previousVersion.sql' ],
+        [ 'etc',  '*.conf' ],
+        [ 'sbin', 'preload.custom' ],
+        [ 'sbin', 'preload.exclude' ] )
+    {
+        my $file_path = File::Spec->catfile( $to_root, @{$file} );
+        for my $file ( glob $file_path ) {
+            unlink $file;
+        }
     }
     return $to_root;
 }
@@ -67,35 +80,39 @@ sub generate_docs {
     require File::Path;
     require Pod::Html;
     require File::Temp;
-    my $self = shift;
-    my $from = $self->wgd->root;
-    my $to_root = shift;
-    my $code_dir = File::Spec->catdir($from, 'lib', 'WebGUI');
+    my $self     = shift;
+    my $from     = $self->wgd->root;
+    my $to_root  = shift;
+    my $code_dir = File::Spec->catdir( $from, 'lib', 'WebGUI' );
     my $temp_dir = File::Temp->newdir;
-    File::Find::find({
-        no_chdir    => 1,
-        wanted      => sub {
-            no warnings 'once';
-            my $code_file = $File::Find::name;
-            return
-                if -d $code_file;
-            my $doc_file = $code_file;
-            return
-                if $doc_file =~ /\bOperation\.pm$/;
-            return
-                unless $doc_file =~ s/\.pm$/.html/;
-            $doc_file = File::Spec->rel2abs(File::Spec->abs2rel($doc_file, $code_dir), $to_root);
-            my $directory = File::Spec->catpath( (File::Spec->splitpath($doc_file))[0,1] );
-            File::Path::mkpath($directory);
-            Pod::Html::pod2html(
-                '--quiet',
-                '--noindex',
-                '--infile=' . $code_file,
-                '--outfile=' . $doc_file,
-                '--cachedir=' . $temp_dir,
-            );
+    File::Find::find( {
+            no_chdir => 1,
+            wanted   => sub {
+                no warnings 'once';    ##no critic (ProhibitNoWarnings)
+                my $code_file = $File::Find::name;
+                return
+                    if -d $code_file;
+                my $doc_file = $code_file;
+                return
+                    if $doc_file =~ /\b\QOperation.pm\E$/msx;
+                return
+                    if $doc_file !~ s/\Q.pm\E$/.html/msx;
+                $doc_file = File::Spec->rel2abs(
+                    File::Spec->abs2rel( $doc_file, $code_dir ), $to_root );
+                my $directory = File::Spec->catpath(
+                    ( File::Spec->splitpath($doc_file) )[ 0, 1 ] );
+                File::Path::mkpath($directory);
+                Pod::Html::pod2html(
+                    '--quiet',
+                    '--noindex',
+                    '--infile=' . $code_file,
+                    '--outfile=' . $doc_file,
+                    '--cachedir=' . $temp_dir,
+                );
+            },
         },
-    }, $code_dir);
+        $code_dir
+    );
     return $to_root;
 }
 
@@ -123,7 +140,7 @@ By default, generates both a code and API documentation package.
 
 =item B<-c --code>
 
-Generates a code distrobution
+Generates a code distribution
 
 =item B<-d --documentation>
 
