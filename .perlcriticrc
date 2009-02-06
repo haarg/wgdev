@@ -12,7 +12,7 @@ theme       = core || strictersubs || pulp || more
 perltidyrc = .perltidyrc
 
 [Documentation::PodSpelling]
-stop_words = Knop WGDev wgd subcommand subcommands namespace config WebGUI WebGUI's DSN mysql changelog webgui SQL sql prefered Prepending dir
+stop_words = Knop WGDev wgd subcommand subcommands namespace config WebGUI WebGUI's DSN mysql changelog webgui SQL sql prefered Prepending dir mysqldump database's
 
 [Documentation::RequirePodSections]
 lib_sections = NAME | SYNOPSIS | DESCRIPTION | AUTHOR | LICENSE

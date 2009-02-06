@@ -1,57 +1,63 @@
 package WGDev::Command::Db;
 use strict;
 use warnings;
+use 5.008008;
 
 our $VERSION = '0.1.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
-sub option_config { qw(
-    print|p
-    dump|d:s
-    load|l=s
-    clear|c
-)}
+sub option_config {
+    return qw(
+        print|p
+        dump|d:s
+        load|l=s
+        clear|c
+    );
+}
 
-sub option_parse_config { qw(gnu_getopt pass_through) }
+sub option_parse_config { return qw(gnu_getopt pass_through) }
 
 sub process {
-    my $self = shift;
-    my $db = $self->wgd->db;
-    my @command_line = $db->command_line($self->arguments);
-    if (  (defined $self->option('print')   || 0)
-        + (defined $self->option('dump')    || 0)
-        + (defined $self->option('load')    || 0)
-        + (defined $self->option('clear')   || 0) > 1) {
+    my $self         = shift;
+    my $db           = $self->wgd->db;
+    my @command_line = $db->command_line( $self->arguments );
+    if (  ( defined $self->option('print') || 0 )
+        + ( defined $self->option('dump')  || 0 )
+        + ( defined $self->option('load')  || 0 )
+        + ( defined $self->option('clear') || 0 ) > 1 )
+    {
         die "Multiple database operations specified!\n";
     }
 
-    if ($self->option('print')) {
-        print join " ", map {"'$_'"} @command_line
+    if ( $self->option('print') ) {
+        print join q{ }, map {"'$_'"} @command_line;
+        return 1;
     }
-    elsif ($self->option('clear')) {
+    if ( $self->option('clear') ) {
         $db->clear;
+        return 1;
     }
-    elsif (defined $self->option('load')) {
-        if ($self->option('load') && $self->option('load') ne '-') {
-            $db->load($self->option('load'));
+    if ( defined $self->option('load') ) {
+        if ( $self->option('load') && $self->option('load') ne q{-} ) {
+            $db->load( $self->option('load') );
         }
         else {
             exec {'mysql'} 'mysql', @command_line;
         }
+        return 1;
     }
-    elsif (defined $self->option('dump')) {
-        if ($self->option('dump') && $self->option('dump') ne '-') {
-            $db->dump($self->option('dump'));
+    if ( defined $self->option('dump') ) {
+        if ( $self->option('dump') && $self->option('dump') ne q{-} ) {
+            $db->dump( $self->option('dump') );
         }
         else {
             exec {'mysqldump'} 'mysqldump', @command_line;
         }
+        return 1;
     }
-    else {
-        exec {'mysql'} 'mysql', @command_line;
-    }
+    exec {'mysql'} 'mysql', @command_line;
 }
 
 1;
