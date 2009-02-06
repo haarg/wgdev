@@ -1,6 +1,7 @@
 package WGDev::Command::Run;
 use strict;
 use warnings;
+use 5.008008;
 
 our $VERSION = '0.0.1';
 
@@ -14,8 +15,8 @@ sub process {
 }
 
 sub parse_params {
-    my $self = shift;
-    @{ $self->{arguments} } = @_;
+    my ( $self, @args ) = @_;
+    @{ $self->{arguments} } = @args;
     return 1;
 }
 
