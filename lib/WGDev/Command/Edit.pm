@@ -22,17 +22,10 @@ sub process {
 
     my @files;
     for my $asset_spec ( $self->arguments ) {
-        my $asset;
-        if ( !( $asset_spec =~ m{/}msx ) ) {
-            $asset = $wgd->asset->by_id($asset_spec);
-        }
-        if ( !$asset ) {
-            $asset = $wgd->asset->by_url($asset_spec);
-        }
-        if ( !$asset ) {
+        my $asset = $wgd->asset->find($asset_spec) || do {
             warn "$asset_spec is not a valid asset!\n";
             next;
-        }
+        };
         my $file_data = $self->write_temp($asset);
         if ( !$file_data ) {
             next;
