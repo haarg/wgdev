@@ -8,6 +8,7 @@ our $VERSION = '0.0.1';
 use constant LINE_LENGTH => 78;
 
 use WGDev;
+use Carp qw(croak);
 
 sub new {
     my $class   = shift;
@@ -41,6 +42,22 @@ sub by_url {    ## no critic (RequireArgUnpacking)
 sub by_id {     ## no critic (RequireArgUnpacking)
     my $self = shift;
     return WebGUI::Asset->new( $self->{session}, @_ );
+}
+
+sub find {
+    my ( $self, $asset_spec ) = @_;
+    my $session = $self->{session};
+    my $asset;
+    if ( $session->id->valid($asset_spec) ) {
+        $asset = WebGUI::Asset->new( $session, $asset_spec );
+    }
+    if ( !$asset ) {
+        $asset = WebGUI::Asset->newByUrl( $session, $asset_spec );
+    }
+    if ( $asset && ref $asset && $asset->isa('WebGUI::Asset') ) {
+        return $asset;
+    }
+    croak "Not able to find asset $asset_spec";
 }
 
 sub serialize {
@@ -112,7 +129,7 @@ sub deserialize {
     my $self          = shift;
     my $asset_data    = shift;
     my @text_sections = split m{
-        ^\Q==== \E  # line start, plus equal signs
+        ^====[ ]    # line start, plus equal signs
         ((?:\w|:)+) # word chars or colons (Perl namespace)
         [ ]=+       # space + equals
         (?:\n|\z)   # end of line or end of string

@@ -1,98 +1,70 @@
 package WGDev::Command::Version;
 use strict;
 use warnings;
+use 5.008008;
 
 our $VERSION = '0.1.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
-sub option_parse_config { qw(no_getopt_compat) };
-sub option_config {qw(
-    create|c
-    bare|b
-)}
+use Carp qw(croak);
+use File::Spec ();
+
+sub option_parse_config { return qw(no_getopt_compat) }
+
+sub option_config {
+    return qw(
+        create|c
+        bare|b
+    );
+}
 
 sub process {
     my $self = shift;
-    my $wgd = $self->wgd;
+    my $wgd  = $self->wgd;
 
     my ($ver) = $self->arguments;
 
-    my $wgv = $wgd->version;
-    if ($self->option('create')) {
-        my $root = $wgd->root;
-        my $old_version = $wgv->module;
-        my $new_version = $ver || do {
-            my @parts = split /\./, $old_version;
-            $parts[-1]++;
-            join '.', @parts;
-        };
-
-        open my $fh, '<', File::Spec->catfile($root, 'lib', 'WebGUI.pm');
-        my @pm_content = do { local $/; <$fh> };
-        close $fh;
-        open $fh, '>', File::Spec->catfile($root, 'lib', 'WebGUI.pm');
-        for my $line (@pm_content) {
-            $line =~ s/(\$VERSION\s*=).*;/$1 '$new_version';/;
-            print {$fh} $line;
-        }
-        close $fh;
-
-        my ($change_file) = $wgv->changelog;
-        my $change_content = do {
-            open my $fh, '<', File::Spec->catfile($root, 'docs', 'changelog', $change_file);
-            local $/;
-            <$fh>;
-        };
-        open $fh, '>', File::Spec->catfile($root, 'docs', 'changelog', $change_file);
-        print {$fh} $new_version . "\n\n" . $change_content;
-        close $fh;
-
-        open my $in, '<', File::Spec->catfile($root, 'docs', 'upgrades', '_upgrade.skeleton');
-        open my $out, '>', File::Spec->catfile($root, 'docs', 'upgrades', "upgrade_$old_version-$new_version.pl");
-        while (my $line = <$in>) {
-            $line =~ s/(\$toVersion\s*=).*$/$1 '$new_version';/;
-            print {$out} $line;
-        }
-        close $out;
-        close $in;
+    if ( $self->option('create') ) {
+        $ver = $self->update_version($ver);
     }
 
-    my ($perl_version, $perl_status) = $wgv->module;
-    if ($self->option('bare')) {
+    my $wgv = $wgd->version;
+    my ( $perl_version, $perl_status ) = $wgv->module;
+    if ( $self->option('bare') ) {
         print $perl_version, "\n";
         return 1;
     }
 
     my $db_version = $wgv->database_script;
-    my ($change_file, $change_version) = $wgv->changelog;
-    my ($up_file, undef, $up_file_ver, $up_version) = $wgv->upgrade;
+    my ( $change_file, $change_version ) = $wgv->changelog;
+    my ( $up_file, undef, $up_file_ver, $up_version ) = $wgv->upgrade;
 
     my $err_count = 0;
     my $expect_ver = $ver || $perl_version;
-    if ($perl_version ne $expect_ver) {
+    if ( $perl_version ne $expect_ver ) {
         $err_count++;
-        $perl_version = colored($perl_version, 'bold red')
+        $perl_version = colored( $perl_version, 'bold red' );
     }
-    if ($db_version ne $expect_ver) {
+    if ( $db_version ne $expect_ver ) {
         $err_count++;
-        $db_version = colored($db_version, 'bold red')
+        $db_version = colored( $db_version, 'bold red' );
     }
-    if ($change_version ne $expect_ver) {
+    if ( $change_version ne $expect_ver ) {
         $err_count++;
-        $change_version = colored($change_version, 'bold red')
+        $change_version = colored( $change_version, 'bold red' );
     }
-    if ($up_version ne $expect_ver) {
+    if ( $up_version ne $expect_ver ) {
         $err_count++;
-        $up_version = colored($up_version, 'bold red')
+        $up_version = colored( $up_version, 'bold red' );
     }
-    if ($up_file_ver ne $expect_ver) {
+    if ( $up_file_ver ne $expect_ver ) {
         $err_count++;
-        $up_file = colored($up_file, 'bold red')
+        $up_file = colored( $up_file, 'bold red' );
     }
 
-    print <<END_REPORT;
+    print <<"END_REPORT";
   Perl version:             $perl_version - $perl_status
   Database version:         $db_version
   Changelog version:        $change_version
@@ -100,18 +72,76 @@ sub process {
   Upgrade script filename:  $up_file
 END_REPORT
 
-    print colored("\n  Version numbers don't match!\n", 'bold red')
-        if $err_count;
+    if ($err_count) {
+        print colored( "\n  Version numbers don't match!\n", 'bold red' );
+    }
     return 1;
 }
 
+sub update_version {
+    my $self        = shift;
+    my $ver         = shift;
+    my $wgd         = $self->wgd;
+    my $root        = $wgd->root;
+    my $wgv         = $wgd->version;
+    my $old_version = $wgv->module;
+    my $new_version = $ver || do {
+        my @parts = split /[.]/msx, $old_version;
+        $parts[-1]++;
+        join q{.}, @parts;
+    };
+
+    open my $fh, '<', File::Spec->catfile( $root, 'lib', 'WebGUI.pm' )
+        or croak "Unable to read WebGUI.pm file: $!\n";
+    my @pm_content = do { local $/ = undef; <$fh> };
+    close $fh or croak "Unable to read WebGUI.pm file: $!";
+    open $fh, '>', File::Spec->catfile( $root, 'lib', 'WebGUI.pm' )
+        or croak "Unable to write to WebGUI.pm file: $!\n";
+    for my $line (@pm_content) {
+        $line =~ s/(\$VERSION\s*=)[^\n]*;/$1 '$new_version';/msx;
+        print {$fh} $line;
+    }
+    close $fh or croak "Unable to write to WebGUI.pm file: $!\n";
+
+    my ($change_file) = $wgv->changelog;
+    open $fh, '<',
+        File::Spec->catfile( $root, 'docs', 'changelog', $change_file )
+        or croak "Unable to read changelog $change_file\: $!\n";
+    my $change_content = do { local $/ = undef; <$fh> };
+    close $fh or croak "Unable to read changelog $change_file\: $!\n";
+
+    open $fh, '>',
+        File::Spec->catfile( $root, 'docs', 'changelog', $change_file )
+        or croak "Unable to write to changelog $change_file\: $!\n";
+    print {$fh} $new_version . "\n\n" . $change_content;
+    close $fh or croak "Unable to write to changelog $change_file\: $!\n";
+
+    ##no critic (RequireBriefOpen)
+    open my $in, '<',
+        File::Spec->catfile( $root, 'docs', 'upgrades', '_upgrade.skeleton' )
+        or croak "Unable to read upgrade skeleton: $!\n";
+    open my $out, '>',
+        File::Spec->catfile( $root, 'docs', 'upgrades',
+        "upgrade_$old_version-$new_version.pl" )
+        or croak "Unable to write to new upgrade script: $!\n";
+    while ( my $line = <$in> ) {
+        $line =~ s/(\$toVersion\s*=)[^\n]*$/$1 '$new_version';/xms;
+        print {$out} $line;
+    }
+    close $out
+        or croak "Unable to read upgrade skeleton: $!\n";
+    close $in
+        or croak "Unable to write to new upgrade script: $!\n";
+    return $new_version;
+}
+
 sub colored {
-    no warnings 'redefine';
-    if (eval { require Term::ANSIColor; 1 }) {
+    no warnings 'redefine';    ##no critic (ProhibitNoWarnings)
+    if ( eval { require Term::ANSIColor; 1 } ) {
         *colored = \&Term::ANSIColor::colored;
     }
     else {
-        *colored = sub {$_[0]};
+        *colored = sub { $_[0] };
     }
     goto &colored;
 }

@@ -1,6 +1,7 @@
 package WGDev::Command::Reset;
 use strict;
 use warnings;
+use 5.008008;
 
 our $VERSION = '0.1.1';
 
@@ -8,120 +9,123 @@ use WGDev::Command::Base::Verbosity;
 BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
 
 use File::Spec ();
+use Carp qw(croak);
 
 sub option_config {
-    (shift->SUPER::option_config, qw(
-        fast|f
+    return (
+        shift->SUPER::option_config, qw(
+            fast|f
 
-        backup!
-        delcache!
-        import!
+            backup!
+            delcache!
+            import!
 
-        test|t
-        dev|d
-        build|b
+            test|t
+            dev|d
+            build|b
 
-        uploads!
-        upgrade!
+            uploads!
+            upgrade!
 
-        debug!
-        starter!
-        clear!
-        purge!
-        cleantags!
-        index!
-        runwf!
-    ))
+            debug!
+            starter!
+            clear!
+            purge!
+            cleantags!
+            index!
+            runwf!
+            ) );
 }
 
 sub parse_params {
-    my $self = shift;
-    my $result = $self->SUPER::parse_params(@_);
+    my ( $self, @args ) = @_;
+    my $result = $self->SUPER::parse_params(@args);
 
-    if ($self->option('fast')) {
-        $self->option_default(backup    => 1);
-        $self->option_default(uploads   => 0);
-        $self->option_default(backup    => 0);
-        $self->option_default(delcache  => 0);
-        $self->option_default(purge     => 0);
-        $self->option_default(cleantags => 0);
-        $self->option_default(index     => 0);
-        $self->option_default(runwf     => 0);
+    if ( $self->option('fast') ) {
+        $self->option_default( backup    => 1 );
+        $self->option_default( uploads   => 0 );
+        $self->option_default( backup    => 0 );
+        $self->option_default( delcache  => 0 );
+        $self->option_default( purge     => 0 );
+        $self->option_default( cleantags => 0 );
+        $self->option_default( index     => 0 );
+        $self->option_default( runwf     => 0 );
     }
-    if ($self->option('dev')) {
-        $self->option_default(backup    => 1);
-        $self->option_default(import    => 1);
-        $self->option_default(uploads   => 1);
-        $self->option_default(upgrade   => 1);
-        $self->option_default(starter   => 0);
-        $self->option_default(debug     => 1);
-        $self->option_default(clear     => 1);
+    if ( $self->option('dev') ) {
+        $self->option_default( backup  => 1 );
+        $self->option_default( import  => 1 );
+        $self->option_default( uploads => 1 );
+        $self->option_default( upgrade => 1 );
+        $self->option_default( starter => 0 );
+        $self->option_default( debug   => 1 );
+        $self->option_default( clear   => 1 );
     }
-    if ($self->option('build')) {
-        $self->verbosity($self->verbosity + 1);
-        $self->option_default(backup    => 1);
-        $self->option_default(uploads   => 1);
-        $self->option_default(import    => 1);
-        $self->option_default(starter   => 1);
-        $self->option_default(debug     => 0);
-        $self->option_default(upgrade   => 1);
-        $self->option_default(purge     => 1);
-        $self->option_default(cleantags => 1);
-        $self->option_default(index     => 1);
-        $self->option_default(runwf     => 1);
+    if ( $self->option('build') ) {
+        $self->verbosity( $self->verbosity + 1 );
+        $self->option_default( backup    => 1 );
+        $self->option_default( uploads   => 1 );
+        $self->option_default( import    => 1 );
+        $self->option_default( starter   => 1 );
+        $self->option_default( debug     => 0 );
+        $self->option_default( upgrade   => 1 );
+        $self->option_default( purge     => 1 );
+        $self->option_default( cleantags => 1 );
+        $self->option_default( index     => 1 );
+        $self->option_default( runwf     => 1 );
     }
-    $self->option_default('delcache', 1);
+    $self->option_default( 'delcache', 1 );
     return $result;
 }
 
 sub process {
     my $self = shift;
-    my $wgd = $self->wgd;
+    my $wgd  = $self->wgd;
 
-    if ($self->option('backup')) {
+    if ( $self->option('backup') ) {
         $self->backup;
     }
 
     # Clear cache
-    if ($self->option('delcache')) {
+    if ( $self->option('delcache') ) {
         $self->clear_cache;
     }
 
     # Clear and recreate uploads
-    if ($self->option('uploads')) {
+    if ( $self->option('uploads') ) {
         $self->reset_uploads;
     }
 
-    if ($self->option('import')) {
+    if ( $self->option('import') ) {
         $self->import_db_script;
     }
 
     # Run the upgrade in a fork
-    if ($self->option('upgrade')) {
+    if ( $self->option('upgrade') ) {
         $self->upgrade;
     }
 
-    if (defined $self->option('debug') || defined $self->option('starter')) {
+    if ( defined $self->option('debug') || defined $self->option('starter') )
+    {
         $self->set_settings;
     }
 
-    if ($self->option('clear')) {
+    if ( $self->option('clear') ) {
         $self->clear_default_content;
     }
 
-    if ($self->option('purge')) {
+    if ( $self->option('purge') ) {
         $self->purge_old_revisions;
     }
 
-    if ($self->option('cleantags')) {
+    if ( $self->option('cleantags') ) {
         $self->clean_version_tags;
     }
 
-    if ($self->option('runwf')) {
+    if ( $self->option('runwf') ) {
         $self->run_all_workflows;
     }
 
-    if ($self->option('index')) {
+    if ( $self->option('index') ) {
         $self->rebuild_lineage;
         $self->rebuild_index;
     }
@@ -131,29 +135,34 @@ sub process {
 
 sub backup {
     my $self = shift;
-    $self->report("Backing up current database... ");
-    $self->wgd->db->dump(File::Spec->catfile(File::Spec->tmpdir, 'WebGUI-reset-backup.sql'));
+    $self->report('Backing up current database... ');
+    $self->wgd->db->dump(
+        File::Spec->catfile( File::Spec->tmpdir, 'WebGUI-reset-backup.sql' )
+    );
     $self->report("Done.\n");
     return 1;
 }
 
 sub clear_cache {
     my $self = shift;
-    my $wgd = $self->wgd;
+    my $wgd  = $self->wgd;
     require File::Path;
-    $self->report("Clearing cache... ");
-    if ($wgd->config->get('cacheType') eq 'WebGUI::Cache::FileCache') {
-        my $cache_dir = $wgd->config->get('fileCacheRoot') || '/tmp/WebGUICache';
+    $self->report('Clearing cache... ');
+    if ( $wgd->config->get('cacheType') eq 'WebGUI::Cache::FileCache' ) {
+        my $cache_dir = $wgd->config->get('fileCacheRoot')
+            || '/tmp/WebGUICache';
         File::Path::rmtree($cache_dir);
     }
-    elsif ($wgd->config->get('cacheType') eq 'WebGUI::Cache::Database') {
-        # Don't clear the DB cache if we are importing, as that will wipe it anyway
-        unless ($self->option('import')) {
+    elsif ( $wgd->config->get('cacheType') eq 'WebGUI::Cache::Database' ) {
+
+   # Don't clear the DB cache if we are importing, as that will wipe it anyway
+        if ( !$self->option('import') ) {
             my $dsn = $wgd->db->connect;
             $dsn->do('DELETE FROM cache');
         }
     }
     else {
+
         # Can't clear a cache we don't know anything about
     }
     $self->report("Done.\n");
@@ -163,49 +172,56 @@ sub clear_cache {
 # Clear and recreate uploads
 sub reset_uploads {
     my $self = shift;
-    my $wgd = $self->wgd;
+    my $wgd  = $self->wgd;
     require File::Copy;
     require File::Find;
     require File::Path;
-    $self->report("Recreating uploads... ");
+    $self->report('Recreating uploads... ');
 
-    my $wg_uploads = File::Spec->catdir($wgd->root, 'www', 'uploads');
+    my $wg_uploads = File::Spec->catdir( $wgd->root, 'www', 'uploads' );
     my $site_uploads = $wgd->config->get('uploadsPath');
     File::Path::rmtree($site_uploads);
-    File::Find::find({
-        no_chdir    => 1,
-        wanted      => sub {
-            no warnings 'once';
-            my $wg_path = $File::Find::name;
-            my $site_path = File::Spec->rel2abs(File::Spec->abs2rel($wg_path, $wg_uploads), $site_uploads);
-            if (-d $wg_path) {
-                my $dir = (File::Spec->splitdir($wg_path))[-1];
-                if ($dir =~ /^\./) {
-                    $File::Find::prune = 1;
-                    return;
+    File::Find::find( {
+            no_chdir => 1,
+            wanted   => sub {
+                no warnings 'once';    ##no critic (ProhibitNoWarnings)
+                my $wg_path = $File::Find::name;
+                my $site_path
+                    = File::Spec->rel2abs(
+                    File::Spec->abs2rel( $wg_path, $wg_uploads ),
+                    $site_uploads );
+                if ( -d $wg_path ) {
+                    my $dir = ( File::Spec->splitdir($wg_path) )[-1];
+                    if ( $dir =~ /^[.]/msx ) {
+                        $File::Find::prune = 1;
+                        return;
+                    }
+                    File::Path::mkpath($site_path);
                 }
-                File::Path::mkpath($site_path);
-            }
-            else {
-                File::Copy::copy($wg_path, $site_path);
-            }
+                else {
+                    File::Copy::copy( $wg_path, $site_path );
+                }
+            },
         },
-    }, $wg_uploads);
+        $wg_uploads
+    );
     $self->report("Done\n");
     return 1;
 }
 
 sub import_db_script {
     my $self = shift;
-    my $wgd = $self->wgd;
-    $self->report("Clearing old database information... ");
+    my $wgd  = $self->wgd;
+    $self->report('Clearing old database information... ');
     $wgd->db->clear;
     $self->report("Done.\n");
 
-    $self->report("Importing clean database dump... ");
+    $self->report('Importing clean database dump... ');
+
     # If we aren't upgrading, we're using the current DB version
-    my $db_file = $self->option('upgrade') ? 'previousVersion.sql' : 'create.sql';
-    $wgd->db->load(File::Spec->catfile($wgd->root, 'docs', $db_file));
+    my $db_file
+        = $self->option('upgrade') ? 'previousVersion.sql' : 'create.sql';
+    $wgd->db->load( File::Spec->catfile( $wgd->root, 'docs', $db_file ) );
     $self->report("Done\n");
     return 1;
 }
@@ -213,22 +229,27 @@ sub import_db_script {
 # Run the upgrade in a fork
 sub upgrade {
     my $self = shift;
-    my $wgd = $self->wgd;
-    $self->report("Running upgrade script... ");
-    # todo: only upgrade single site
+    my $wgd  = $self->wgd;
+    $self->report('Running upgrade script... ');
+
+    # TODO: only upgrade single site
     my $pid = fork;
-    unless ($pid) {
+    if ( !$pid ) {
+
         # child process, don't need to worry about restoring anything
-        chdir File::Spec->catdir($wgd->root, 'sbin');
-        @ARGV = qw(--doit --override --skipBackup);
-        push @ARGV, '--quiet'
-            if $self->verbosity < 2;
+        chdir File::Spec->catdir( $wgd->root, 'sbin' );
+        local @ARGV = qw(--doit --override --skipBackup);
+        if ( $self->verbosity < 2 ) {
+            push @ARGV, '--quiet';
+        }
         do 'upgrade.pl';
-        die $@ if $@;
+        croak $@ if $@;
         exit;
     }
     waitpid $pid, 0;
-    if ($?) {
+
+    # error status of subprocess
+    if ($?) {    ##no critic (ProhibitPunctuationVars)
         die "Upgrade failed!\n";
     }
     $self->report("Done\n");
@@ -237,23 +258,28 @@ sub upgrade {
 
 sub set_settings {
     my $self = shift;
-    my $wgd = $self->wgd;
-    $self->report("Setting WebGUI settings... ");
+    my $wgd  = $self->wgd;
+    $self->report('Setting WebGUI settings... ');
     my $dbh = $wgd->db->connect;
-    my $sth = $dbh->prepare("REPLACE INTO `settings` (`name`, `value`) VALUES (?,?)");
-    if ($self->option('debug')) {
-        $sth->execute('showDebug', 1);
-        $sth->execute('sessionTimeout', 31536000);
+    my $sth = $dbh->prepare(
+        q{REPLACE INTO `settings` (`name`, `value`) VALUES (?,?)});
+    if ( $self->option('debug') ) {
+        $sth->execute( 'showDebug', 1 );
+
+        # for debug we set this to 1 year
+        $sth->execute( 'sessionTimeout', 365 * 24 * 60 * 60 );
     }
-    elsif (defined $self->option('debug')) {
-        $sth->execute('showDebug', 0);
-        $sth->execute('sessionTimeout', 7200);
+    elsif ( defined $self->option('debug') ) {
+        $sth->execute( 'showDebug', 0 );
+
+        # default time is 2 hours
+        $sth->execute( 'sessionTimeout', 2 * 60 * 60 );
     }
-    if ($self->option('starter')) {
-        $sth->execute('specialState', 'init');
+    if ( $self->option('starter') ) {
+        $sth->execute( 'specialState', 'init' );
     }
-    elsif (defined $self->option('starter')) {
-        $dbh->do("DELETE FROM `settings` WHERE `name`='specialState'");
+    elsif ( defined $self->option('starter') ) {
+        $dbh->do(q{DELETE FROM `settings` WHERE `name`='specialState'});
     }
     $self->report("Done\n");
     return 1;
@@ -261,19 +287,26 @@ sub set_settings {
 
 sub clear_default_content {
     my $self = shift;
-    my $wgd = $self->wgd;
-    $self->report("Clearing example assets... ");
-    $self->report(2, "\n");
-    my $home = $wgd->asset->home;
-    my $children = $home->getLineage(['descendants'], {
-        statesToInclude => ['published', 'trash', 'clipboard', 'clipboard-limbo', 'trash-limbo'],
-        statusToInclude => ['approved', 'pending', 'archive'],
-        excludeClasses  => ['WebGUI::Asset::Wobject::Layout'],
-        returnObjects   => 1,
-        invertTree      => 1,
-    });
-    for my $child (@$children) {
-        $self->report(2, sprintf "\tRemoving \%-35s '\%s'\n", $child->getName, $child->get('title'));
+    my $wgd  = $self->wgd;
+    $self->report('Clearing example assets... ');
+    $self->report( 2, "\n" );
+    my $home     = $wgd->asset->home;
+    my $children = $home->getLineage(
+        ['descendants'],
+        {
+            statesToInclude => [
+                'published', 'trash',
+                'clipboard', 'clipboard-limbo',
+                'trash-limbo'
+            ],
+            statusToInclude => [ 'approved', 'pending', 'archive' ],
+            excludeClasses => ['WebGUI::Asset::Wobject::Layout'],
+            returnObjects  => 1,
+            invertTree     => 1,
+        } );
+    for my $child ( @{$children} ) {
+        $self->report( 2, sprintf "\tRemoving \%-35s '\%s'\n",
+            $child->getName, $child->get('title') );
         $child->purge;
     }
     $self->report("Done\n");
@@ -282,26 +315,29 @@ sub clear_default_content {
 
 sub purge_old_revisions {
     my $self = shift;
-    my $wgd = $self->wgd;
+    my $wgd  = $self->wgd;
     require WebGUI::Asset;
-    $self->report("Purging old Asset revisions... ");
-    $self->report(2, "\n");
-    my $sth = $wgd->db->connect->prepare(<<END_SQL);
+    $self->report('Purging old Asset revisions... ');
+    $self->report( 2, "\n" );
+    my $sth = $wgd->db->connect->prepare(<<'END_SQL');
     SELECT assetData.assetId, asset.className, assetData.revisionDate
     FROM asset
         LEFT JOIN assetData on asset.assetId=assetData.assetId
     ORDER BY assetData.revisionDate ASC
 END_SQL
     $sth->execute;
-    while (my ($id, $class, $revision) = $sth->fetchrow_array) {
-        my $current_revision = WebGUI::Asset->getCurrentRevisionDate($wgd->session, $id);
-        if (!defined $current_revision || $current_revision == $revision) {
+    while ( my ( $id, $class, $revision ) = $sth->fetchrow_array ) {
+        my $current_revision
+            = WebGUI::Asset->getCurrentRevisionDate( $wgd->session, $id );
+        if ( !defined $current_revision || $current_revision == $revision ) {
             next;
         }
-        my $asset = WebGUI::Asset->new($wgd->session, $id, $class, $revision)
+        my $asset
+            = WebGUI::Asset->new( $wgd->session, $id, $class, $revision )
             || next;
-        if ($asset->getRevisionCount("approved") > 1) {
-            $self->report(2, sprintf "\tPurging \%-35s \%s '\%s'\n", $asset->getName, $revision, $asset->get('title'));
+        if ( $asset->getRevisionCount('approved') > 1 ) {
+            $self->report( 2, sprintf "\tPurging \%-35s \%s '\%s'\n",
+                $asset->getName, $revision, $asset->get('title') );
             $asset->purgeRevision;
         }
     }
@@ -311,18 +347,18 @@ END_SQL
 
 sub clean_version_tags {
     my $self = shift;
-    my $wgd = $self->wgd;
+    my $wgd  = $self->wgd;
 
-    $self->report("Finding current version number... ");
-    my $version = $wgd->version->database($wgd->db->connect);
+    $self->report('Finding current version number... ');
+    my $version = $wgd->version->database( $wgd->db->connect );
     $self->report("$version. Done\n");
 
-    $self->report("Cleaning out versions Tags... ");
+    $self->report('Cleaning out versions Tags... ');
     my $tag_id = 'pbversion0000000000001';
-    my $dbh = $wgd->db->connect;
-    my $sth = $dbh->prepare("UPDATE `assetData` SET `tagId` = ?");
+    my $dbh    = $wgd->db->connect;
+    my $sth    = $dbh->prepare(q{UPDATE `assetData` SET `tagId` = ?});
     $sth->execute($tag_id);
-    $sth = $dbh->prepare("DELETE FROM `assetVersionTag`");
+    $sth = $dbh->prepare(q{DELETE FROM `assetVersionTag`});
     $sth->execute;
     $sth = $dbh->prepare(<<'END_SQL');
         INSERT INTO `assetVersionTag`
@@ -331,41 +367,47 @@ sub clean_version_tags {
         VALUES (?,?,?,?,?,?,?,?,?,?,?)
 END_SQL
     my $now = time;
-    $sth->execute($tag_id, "Base $version Install", 1, $now, '3', $now, '3', 0, '', '3', '');
+    $sth->execute( $tag_id, "Base $version Install",
+        1, $now, '3', $now, '3', 0, q{}, '3', q{} );
     $self->report("Done\n");
     return 1;
 }
 
 sub run_all_workflows {
     my $self = shift;
-    my $wgd = $self->wgd;
-    $self->report("Running all pending workflows... ");
-    $self->report(2, "\n");
+    my $wgd  = $self->wgd;
+    $self->report('Running all pending workflows... ');
+    $self->report( 2, "\n" );
     require WebGUI::Workflow::Instance;
-    my $sth = $wgd->db->connect->prepare("SELECT instanceId FROM WorkflowInstance");
+    my $sth = $wgd->db->connect->prepare(
+        q{SELECT instanceId FROM WorkflowInstance});
     $sth->execute;
-    while (my ($instanceId) = $sth->fetchrow_array) {
-        my $instance = WebGUI::Workflow::Instance->new($wgd->session, $instanceId);
+    while ( my ($instance_id) = $sth->fetchrow_array ) {
+        my $instance
+            = WebGUI::Workflow::Instance->new( $wgd->session, $instance_id );
         my $waiting_count = 0;
-        while (my $result = $instance->run) {
-            if ($result eq 'complete') {
+        while ( my $result = $instance->run ) {
+            if ( $result eq 'complete' ) {
                 $waiting_count = 0;
                 next;
             }
-            if ($result eq 'waiting') {
-                if ($waiting_count++ > 10) {
-                    warn "Unable to finish workflow " . $instanceId . ", too many iterations!\n";
+            if ( $result eq 'waiting' ) {
+                ##no critic (ProhibitMagicNumbers)
+                if ( $waiting_count++ > 10 ) {
+                    warn
+                        "Unable to finish workflow $instance_id, too many iterations!\n";
                     last;
                 }
                 next;
             }
-            if ($result eq 'done') {
+            if ( $result eq 'done' ) {
             }
-            elsif ($result eq 'error') {
-                warn "Unable to finish workflow " . $instanceId . ".  Error!\n";
+            elsif ( $result eq 'error' ) {
+                warn "Unable to finish workflow $instance_id.  Error!\n";
             }
             else {
-                warn "Unable to finish workflow " . $instanceId . ".  Unknown status $result!\n";
+                warn
+                    "Unable to finish workflow $instance_id.  Unknown status $result!\n";
             }
             last;
         }
@@ -376,19 +418,24 @@ sub run_all_workflows {
 
 sub rebuild_lineage {
     my $self = shift;
-    my $wgd = $self->wgd;
-    $self->report("Rebuilding lineage... ");
+    my $wgd  = $self->wgd;
+    $self->report('Rebuilding lineage... ');
     my $pid = fork;
-    unless ($pid) {
-        if ($self->verbosity < 3) {
+    if ( !$pid ) {
+
+        # silence output of rebuildLineage unless we're at max verbosity
+        if ( $self->verbosity < 3 ) {    ##no critic (ProhibitMagicNumbers)
+            ##no critic (RequireCheckedOpen R)
             open STDIN,  '<', File::Spec->devnull;
             open STDOUT, '>', File::Spec->devnull;
             open STDERR, '>', File::Spec->devnull;
         }
         print "\n\n";
-        chdir File::Spec->catdir($wgd->root, 'sbin');
-        @ARGV = ('--configFile=' . $wgd->config_file_relative);
-        $0 = './rebuildLineage.pl';
+        chdir File::Spec->catdir( $wgd->root, 'sbin' );
+        local @ARGV = ( '--configFile=' . $wgd->config_file_relative );
+        ##no critic (ProhibitPunctuationVars)
+        # $0 should have the filename of the script being run
+        local $0 = './rebuildLineage.pl';
         do $0;
         exit;
     }
@@ -399,19 +446,25 @@ sub rebuild_lineage {
 
 sub rebuild_index {
     my $self = shift;
-    my $wgd = $self->wgd;
-    $self->report("Rebuilding search index... ");
+    my $wgd  = $self->wgd;
+    $self->report('Rebuilding search index... ');
     my $pid = fork;
-    unless ($pid) {
-        if ($self->verbosity < 3) {
+    if ( !$pid ) {
+
+        # silence output of searhc indexer unless we're at max verbosity
+        if ( $self->verbosity < 3 ) {    ##no critic (ProhibitMagicNumbers)
+            ##no critic (RequireCheckedOpen)
             open STDIN,  '<', File::Spec->devnull;
             open STDOUT, '>', File::Spec->devnull;
             open STDERR, '>', File::Spec->devnull;
         }
         print "\n\n";
-        chdir File::Spec->catdir($wgd->root, 'sbin');
-        @ARGV = ('--configFile=' . $wgd->config_file_relative, '--indexsite');
-        $0 = './search.pl';
+        chdir File::Spec->catdir( $wgd->root, 'sbin' );
+        local @ARGV
+            = ( '--configFile=' . $wgd->config_file_relative, '--indexsite' );
+        ##no critic (ProhibitPunctuationVars)
+        # $0 should have the filename of the script being run
+        local $0 = './search.pl';
         do $0;
         exit;
     }

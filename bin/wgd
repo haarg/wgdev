@@ -1,5 +1,9 @@
 #!/usr/bin/env perl
-unless (caller) {
+use strict;
+use warnings;
+use 5.008008;
+our $VERSION = '0.1.0';
+if ( !caller ) {
     require WGDev::Command;
     WGDev::Command->run(@ARGV);
 }
