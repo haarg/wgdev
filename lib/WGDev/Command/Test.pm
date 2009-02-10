@@ -32,7 +32,7 @@ sub process {
     my $prove = App::Prove->new;
     my @args  = $self->arguments;
     my $orig_dir;
-    if ( $self->option('slow') ) {
+    if ( $self->option('all') ) {
         $orig_dir = Cwd::cwd();
         chdir $wgd->root;
         unshift @args, '-r', 't';
