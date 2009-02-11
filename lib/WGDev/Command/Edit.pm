@@ -13,6 +13,8 @@ use constant STAT_MTIME => 9;
 sub option_config {
     return qw(
         command=s
+        tree=s@
+        class=s@
     );
 }
 
@@ -20,18 +22,8 @@ sub process {
     my $self = shift;
     my $wgd  = $self->wgd;
 
-    my @files;
-    for my $asset_spec ( $self->arguments ) {
-        my $asset = $wgd->asset->find($asset_spec) || do {
-            warn "$asset_spec is not a valid asset!\n";
-            next;
-        };
-        my $file_data = $self->write_temp($asset);
-        if ( !$file_data ) {
-            next;
-        }
-        push @files, $file_data;
-    }
+    my @files = $self->export_asset_data;
+
     if ( !@files ) {
         die "No assets to edit!\n";
     }
@@ -42,10 +34,10 @@ sub process {
 
     my $version_tag;
     for my $file (@files) {
+        my $asset = $wgd->asset->by_id( $file->{asset_id}, undef,
+            $file->{revision} );
         if ( ( stat $file->{filename} )[STAT_MTIME] <= $file->{mtime} ) {
-            warn 'Skipping '
-                . $file->{asset}->get('url')
-                . ", not changed.\n";
+            warn 'Skipping ' . $asset->get('url') . ", not changed.\n";
             unlink $file->{filename};
             next;
         }
@@ -60,7 +52,11 @@ sub process {
         close $fh or next;
         unlink $file->{filename};
         my $asset_data = $wgd->asset->deserialize($asset_text);
-        $file->{asset}->addRevision($asset_data);
+        $asset->addRevision($asset_data);
+        if ( $asset_data->{parent_url} ) {
+
+            # TODO: move asset
+        }
     }
 
     if ($version_tag) {
@@ -69,9 +65,55 @@ sub process {
     return 1;
 }
 
+sub export_asset_data {
+    my $self = shift;
+    my $wgd  = $self->wgd;
+    my @files;
+    for my $asset_spec ( $self->arguments ) {
+        my $asset = $wgd->asset->find($asset_spec) || do {
+            warn "$asset_spec is not a valid asset!\n";
+            next;
+        };
+        my $file_data = $self->write_temp($asset);
+        if ( !$file_data ) {
+            next;
+        }
+        push @files, $file_data;
+    }
+    if ( $self->option('tree') ) {
+        for my $parent_spec ( @{ $self->option('tree') } ) {
+            my $parent = $wgd->asset->find($parent_spec) || do {
+                warn "$parent_spec is not a valid asset!\n";
+                next;
+            };
+            my $options = {};
+            if ( $self->option('class') ) {
+                my @classes = @{ $self->option('class') };
+                for (@classes) {
+                    s/^(?:(?:WebGUI::Asset)?::)?/WebGUI::Asset::/msx;
+                }
+                $options->{includeOnlyClasses} = \@classes;
+            }
+            my $assets
+                = $parent->getLineage( [qw(self descendants)], $options );
+            for my $asset_id ( @{$assets} ) {
+                my $file_data = $self->write_temp($asset_id);
+                if ( !$file_data ) {
+                    next;
+                }
+                push @files, $file_data;
+            }
+        }
+    }
+    return @files;
+}
+
 sub write_temp {
     my $self  = shift;
     my $asset = shift;
+    if ( !ref $asset ) {
+        $asset = $self->wgd->asset->find($asset);
+    }
 
     require File::Temp;
 
@@ -81,6 +123,8 @@ sub write_temp {
     close $fh or return;
     return {
         asset    => $asset,
+        asset_id => $asset->getId,
+        revision => $asset->get('revisionDate'),
         filename => $filename,
         mtime    => ( stat $filename )[STAT_MTIME],
     };
@@ -96,7 +140,8 @@ WGDev::Command::Edit - Edits assets by URL
 
 =head1 SYNOPSIS
 
-wgd edit [--command=<command>] <asset> [<asset> ...]
+    wgd edit [--command=<command>] <asset> [<asset> ...]
+    wgd edit --tree=<asset> [--tree=<asset> ...] [--class=<class> ...]
 
 =head1 DESCRIPTION
 
@@ -116,6 +161,17 @@ variable.  If that is not specified, uses vi.
 
 Either a URL or an asset ID of an asset.  As many can be specified as desired.
 Prepending with a slash will force it to be interpreted as a URL.
+
+=item B<--tree>
+
+Will open specified asset and all descendants in editor.  Can be specified
+multiple times.
+
+=item B<--class>
+
+Only used with --tree option.  Limits exported assets to specified classes.
+Can be specified as a full (WebGUI::Asset::Template) or abbreviated (Template)
+class name.
 
 =back
 
