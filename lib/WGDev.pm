@@ -217,53 +217,40 @@ sub my_config {    ## no critic (RequireArgUnpacking)
 }
 
 sub yaml_decode {
-    ## no critic (RequireFinalReturn ProhibitCascadingIfElse ProhibitNoWarnings)
-    my $decode;
-    if ( eval { require YAML::XS } ) {
-        $decode = \&YAML::XS::Load;
-    }
-    elsif ( eval { require YAML::Syck } ) {
-        $decode = \&YAML::Syck::Load;
-    }
-    elsif ( eval { require YAML } ) {
-        $decode = \&YAML::Load;
-    }
-    elsif ( eval { require YAML::Tiny } ) {
-        $decode = \&YAML::Tiny::Load;
-    }
-    else {
-        $decode = sub {
-            die "No YAML library available!\n";
-        };
-    }
-    no warnings 'redefine';
-    *yaml_decode = $decode;
-    goto &{$decode};
+    _load_yaml_lib();
+    goto &yaml_decode;
 }
 
 sub yaml_encode {
+    _load_yaml_lib();
+    goto &yaml_encode;
+}
+
+sub _load_yaml_lib {
     ## no critic (RequireFinalReturn ProhibitCascadingIfElse ProhibitNoWarnings)
-    my $encode;
+    no warnings 'redefine';
     if ( eval { require YAML::XS } ) {
-        $encode = \&YAML::XS::Dump;
+        *yaml_encode = \&YAML::XS::Dump;
+        *yaml_decode = \&YAML::XS::Load;
     }
     elsif ( eval { require YAML::Syck } ) {
-        $encode = \&YAML::Syck::Dump;
+        *yaml_encode = \&YAML::Syck::Dump;
+        *yaml_decode = \&YAML::Syck::Load;
     }
     elsif ( eval { require YAML } ) {
-        $encode = \&YAML::Dump;
+        *yaml_encode = \&YAML::Dump;
+        *yaml_decode = \&YAML::Load;
     }
     elsif ( eval { require YAML::Tiny } ) {
-        $encode = \&YAML::Tiny::Dump;
+        *yaml_encode = \&YAML::Tiny::Dump;
+        *yaml_decode = \&YAML::Tiny::Load;
     }
     else {
-        $encode = sub {
+        *yaml_encode = *yaml_decode = sub {
             die "No YAML library available!\n";
         };
     }
-    no warnings 'redefine';
-    *yaml_encode = $encode;
-    goto &{$encode};
+    return;
 }
 
 sub DESTROY {
