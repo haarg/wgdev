@@ -8,8 +8,6 @@ our $VERSION = '0.1.0';
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
-use constant STAT_MTIME => 9;
-
 sub option_config {
     return qw(
         command=s
@@ -28,15 +26,18 @@ sub process {
         die "No assets to edit!\n";
     }
 
+    ## no critic (ProhibitParensWithBuiltins)
     my $command = $self->option('command') || $ENV{EDITOR} || 'vi';
-    ##no critic (ProhibitParensWithBuiltins)
     system join( q{ }, $command, map { $_->{filename} } @files );
 
     my $version_tag;
     for my $file (@files) {
         my $asset = $wgd->asset->by_id( $file->{asset_id}, undef,
             $file->{revision} );
-        if ( ( stat $file->{filename} )[STAT_MTIME] <= $file->{mtime} ) {
+        open my $fh, '<:utf8', $file->{filename} or next;
+        my $asset_text = do { local $/ = undef; <$fh> };
+        close $fh or next;
+        if ( $asset_text eq $file->{text} ) {
             warn 'Skipping ' . $asset->get('url') . ", not changed.\n";
             unlink $file->{filename};
             next;
@@ -47,9 +48,6 @@ sub process {
             $vt->set( { name => 'WGDev Asset Editor' } );
             $vt;
         };
-        open my $fh, '<:utf8', $file->{filename} or next;
-        my $asset_text = do { local $/ = undef; <$fh> };
-        close $fh or next;
         unlink $file->{filename};
         my $asset_data = $wgd->asset->deserialize($asset_text);
         $asset->addRevision($asset_data);
@@ -119,14 +117,15 @@ sub write_temp {
 
     my ( $fh, $filename ) = File::Temp::tempfile();
     binmode $fh, ':utf8';
-    print {$fh} $self->wgd->asset->serialize($asset);
+    my $asset_text = $self->wgd->asset->serialize($asset);
+    print {$fh} $asset_text;
     close $fh or return;
     return {
         asset    => $asset,
         asset_id => $asset->getId,
         revision => $asset->get('revisionDate'),
         filename => $filename,
-        mtime    => ( stat $filename )[STAT_MTIME],
+        text     => $asset_text,
     };
 }
 
