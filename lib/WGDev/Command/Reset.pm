@@ -271,8 +271,8 @@ sub reset_config {
     my %set_config   = %{ $reset_config->{override} };
     for my $key (
         @{ $reset_config->{copy} }, qw(
-        dsn dbuser dbpass uploadsPath uploadsUrl
-        exportPath extrasPath extrasUrl cacheType
+        dsn dbuser dbpass uploadsPath uploadsURL
+        exportPath extrasPath extrasURL cacheType
         sitename spectreIp spectrePort spectreSubnets
         ) )
     {
@@ -280,10 +280,11 @@ sub reset_config {
     }
 
     $wgd->close_config;
-    unlink $wgd->config_file;
+    open my $fh, '>', $wgd->config_file or croak "Unable to write config file: $!";
     File::Copy::copy(
         File::Spec->catfile( $wgd->root, 'etc', 'WebGUI.conf.original' ),
-        $wgd->config_file );
+        $fh );
+    close $fh;
 
     my $config = $wgd->config;
     while ( my ( $key, $value ) = each %set_config ) {
@@ -594,6 +595,11 @@ Enable the site starter
 =item B<--clear --no-clear>
 
 Clear the content off the home page and its children
+
+=item B<--config --no-config>
+
+Resets the site's config file.  Some values like database information will be
+preserved.  Additional options can be set in the WGDev config file.
 
 =item B<--purge --no-purge>
 
