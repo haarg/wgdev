@@ -10,6 +10,9 @@ BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
 
 use File::Spec ();
 use Carp qw(croak);
+use constant STAT_MODE => 2;
+use constant STAT_UID  => 2;
+use constant STAT_GID  => 2;
 
 sub option_config {
     return (
@@ -30,6 +33,7 @@ sub option_config {
             debug!
             starter!
             clear!
+            config!
             purge!
             cleantags!
             index!
@@ -102,6 +106,10 @@ sub process {
     # Run the upgrade in a fork
     if ( $self->option('upgrade') ) {
         $self->upgrade;
+    }
+
+    if ( $self->option('config') ) {
+        $self->reset_config;
     }
 
     if ( defined $self->option('debug') || defined $self->option('starter') )
@@ -180,7 +188,20 @@ sub reset_uploads {
 
     my $wg_uploads = File::Spec->catdir( $wgd->root, 'www', 'uploads' );
     my $site_uploads = $wgd->config->get('uploadsPath');
-    File::Path::rmtree($site_uploads);
+
+    my $initial_umask = umask;
+    my ( $uploads_mode, $uploads_uid, $uploads_gid )
+        = ( stat $site_uploads )[ STAT_MODE, STAT_UID, STAT_GID ];
+
+    ##no critic (ProhibitPunctuationVars ProhibitParensWithBuiltins)
+    # make umask as permissive as required to match existing uploads folder
+    umask( $uploads_mode ^ oct(777) );
+
+    # set effective UID and GID
+    local ( $>, $) ) = ( $uploads_uid, $uploads_gid );
+
+    File::Path::rmtree( $site_uploads, { keep_root => 1 } );
+
     File::Find::find( {
             no_chdir => 1,
             wanted   => sub {
@@ -205,6 +226,9 @@ sub reset_uploads {
         },
         $wg_uploads
     );
+
+    umask $initial_umask;
+
     $self->report("Done\n");
     return 1;
 }
@@ -252,6 +276,41 @@ sub upgrade {
     if ($?) {    ##no critic (ProhibitPunctuationVars)
         die "Upgrade failed!\n";
     }
+    $self->report("Done\n");
+    return 1;
+}
+
+sub reset_config {
+    my $self = shift;
+    my $wgd  = $self->wgd;
+    require File::Copy;
+
+    $self->report('Resetting config file... ');
+    my $reset_config = $wgd->my_config('config');
+    my %set_config   = %{ $reset_config->{override} };
+    for my $key (
+        @{ $reset_config->{copy} }, qw(
+        dsn dbuser dbpass uploadsPath uploadsURL
+        exportPath extrasPath extrasURL cacheType
+        sitename spectreIp spectrePort spectreSubnets
+        ) )
+    {
+        $set_config{$key} = $wgd->config->get($key);
+    }
+
+    $wgd->close_config;
+    open my $fh, '>', $wgd->config_file
+        or croak "Unable to write config file: $!";
+    File::Copy::copy(
+        File::Spec->catfile( $wgd->root, 'etc', 'WebGUI.conf.original' ),
+        $fh );
+    close $fh or croak "Unable to write config file: $!";
+
+    my $config = $wgd->config;
+    while ( my ( $key, $value ) = each %set_config ) {
+        $config->set( $key, $value );
+    }
+
     $self->report("Done\n");
     return 1;
 }
@@ -556,6 +615,11 @@ Enable the site starter
 =item B<--clear --no-clear>
 
 Clear the content off the home page and its children
+
+=item B<--config --no-config>
+
+Resets the site's config file.  Some values like database information will be
+preserved.  Additional options can be set in the WGDev config file.
 
 =item B<--purge --no-purge>
 

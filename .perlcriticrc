@@ -24,7 +24,7 @@ functions = opendir read readline readdir closedir
 minimum_regex_length_to_complain_about = 5
 
 [ValuesAndExpressions::ProhibitMagicNumbers]
-allowed_values = -1 0 1 2 24 60 365
+allowed_values = -1 0 1 2 24 60 365 777
 
 [Variables::ProhibitPackageVars]
 packages = File::Find Data::Dumper Config
