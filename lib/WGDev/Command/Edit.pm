@@ -30,16 +30,18 @@ sub process {
     my $command = $self->option('command') || $ENV{EDITOR} || 'vi';
     system join( q{ }, $command, map { $_->{filename} } @files );
 
+    my $output_format = "%-8s: %-30s (%22s) %s\n";
+
     my $version_tag;
     for my $file (@files) {
-        my $asset = $wgd->asset->by_id( $file->{asset_id}, undef,
-            $file->{revision} );
         open my $fh, '<:utf8', $file->{filename} or next;
         my $asset_text = do { local $/ = undef; <$fh> };
         close $fh or next;
+        unlink $file->{filename};
         if ( $asset_text eq $file->{text} ) {
-            warn 'Skipping ' . $asset->get('url') . ", not changed.\n";
-            unlink $file->{filename};
+            printf $output_format,
+                'Skipping', ( $file->{url} || $file->{title} ),
+                ( $file->{asset_id} || q{} ), $file->{title};
             next;
         }
         $version_tag ||= do {
@@ -48,13 +50,27 @@ sub process {
             $vt->set( { name => 'WGDev Asset Editor' } );
             $vt;
         };
-        unlink $file->{filename};
         my $asset_data = $wgd->asset->deserialize($asset_text);
-        $asset->addRevision($asset_data);
-        if ( $asset_data->{parent_url} ) {
-
-            # TODO: move asset
+        my $asset;
+        my $parent;
+        if ( $asset_data->{parent} ) {
+            $parent = eval { $wgd->asset->find( $asset_data->{parent} ) };
         }
+        if ( $file->{asset_id} ) {
+            $asset = $wgd->asset->by_id( $file->{asset_id}, undef,
+                $file->{revision} );
+            $asset = $asset->addRevision($asset_data);
+            if ($parent) {
+                $asset->setParent($parent);
+            }
+        }
+        else {
+            $parent ||= $wgd->asset->import_node;
+            my $asset_id = $asset_data->{assetId};
+            $asset = $parent->addChild( $asset_data, $asset_id );
+        }
+        printf $output_format, ( $file->{asset_id} ? 'Updating' : 'Adding' ),
+            $asset->get('url'), $asset->getId, $asset->get('title');
     }
 
     if ($version_tag) {
@@ -68,12 +84,9 @@ sub export_asset_data {
     my $wgd  = $self->wgd;
     my @files;
     for my $asset_spec ( $self->arguments ) {
-        my $asset = $wgd->asset->find($asset_spec) || do {
-            warn "$asset_spec is not a valid asset!\n";
-            next;
-        };
-        my $file_data = $self->write_temp($asset);
+        my $file_data = eval { $self->write_temp($asset_spec) };
         if ( !$file_data ) {
+            warn "$asset_spec is not a valid asset!\n";
             next;
         }
         push @files, $file_data;
@@ -109,11 +122,19 @@ sub export_asset_data {
 sub write_temp {
     my $self  = shift;
     my $asset = shift;
+    require File::Temp;
+
+    my $wgd_asset = $self->wgd->asset;
     if ( !ref $asset ) {
-        $asset = $self->wgd->asset->find($asset);
+        $asset = eval { $wgd_asset->find($asset) }
+            || eval { $wgd_asset->validate_class($asset) };
+        if ( !$asset ) {
+            die $@;    ##no critic (RequireCarping)
+        }
     }
 
-    require File::Temp;
+    my $short_class = ref $asset || $asset;
+    $short_class =~ s/^WebGUI::Asset:://msx;
 
     my ( $fh, $filename ) = File::Temp::tempfile();
     binmode $fh, ':utf8';
@@ -121,11 +142,16 @@ sub write_temp {
     print {$fh} $asset_text;
     close $fh or return;
     return {
-        asset    => $asset,
-        asset_id => $asset->getId,
-        revision => $asset->get('revisionDate'),
         filename => $filename,
         text     => $asset_text,
+        class    => ref $asset || $asset,
+        ref $asset
+        ? (
+            asset_id => $asset->getId,
+            url      => $asset->get('url'),
+            title    => $asset->get('title'),
+            )
+        : ( title => 'New ' . $short_class, ),
     };
 }
 
@@ -158,8 +184,9 @@ variable.  If that is not specified, uses vi.
 
 =item B<E<lt>assetE<gt>>
 
-Either a URL or an asset ID of an asset.  As many can be specified as desired.
-Prepending with a slash will force it to be interpreted as a URL.
+Either an asset URL, ID, or class name.  As many can be specified as desired.
+Prepending with a slash will force it to be interpreted as a URL.  Class names
+specified will be opened with a skeleton for the asset type.
 
 =item B<--tree>
 
