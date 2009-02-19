@@ -140,8 +140,9 @@ sub session {
     if ( $self->{session} ) {
         my $dbh = $self->{session}->db->dbh;
 
-        # evil, but we have to detect if the database handle died somehow
+        # if the database handle died, close the session
         if ( !$dbh->ping ) {
+            delete $self->{asset};
             ( delete $self->{session} )->close;
         }
     }
@@ -160,6 +161,7 @@ sub close_session {
         my $session = $self->session;  # get the session, recreating if needed
         $session->var->end;            # close the session
         $session->close;
+        delete $self->{asset};
         delete $self->{session};
     }
     return 1;
