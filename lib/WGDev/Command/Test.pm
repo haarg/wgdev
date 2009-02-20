@@ -16,6 +16,7 @@ sub option_config {
     return qw(
         all|A
         slow|S
+        reset
     );
 }
 
@@ -28,6 +29,14 @@ sub process {
         $ENV{CODE_COP}    = 1;
         $ENV{TEST_SYNTAX} = 1;
         $ENV{TEST_POD}    = 1;
+    }
+    if ( $self->option('reset') ) {
+        require WGDev::Command::Reset;
+        my $reset = WGDev::Command::Reset->new($wgd);
+        $reset->verbosity(0);
+        $reset->clear_cache;
+        $reset->import_db_script;
+        $reset->upgrade;
     }
     my $prove = App::Prove->new;
     my @args  = $self->arguments;
