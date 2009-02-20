@@ -60,30 +60,49 @@ sub find {
     croak "Not able to find asset $asset_spec";
 }
 
+sub validate_class {
+    my $self = shift;
+    my $in_class = my $class = shift;
+    if ( $class =~ s/\A(?:(?:WebGUI::Asset)?::)?(.*)/WebGUI::Asset::$1/msx ) {
+        my $short_class = $1;
+        if ( $class =~ /\A[[:upper:]]\w+(?:::[[:upper:]]\w+)*\z/msx ) {
+            return wantarray ? ( $class, $short_class ) : $class;
+        }
+    }
+    croak "Invalid Asset class: $in_class";
+}
+
+sub _gen_serialize_header {
+    my $header_text = shift;
+    my $header      = "==== $header_text ";
+    $header .= ( q{=} x ( LINE_LENGTH - length $header ) ) . "\n";
+    return $header;
+}
+
 sub serialize {
-    my ( $self, $asset ) = @_;
-    my $class       = ref $asset;
+    my ( $self, $asset, $properties ) = @_;
+    my $class = ref $asset || $asset;
     my $short_class = $class;
     $short_class =~ s/^WebGUI::Asset:://xms;
-    my $definition = $class->definition( $asset->session );
+    my $definition = $class->definition( $self->{session} );
     my %text;
     my %meta;
-    my $asset_properties = $asset->get;
-    my $parent_url       = $asset->getParent->get('url');
-    my $header           = "==== $short_class ";
-    $header .= ( q{=} x ( LINE_LENGTH - length $header ) ) . "\n";
-    my $output = $header . <<"END_COMMON";
-Asset ID     : $asset_properties->{assetId}
-Title        : $asset_properties->{title}
-# Menu Title : $asset_properties->{menuTitle}
-# URL        : $asset_properties->{url}
-# Parent URL : $parent_url
-END_COMMON
+
+    my $asset_properties = {
+        ref $asset  ? %{ $asset->get } : (),
+        $properties ? %{$properties}   : () };
 
     for my $def ( @{$definition} ) {
         while ( my ( $property, $property_def )
             = each %{ $def->{properties} } )
         {
+            if (  !defined $asset_properties->{$property}
+                && defined $property_def->{defaultValue} )
+            {
+                $asset_properties->{$property}
+                    = $property_def->{defaultValue};
+            }
+
             my $field_type = ucfirst $property_def->{fieldType};
             if (   $property eq 'title'
                 || $property eq 'menuTitle'
@@ -106,24 +125,45 @@ END_COMMON
             }
         }
     }
+
+    my $basic_yaml = WGDev::yaml_encode( {
+            'Asset ID'   => $asset_properties->{assetId},
+            'Title'      => $asset_properties->{title},
+            'Menu Title' => $asset_properties->{menuTitle},
+            'URL'        => $asset_properties->{url},
+            'Parent'     => (
+                ref $asset
+                ? $asset->getParent->get('url')
+                : $self->import_node->get('url')
+            ),
+        } );
+    $basic_yaml =~ s/\A---(?:\Q {}\E)?\n?//msx;
+    $basic_yaml =~ s/^([^:]+):/sprintf("%-12s:", $1)/msxeg;
+    $basic_yaml =~ s/\n?\z/\n/msx;
+    my $output = _gen_serialize_header($short_class) . $basic_yaml;
+
     while ( my ( $field, $value ) = each %text ) {
         if ( !defined $value ) {
             $value = q{~};
         }
-        $value =~ s/\r\n/\n/msxg;
-        $value =~ s/\r/\n/msxg;
-        $header = "==== $field ";
-        $header .= ( q{=} x ( LINE_LENGTH - length $header ) ) . "\n";
-        $output .= $header . ( defined $value ? $value : q{~} ) . "\n";
+        $value =~ s/\r\n?/\n/msxg;
+        $output .= _gen_serialize_header($field) . $value . "\n";
     }
-    $header = '==== Properties ';
-    $header .= ( q{=} x ( LINE_LENGTH - length $header ) ) . "\n";
-    $output .= $header;
+
     my $meta_yaml = WGDev::yaml_encode( \%meta );
     $meta_yaml =~ s/\A---(?:\Q {}\E)?\n?//msx;
-    $output .= $meta_yaml . "\n";
+    $output .= _gen_serialize_header('Properties') . $meta_yaml . "\n";
+
     return $output;
 }
+
+my %basic_translation = (
+    'Title'      => 'title',
+    'Asset ID'   => 'assetId',
+    'Menu Title' => 'menuTitle',
+    'URL'        => 'url',
+    'Parent'     => 'parent',
+);
 
 sub deserialize {
     my $self          = shift;
@@ -135,7 +175,8 @@ sub deserialize {
         (?:\n|\z)   # end of line or end of string
     }msx, $asset_data;
     shift @text_sections;
-    my $class      = shift @text_sections;
+    my $class = shift @text_sections;
+    $class =~ s/^(?:(?:WebGUI::Asset)?::)?/WebGUI::Asset::/msx;
     my $basic_data = shift @text_sections;
     my %sections;
     my %properties;
@@ -152,32 +193,18 @@ sub deserialize {
         my $tabs = WGDev::yaml_decode($prop_data);
         %properties = map { %{$_} } values %{$tabs};
     }
-    %properties = ( %properties, %sections );
-    for my $line ( split /\n/msx, $basic_data ) {
-        next
-            if $line =~ /\A\s*#/msx;
-        if (
-            $line =~ m{
-            ^\s*
-            ([^:]+?)
-            \s*:\s*
-            (.*?)
-            \s*$
-        }msx
-            )
-        {
-            my $prop
-                = $1 eq 'Title'      ? 'title'
-                : $1 eq 'Asset ID'   ? 'assetId'
-                : $1 eq 'Menu Title' ? 'menuTitle'
-                : $1 eq 'URL'        ? 'url'
-                : $1 eq 'Parent URL' ? 'parent_url'
-                :                      undef;
-            if ($prop) {
-                $properties{$prop} = $2;
-            }
+
+    @properties{ keys %sections } = values %sections;
+
+    my $basic_untrans = WGDev::yaml_decode($basic_data);
+    for my $property ( keys %{$basic_untrans} ) {
+        if ( $basic_translation{$property} ) {
+            $properties{ $basic_translation{$property} }
+                = $basic_untrans->{$property};
         }
     }
+
+    $properties{className} = $class;
 
     return \%properties;
 }
