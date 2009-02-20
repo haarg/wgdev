@@ -46,7 +46,6 @@ sub parse_params {
     my $result = $self->SUPER::parse_params(@args);
 
     if ( $self->option('fast') ) {
-        $self->option_default( backup    => 1 );
         $self->option_default( uploads   => 0 );
         $self->option_default( backup    => 0 );
         $self->option_default( delcache  => 0 );
