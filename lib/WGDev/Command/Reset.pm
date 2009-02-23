@@ -38,12 +38,29 @@ sub option_config {
             cleantags!
             index!
             runwf!
+
+            profile|pro|p=s@
             ) );
 }
 
 sub parse_params {
     my ( $self, @args ) = @_;
     my $result = $self->SUPER::parse_params(@args);
+
+    my @profiles;
+    if ($self->option('profile')) {
+        @profiles = @{ $self->option('profile') };
+        # we have the profiles, unset the option so they don't try to process again
+        $self->option('profile', undef);
+    }
+    for my $profile ( @profiles ) {
+        my $profile_string = $self->wgd->my_config('profiles', $profile);
+        if (!defined $profile_string) {
+            warn "Profile '$profile' does not exist!\n";
+            next;
+        }
+        $self->parse_params_string($profile_string);
+    }
 
     if ( $self->option('fast') ) {
         $self->option_default( uploads   => 0 );
@@ -646,6 +663,13 @@ Rebuild the site lineage and reindex all of the content
 =item B<--runwf --no-runwf>
 
 Attempt to finish any running workflows
+
+=item B<--profile= --pro= -p>
+
+Specify a profile of options to use for resetting.  Profiles are specified in
+the WGDev config file under the 'profiles' section.  A profile is defined as
+a string to be used as additional command line options.  Profiles take
+priority over other command line options.  This may change in the future.
 
 =back
 
