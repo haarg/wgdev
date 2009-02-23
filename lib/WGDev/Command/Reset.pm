@@ -287,22 +287,23 @@ sub reset_config {
 
     $self->report('Resetting config file... ');
     my $reset_config = $wgd->my_config('config');
-    my %set_config   = ();
-    ##Handle missing or empty config files.
+
+    # new config file will include any explicit overrides
+    my %set_config;
     if (exists $reset_config->{override}) {
-        %set_config   = %{ $reset_config->{override} };
+        %set_config = %{ $reset_config->{override} };
     }
-    my @copy_keys    = ();
-    if (exists $reset_config->{copy}) {
-        unshift @copy_keys, @{ $reset_config->{copy} };
-    }
-    for my $key (
-        @{ $reset_config->{copy} }, qw(
+    # will also include specified values copied from old config
+    my @copy_keys = qw(
         dsn dbuser dbpass uploadsPath uploadsURL
         exportPath extrasPath extrasURL cacheType
         sitename spectreIp spectrePort spectreSubnets
-        ) )  ##Update POD docs if these change
-    {
+        fileCacheRoot
+    );  # Update POD docs if these change
+    if (exists $reset_config->{copy}) {
+        unshift @copy_keys, @{ $reset_config->{copy} };
+    }
+    for my $key (@copy_keys) {
         $set_config{$key} = $wgd->config->get($key);
     }
 
@@ -660,13 +661,13 @@ file are applied.
 
 These keys are always copied for convenience:
 
-        dsn dbuser dbpass
-        uploadsPath uploadsURL
-        extrasPath extrasURL
-        exportPath
-        cacheType
-        sitename
-        spectreIp spectrePort spectreSubnets
+    dsn         dbuser          dbpass
+    uploadsPath uploadsURL
+    extrasPath  extrasURL
+    exportPath
+    cacheType   fileCacheRoot
+    sitename
+    spectreIp   spectrePort     spectreSubnets
 
 =head2 .wgdevcfg
 

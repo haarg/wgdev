@@ -180,9 +180,8 @@ sub version {
 }
 
 sub wgd_config {
-    my $self      = shift;
-    my $namespace = shift;
-    my $key       = shift;
+    my $self = shift;
+    my @keys = @_;
     my $config    = $self->{wgd_config};
     if ( !$config ) {
         for my $config_file ( '.wgdevcfg', $ENV{HOME} . '/.wgdevcfg' ) {
@@ -197,19 +196,13 @@ sub wgd_config {
     if ( !$config ) {
         return;
     }
-    if ($namespace) {
-        my $ns_config = $config->{$namespace};
-        if ( !$ns_config ) {
+    for my $key (@keys) {
+        if (!exists $config->{$key}) {
             return;
         }
-        if ($key) {
-            return $ns_config->{$key};
-        }
-        return $ns_config;
+        $config = $config->{$key};
     }
-    else {
-        return $config;
-    }
+    return $config;
 }
 
 sub my_config {    ## no critic (RequireArgUnpacking)
