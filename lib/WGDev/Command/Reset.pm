@@ -640,6 +640,47 @@ Attempt to finish any running workflows
 
 =back
 
+=head2 Config Reset
+
+The config file is reset by taking the currently specified WebGUI config file,
+the WebGUI.conf.orig file that WGDev finds in the etc directory, and instructions in
+the L<.wgdevcfg> file.
+
+From the .wgdevcfg file, it applies all override commands.  Then, it applies any copy
+commands from the .wgdevcfg file, and lastly, properties from the WebGUI.conf.orig
+file are applied.
+
+These keys are always copied for convenience:
+
+        dsn dbuser dbpass
+        uploadsPath uploadsURL
+        extrasPath extrasURL
+        exportPath
+        cacheType
+        sitename
+        spectreIp spectrePort spectreSubnets
+
+=head2 .wgdevcfg
+
+It currently looks for the .wgdevcfg file in the current directory and  
+your home directory.  It is a YAML formatted file that looks like this:
+
+    WGDev::Command::Reset:
+        config:
+            copy:
+                - exportPath
+                - searchIndexerPlugins
+            override:
+                availableDictionaries:
+                -   default: 1
+                    id: en_US
+                    name: English
+                emailToLog: 1
+                macros/Env: Env
+
+The config section contains commands and instructions that are used when the config
+file is reset.
+
 =head1 AUTHOR
 
 Graham Knop <graham@plainblack.com>
