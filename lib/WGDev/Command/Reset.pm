@@ -11,8 +11,8 @@ BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
 use File::Spec ();
 use Carp qw(croak);
 use constant STAT_MODE => 2;
-use constant STAT_UID  => 2;
-use constant STAT_GID  => 2;
+use constant STAT_UID  => 4;
+use constant STAT_GID  => 5;
 
 sub option_config {
     return (
@@ -194,7 +194,8 @@ sub reset_uploads {
 
     ##no critic (ProhibitPunctuationVars ProhibitParensWithBuiltins)
     # make umask as permissive as required to match existing uploads folder
-    umask( $uploads_mode ^ oct(777) );
+    # including sticky bits
+    umask( $uploads_mode ^ oct(777777) );
 
     # set effective UID and GID
     local ( $>, $) ) = ( $uploads_uid, $uploads_gid );
