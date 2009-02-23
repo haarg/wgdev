@@ -16,7 +16,7 @@ sub option_config {
     return qw(
         all|A
         slow|S
-        reset
+        reset:s
     );
 }
 
@@ -30,13 +30,15 @@ sub process {
         $ENV{TEST_SYNTAX} = 1;
         $ENV{TEST_POD}    = 1;
     }
-    if ( $self->option('reset') ) {
+    if ( defined $self->option('reset') ) {
+        my $reset_options = $self->option('reset');
+        if ($reset_options eq '') {
+            $reset_options = '--quiet --delcache --import --upgrade';
+        }
         require WGDev::Command::Reset;
         my $reset = WGDev::Command::Reset->new($wgd);
-        $reset->verbosity(0);
-        $reset->clear_cache;
-        $reset->import_db_script;
-        $reset->upgrade;
+        $reset->parse_params_string($reset_options);
+        $reset->process;
     }
     my $prove = App::Prove->new;
     my @args  = $self->arguments;
@@ -84,6 +86,12 @@ Run all tests recursively.  Otherwise, tests will need to be specified.
 =item B<-S --slow>
 
 Includes slow tests by defining CODE_COP, TEST_SYNTAX, and TEST_POD.
+
+=item B<--reset=>
+
+Perform a site reset before running the tests.  The value specified is used
+as the command line parameters for the reset command.  With no value, will use
+the --delcache --import --upgrade parameters to do a fast site reset.
 
 =back
 
