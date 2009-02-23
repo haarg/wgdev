@@ -287,13 +287,21 @@ sub reset_config {
 
     $self->report('Resetting config file... ');
     my $reset_config = $wgd->my_config('config');
-    my %set_config   = %{ $reset_config->{override} };
+    my %set_config   = ();
+    ##Handle missing or empty config files.
+    if (exists $reset_config->{override}) {
+        %set_config   = %{ $reset_config->{override} };
+    }
+    my @copy_keys    = ();
+    if (exists $reset_config->{copy}) {
+        unshift @copy_keys, @{ $reset_config->{copy} };
+    }
     for my $key (
         @{ $reset_config->{copy} }, qw(
         dsn dbuser dbpass uploadsPath uploadsURL
         exportPath extrasPath extrasURL cacheType
         sitename spectreIp spectrePort spectreSubnets
-        ) )
+        ) )  ##Update POD docs if these change
     {
         $set_config{$key} = $wgd->config->get($key);
     }
