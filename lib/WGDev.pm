@@ -20,30 +20,28 @@ sub new {
     if ($root) {
         $self->{root} = $root;
     }
+    elsif ( $config && -e $config ) {
+        my $config_dir = File::Spec->catpath(
+            ( File::Spec->splitpath($config) )[ 0, 1 ] );
+        $self->{root} = Cwd::realpath(
+            File::Spec->catdir( $config_dir, File::Spec->updir ) );
+    }
     else {
-        if ( $config && -e $config ) {
-            my $config_dir = File::Spec->catpath(
-                ( File::Spec->splitpath($config) )[ 0, 1 ] );
-            $self->{root} = Cwd::realpath(
-                File::Spec->catdir( $config_dir, File::Spec->updir ) );
-        }
-        else {
-            my $dir = Cwd::getcwd();
-            while (1) {
-                if (
-                    -e File::Spec->catfile(
-                        $dir, 'etc', 'WebGUI.conf.original'
-                    ) )
-                {
-                    $self->{root} = $dir;
-                    last;
-                }
-                my $parent = Cwd::realpath(
-                    File::Spec->catdir( $dir, File::Spec->updir ) );
-                last
-                    if $dir eq $parent;
-                $dir = $parent;
+        my $dir = Cwd::getcwd();
+        while (1) {
+            if (
+                -e File::Spec->catfile(
+                    $dir, 'etc', 'WebGUI.conf.original'
+                ) )
+            {
+                $self->{root} = $dir;
+                last;
             }
+            my $parent = Cwd::realpath(
+                File::Spec->catdir( $dir, File::Spec->updir ) );
+            last
+                if $dir eq $parent;
+            $dir = $parent;
         }
     }
     if ( $self->{root} ) {
