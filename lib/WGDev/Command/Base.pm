@@ -35,10 +35,10 @@ sub parse_params {
 }
 
 sub parse_params_string {
-    my $self = shift;
+    my $self         = shift;
     my $param_string = shift;
     require Text::ParseWords;
-    return $self->parse_params(Text::ParseWords::shellwords($param_string));
+    return $self->parse_params( Text::ParseWords::shellwords($param_string) );
 }
 
 sub option_parse_config { return qw(gnu_getopt) }

@@ -48,14 +48,15 @@ sub parse_params {
     my $result = $self->SUPER::parse_params(@args);
 
     my @profiles;
-    if ($self->option('profile')) {
+    if ( $self->option('profile') ) {
         @profiles = @{ $self->option('profile') };
-        # we have the profiles, unset the option so they don't try to process again
-        $self->option('profile', undef);
+
+   # we have the profiles, unset the option so they don't try to process again
+        $self->option( 'profile', undef );
     }
-    for my $profile ( @profiles ) {
-        my $profile_string = $self->wgd->my_config('profiles', $profile);
-        if (!defined $profile_string) {
+    for my $profile (@profiles) {
+        my $profile_string = $self->wgd->my_config( 'profiles', $profile );
+        if ( !defined $profile_string ) {
             warn "Profile '$profile' does not exist!\n";
             next;
         }
@@ -212,7 +213,7 @@ sub reset_uploads {
     ##no critic (ProhibitPunctuationVars ProhibitParensWithBuiltins)
     # make umask as permissive as required to match existing uploads folder
     # including sticky bits
-    umask( $uploads_mode ^ oct(777777) );
+    umask( $uploads_mode ^ oct(7777) );
 
     # set effective UID and GID
     local ( $>, $) ) = ( $uploads_uid, $uploads_gid );
@@ -234,7 +235,7 @@ sub reset_uploads {
                         $File::Find::prune = 1;
                         return;
                     }
-                    File::Path::mkpath($site_path);
+                    File::Path::mkpath( $site_path, 0, oct(7777) );
                 }
                 else {
                     File::Copy::copy( $wg_path, $site_path );
@@ -307,17 +308,18 @@ sub reset_config {
 
     # new config file will include any explicit overrides
     my %set_config;
-    if (exists $reset_config->{override}) {
+    if ( exists $reset_config->{override} ) {
         %set_config = %{ $reset_config->{override} };
     }
+
     # will also include specified values copied from old config
     my @copy_keys = qw(
         dsn dbuser dbpass uploadsPath uploadsURL
         exportPath extrasPath extrasURL cacheType
         sitename spectreIp spectrePort spectreSubnets
         fileCacheRoot
-    );  # Update POD docs if these change
-    if (exists $reset_config->{copy}) {
+        );    # Update POD docs if these change
+    if ( exists $reset_config->{copy} ) {
         unshift @copy_keys, @{ $reset_config->{copy} };
     }
     for my $key (@copy_keys) {
@@ -695,17 +697,17 @@ These keys are always copied for convenience:
 
 =head2 .wgdevcfg
 
-It currently looks for the .wgdevcfg file in the current directory and  
-your home directory.  It is a YAML formatted file that looks like this:
+It currently looks for the .wgdevcfg file in the current directory and
+your home directory.  It is a YAML formatted file that looks like this:
 
     WGDev::Command::Reset:
         config:
             copy:
-                - exportPath
-                - searchIndexerPlugins
+                - exportPath
+                - searchIndexerPlugins
             override:
                 availableDictionaries:
-                -   default: 1
+                -   default: 1
                     id: en_US
                     name: English
                 emailToLog: 1

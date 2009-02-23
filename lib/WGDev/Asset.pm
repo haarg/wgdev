@@ -137,7 +137,11 @@ sub serialize {
                 : $self->import_node->get('url')
             ),
         } );
+
+    # filter out unneeded YAML syntax
     $basic_yaml =~ s/\A---(?:\Q {}\E)?\n?//msx;
+
+    # line up colons
     $basic_yaml =~ s/^([^:]+):/sprintf("%-12s:", $1)/msxeg;
     $basic_yaml =~ s/\n?\z/\n/msx;
     my $output = _gen_serialize_header($short_class) . $basic_yaml;

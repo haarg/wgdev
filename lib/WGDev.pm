@@ -29,10 +29,8 @@ sub new {
     else {
         my $dir = Cwd::getcwd();
         while (1) {
-            if (
-                -e File::Spec->catfile(
-                    $dir, 'etc', 'WebGUI.conf.original'
-                ) )
+            if ( -e File::Spec->catfile( $dir, 'etc', 'WebGUI.conf.original' )
+                )
             {
                 $self->{root} = $dir;
                 last;
@@ -178,9 +176,8 @@ sub version {
 }
 
 sub wgd_config {
-    my $self = shift;
-    my @keys = @_;
-    my $config    = $self->{wgd_config};
+    my ( $self, @keys ) = @_;
+    my $config = $self->{wgd_config};
     if ( !$config ) {
         for my $config_file ( '.wgdevcfg', $ENV{HOME} . '/.wgdevcfg' ) {
             if ( -e $config_file ) {
@@ -195,7 +192,7 @@ sub wgd_config {
         return;
     }
     for my $key (@keys) {
-        if (!exists $config->{$key}) {
+        if ( !exists $config->{$key} ) {
             return;
         }
         $config = $config->{$key};

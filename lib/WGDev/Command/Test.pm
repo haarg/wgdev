@@ -32,7 +32,7 @@ sub process {
     }
     if ( defined $self->option('reset') ) {
         my $reset_options = $self->option('reset');
-        if ($reset_options eq '') {
+        if ( $reset_options eq q{} ) {
             $reset_options = '--quiet --delcache --import --upgrade';
         }
         require WGDev::Command::Reset;
