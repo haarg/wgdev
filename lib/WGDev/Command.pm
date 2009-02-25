@@ -31,7 +31,8 @@ sub run {
         my $command_exec = _find_cmd_exec($command_name);
         if ($command_exec) {
             require WGDev;
-            my $wgd = $class->guess_webgui_paths(WGDev->new, $opt_root, $opt_config);
+            my $wgd = $class->guess_webgui_paths( WGDev->new, $opt_root,
+                $opt_config );
             $wgd->set_environment;
             exec {$command_exec} $command_exec, $opt_help ? '--help' : (),
                 $opt_version ? '--version' : (), @_;
@@ -60,7 +61,8 @@ sub run {
     }
     else {
         require WGDev;
-        my $wgd = $class->guess_webgui_paths(WGDev->new, $opt_root, $opt_config);
+        my $wgd = $class->guess_webgui_paths( WGDev->new, $opt_root,
+            $opt_config );
         if (
             !eval {
                 my $command = $command_module->new($wgd);
@@ -76,31 +78,43 @@ sub run {
 }
 
 sub guess_webgui_paths {
-    my ($class, $wgd, $webgui_root, $webgui_config) = @_;
+    my ( $class, $wgd, $webgui_root, $webgui_config ) = @_;
     $webgui_root ||= $ENV{WEBGUI_ROOT} || $wgd->my_config('webgui_root');
-    $webgui_config ||= $ENV{WEBGUI_CONFIG} || $wgd->my_config('webgui_config');
+    $webgui_config ||= $ENV{WEBGUI_CONFIG}
+        || $wgd->my_config('webgui_config');
+
     # first we need to find the webgui root
 
     if ($webgui_root) {
         $wgd->root($webgui_root);
     }
-    if (! eval {
-        if ($webgui_config && $wgd->config_file($webgui_config) && $wgd->root) {
-            return $wgd;
+    if (
+        !eval {
+            if (   $webgui_config
+                && $wgd->config_file($webgui_config)
+                && $wgd->root )
+            {
+                return $wgd;
+            }
+            1;
         }
-        1;
-    } && $webgui_root) {
+        && $webgui_root
+        )
+    {
         die $@;
     }
 
-    if (! $wgd->root) {
+    if ( !$wgd->root ) {
         my $dir = Cwd::getcwd();
         while (1) {
-            if ( -e File::Spec->catfile( $dir, 'etc', 'WebGUI.conf.original' ) ) {
+            if ( -e File::Spec->catfile( $dir, 'etc', 'WebGUI.conf.original' )
+                )
+            {
                 $wgd->root($dir);
                 last;
             }
-            my $parent = Cwd::realpath( File::Spec->catdir( $dir, File::Spec->updir ) );
+            my $parent = Cwd::realpath(
+                File::Spec->catdir( $dir, File::Spec->updir ) );
             croak "Unable to find WebGUI root directory!\n"
                 if $dir eq $parent;
             $dir = $parent;
@@ -114,12 +128,11 @@ sub guess_webgui_paths {
         my @configs = readdir $dh;
         closedir $dh
             or croak "Unable to close directory handle: $!";
-        @configs = grep {
-            /\Q.conf\E$/msx
-            && !/^(?:spectre|log)\Q.conf\E$/msx
-        } @configs;
+        @configs
+            = grep { /\Q.conf\E$/msx && !/^(?:spectre|log)\Q.conf\E$/msx }
+            @configs;
         if ( @configs == 1 ) {
-            $wgd->config_file($configs[0]);
+            $wgd->config_file( $configs[0] );
             return $wgd;
         }
     }

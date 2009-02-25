@@ -15,7 +15,7 @@ sub package_usage {
     if ( !defined $verbosity ) {
         $verbosity = 1;
     }
-    if ($verbosity == 1) {
+    if ( $verbosity == 1 ) {
         $verbosity = USE_SECTIONS;
     }
     ( my $file = $package . '.pm' ) =~ s{::}{/}msxg;

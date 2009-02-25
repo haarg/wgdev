@@ -55,7 +55,8 @@ sub parse_params {
         $self->option( 'profile', undef );
     }
     for my $profile (@profiles) {
-        my $profile_string = $self->wgd->my_config( ['profiles', $profile ]);
+        my $profile_string
+            = $self->wgd->my_config( [ 'profiles', $profile ] );
         if ( !defined $profile_string ) {
             warn "Profile '$profile' does not exist!\n";
             next;

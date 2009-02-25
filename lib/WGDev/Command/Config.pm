@@ -8,7 +8,7 @@ our $VERSION = '0.0.1';
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
-use WGDev ();
+use WGDev          ();
 use WGDev::Command ();
 
 sub option_config {
@@ -22,7 +22,7 @@ sub process {
     my $wgd  = $self->wgd;
     my @args = $self->arguments;
 
-    if (!@args) {
+    if ( !@args ) {
         my $usage = $self->usage(0);
         warn $usage;    ##no critic (RequireCarping)
         return;
@@ -31,18 +31,18 @@ sub process {
     my $config_param = shift @args;
     my @config_path = split /[.]/msx, $config_param;
 
-    if ($self->option('command')) {
+    if ( $self->option('command') ) {
         my $command = shift @config_path;
-        my $module = WGDev::Command::command_to_module($command);
+        my $module  = WGDev::Command::command_to_module($command);
         unshift @config_path, $module;
     }
 
-    my $param = $wgd->wgd_config(\@config_path, @args);
-    if (@args && defined $param) {
+    my $param = $wgd->wgd_config( \@config_path, @args );
+    if ( @args && defined $param ) {
         $wgd->write_wgd_config;
         return 1;
     }
-    if (ref $param) {
+    if ( ref $param ) {
         $param = WGDev::yaml_encode($param);
         $param =~ s/\A---(?:\Q {}\E)?\n?//msx;
     }

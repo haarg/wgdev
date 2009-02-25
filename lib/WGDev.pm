@@ -15,10 +15,10 @@ sub new {
     my $root;
     my $config;
     if ( $_[0] && -d $_[0] ) {
-        ($root, $config) = @_;
+        ( $root, $config ) = @_;
     }
     else {
-        ($config, $root) = @_;
+        ( $config, $root ) = @_;
     }
     if ($root) {
         $self->root($root);
@@ -33,12 +33,11 @@ sub set_environment {
     my $self = shift;
     croak 'WebGUI root not set'
         if !$self->root;
-    $self->{orig_env} ||= {
-        map { $_ => $ENV{$_} } qw(WEBGUI_ROOT WEBGUI_CONFIG PERL5LIB)
-    };
+    $self->{orig_env}
+        ||= { map { $_ => $ENV{$_} } qw(WEBGUI_ROOT WEBGUI_CONFIG PERL5LIB) };
     $ENV{WEBGUI_ROOT}   = $self->root;
     $ENV{WEBGUI_CONFIG} = $self->config_file;
-    $ENV{PERL5LIB} = $ENV{PERL5LIB}
+    $ENV{PERL5LIB}      = $ENV{PERL5LIB}
         ? do {
         require Config;
         $self->lib . $Config::Config{path_sep} . $ENV{PERL5LIB};
@@ -48,11 +47,11 @@ sub set_environment {
 }
 
 sub reset_environment {
-    my $self = shift;
+    my $self     = shift;
     my $orig_env = delete $self->{orig_env};
     return
         if !$orig_env;
-    @ENV{keys %{$orig_env}} = values %{$orig_env};
+    @ENV{ keys %{$orig_env} } = values %{$orig_env};
     return 1;
 }
 
@@ -60,7 +59,7 @@ sub root {
     my $self = shift;
     if (@_) {
         my $path = shift;
-        if (-d $path && -d File::Spec->catdir($path, 'docs') ) {
+        if ( -d $path && -d File::Spec->catdir( $path, 'docs' ) ) {
             $self->{root} = File::Spec->rel2abs($path);
             $self->{lib} = File::Spec->catdir( $self->{root}, 'lib' );
             unshift @INC, $self->lib;
@@ -76,18 +75,27 @@ sub config_file {
     my $self = shift;
     if (@_) {
         my $path = shift;
-        if (-f $path) {
+        if ( -f $path ) {
         }
-        elsif ( $self->root && -f (my $fullpath = File::Spec->catfile($self->root, 'etc', $path) ) ) {
+        elsif (
+            $self->root
+            && -f (
+                my $fullpath
+                    = File::Spec->catfile( $self->root, 'etc', $path ) ) )
+        {
             $path = $fullpath;
         }
         else {
             croak "Invalid WebGUI config file: $path\n";
         }
-        if (!$self->root) {
+        if ( !$self->root ) {
             ##no critic (RequireCheckingReturnValueOfEval)
             eval {
-                $self->root(File::Spec->catpath( (File::Spec->splitpath($path))[0,1], File::Spec->updir ));
+                $self->root(
+                    File::Spec->catpath(
+                        ( File::Spec->splitpath($path) )[ 0, 1 ],
+                        File::Spec->updir
+                    ) );
             };
         }
         $self->close_session;
@@ -183,58 +191,61 @@ sub version {
     return $self->{version} ||= WGDev::Version->new( $self->root );
 }
 
-sub wgd_config {
+sub wgd_config {    ##no critic (ProhibitExcessComplexity)
     my ( $self, $key_list, $value ) = @_;
     my $config = \( $self->{wgd_config} );
-    if ( !${ $config } ) {
+    if ( !${$config} ) {
         $config = \( $self->read_wgd_config );
     }
     my @keys;
-    if (ref $key_list && ref $key_list eq 'ARRAY') {
+    if ( ref $key_list && ref $key_list eq 'ARRAY' ) {
         @keys = @{$key_list};
     }
     else {
         @keys = split /[.]/msx, $key_list;
     }
 
-    if ( !${ $config } ) {
+    if ( !${$config} ) {
         $config = \( $self->{wgd_config} = {} );
     }
-    while ( @keys ) {
-        my $key = shift @keys;
+    while (@keys) {
+        my $key     = shift @keys;
         my $numeric = $key ne q{} && $key =~ /^[+]?-?\d+$/msx;
-        my $type = ref ${ $config };
-        if ( (!$type && !defined $value)
+        my $type    = ref ${$config};
+        if (   ( !$type && !defined $value )
             || $type eq 'SCALAR'
-            || ($type eq 'ARRAY' && !$numeric) ) {
+            || ( $type eq 'ARRAY' && !$numeric ) )
+        {
             return;
         }
-        elsif ( $type eq 'ARRAY' or (!$type && $numeric) ) {
+        elsif ( $type eq 'ARRAY' or ( !$type && $numeric ) ) {
             if ( !$type ) {
-                ${ $config } = [];
+                ${$config} = [];
             }
             my ($insert) = $key =~ s/^([+])//msx;
-            if ( !defined $value && ($insert || !defined ${$config}->[$key])) {
+            if ( !defined $value
+                && ( $insert || !defined ${$config}->[$key] ) )
+            {
                 return;
             }
             if ($insert) {
-                if ($key ne q{}) {
-                    if ($key < 0) {
-                        $key += @{ ${ $config } };
+                if ( $key ne q{} ) {
+                    if ( $key < 0 ) {
+                        $key += @{ ${$config} };
                     }
-                    splice @{ ${ $config } }, $key, 0, undef;
+                    splice @{ ${$config} }, $key, 0, undef;
                 }
                 else {
-                    $key = @{ ${ $config } };
+                    $key = @{ ${$config} };
                 }
             }
             $config = \( ${$config}->[$key] );
         }
         else {
             if ( !$type ) {
-                ${ $config } = {};
+                ${$config} = {};
             }
-            if (!defined ${$config}->{$key} && !defined $value) {
+            if ( !defined ${$config}->{$key} && !defined $value ) {
                 return;
             }
             $config = \( ${$config}->{$key} );
@@ -265,27 +276,28 @@ sub read_wgd_config {
 }
 
 sub write_wgd_config {
-    my $self = shift;
+    my $self        = shift;
     my $config_path = $self->{wgd_config_path};
-    if (! $self->{wgd_config_path}) {
+    if ( !$self->{wgd_config_path} ) {
         $config_path = $self->{wgd_config_path} = $ENV{HOME} . '/.wgdevcfg';
     }
     my $config = $self->{wgd_config} || {};
     my $encoded = yaml_encode($config);
     $encoded =~ s/\A---(?:\Q {}\E)?\n?//msx;
     $encoded =~ s/\n?\z/\n/msx;
-    open my $fh, '>', $config_path or croak "Unable to write to $config_path: $!";
+    open my $fh, '>', $config_path
+        or croak "Unable to write to $config_path: $!";
     print {$fh} $encoded;
     close $fh or croak "Unable to write to $config_path: $!";
     return 1;
 }
 
 sub my_config {
-    my $self   = shift;
-    my $key    = shift;
+    my $self     = shift;
+    my $key      = shift;
     my ($caller) = caller;
     my @keys;
-    if (ref $key && ref $key eq 'ARRAY') {
+    if ( ref $key && ref $key eq 'ARRAY' ) {
         @keys = @{$key};
     }
     else {
