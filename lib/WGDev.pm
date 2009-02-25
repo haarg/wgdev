@@ -184,34 +184,115 @@ sub version {
 }
 
 sub wgd_config {
-    my ( $self, @keys ) = @_;
-    my $config = $self->{wgd_config};
-    if ( !$config ) {
-        for my $config_file ( '.wgdevcfg', $ENV{HOME} . '/.wgdevcfg' ) {
-            if ( -e $config_file ) {
-                open my $fh, '<', $config_file or next;
-                my $content = do { local $/ = undef; <$fh> };
-                close $fh or next;
-                $self->{wgd_config} = $config = yaml_decode($content);
-            }
-        }
+    my ( $self, $key_list, $value ) = @_;
+    my $config = \( $self->{wgd_config} );
+    if ( !${ $config } ) {
+        $config = \( $self->read_wgd_config );
     }
-    if ( !$config ) {
-        return;
+    my @keys;
+    if (ref $key_list && ref $key_list eq 'ARRAY') {
+        @keys = @{$key_list};
     }
-    for my $key (@keys) {
-        if ( !exists $config->{$key} ) {
+    else {
+        @keys = split /[.]/msx, $key_list;
+    }
+
+    if ( !${ $config } ) {
+        $config = \( $self->{wgd_config} = {} );
+    }
+    while ( @keys ) {
+        my $key = shift @keys;
+        my $numeric = $key ne q{} && $key =~ /^[+]?-?\d+$/msx;
+        my $type = ref ${ $config };
+        if ( (!$type && !defined $value)
+            || $type eq 'SCALAR'
+            || ($type eq 'ARRAY' && !$numeric) ) {
             return;
         }
-        $config = $config->{$key};
+        elsif ( $type eq 'ARRAY' or (!$type && $numeric) ) {
+            if ( !$type ) {
+                ${ $config } = [];
+            }
+            my ($insert) = $key =~ s/^([+])//msx;
+            if ( !defined $value && ($insert || !defined ${$config}->[$key])) {
+                return;
+            }
+            if ($insert) {
+                if ($key ne q{}) {
+                    if ($key < 0) {
+                        $key += @{ ${ $config } };
+                    }
+                    splice @{ ${ $config } }, $key, 0, undef;
+                }
+                else {
+                    $key = @{ ${ $config } };
+                }
+            }
+            $config = \( ${$config}->[$key] );
+        }
+        else {
+            if ( !$type ) {
+                ${ $config } = {};
+            }
+            if (!defined ${$config}->{$key} && !defined $value) {
+                return;
+            }
+            $config = \( ${$config}->{$key} );
+        }
+        if (@keys) {
+            next;
+        }
+        if ($value) {
+            return ${$config} = $value;
+        }
+        return ${$config};
     }
-    return $config;
+    return;
+}
+
+sub read_wgd_config {
+    my $self = shift;
+    for my $config_file ( "$ENV{HOME}/.wgdevcfg", '/etc/wgdevcfg' ) {
+        if ( -f $config_file ) {
+            open my $fh, '<', $config_file or next;
+            my $content = do { local $/ = undef; <$fh> };
+            close $fh or next;
+            $self->{wgd_config_path} = Cwd::realpath($config_file);
+            return $self->{wgd_config} = yaml_decode($content);
+        }
+    }
+    return $self->{wgd_config} = {};
+}
+
+sub write_wgd_config {
+    my $self = shift;
+    my $config_path = $self->{wgd_config_path};
+    if (! $self->{wgd_config_path}) {
+        $config_path = $self->{wgd_config_path} = $ENV{HOME} . '/.wgdevcfg';
+    }
+    my $config = $self->{wgd_config} || {};
+    my $encoded = yaml_encode($config);
+    $encoded =~ s/\A---(?:\Q {}\E)?\n?//msx;
+    $encoded =~ s/\n?\z/\n/msx;
+    open my $fh, '>', $config_path or croak "Unable to write to $config_path: $!";
+    print {$fh} $encoded;
+    close $fh or croak "Unable to write to $config_path: $!";
+    return 1;
 }
 
 sub my_config {
-    my ($self)   = shift;
+    my $self   = shift;
+    my $key    = shift;
     my ($caller) = caller;
-    return $self->wgd_config( $caller, @_ );
+    my @keys;
+    if (ref $key && ref $key eq 'ARRAY') {
+        @keys = @{$key};
+    }
+    else {
+        @keys = split /[.]/msx, $key;
+    }
+    unshift @keys, $caller;
+    return $self->wgd_config( \@keys, @_ );
 }
 
 sub yaml_decode {

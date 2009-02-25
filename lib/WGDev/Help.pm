@@ -6,6 +6,7 @@ use 5.008008;
 our $VERSION = '0.0.1';
 
 use Carp qw(croak);
+use constant USE_SECTIONS => 99;
 
 sub package_usage {
     my $package   = shift;
@@ -13,6 +14,9 @@ sub package_usage {
     require Pod::Usage;
     if ( !defined $verbosity ) {
         $verbosity = 1;
+    }
+    if ($verbosity == 1) {
+        $verbosity = USE_SECTIONS;
     }
     ( my $file = $package . '.pm' ) =~ s{::}{/}msxg;
     require $file;
@@ -24,10 +28,12 @@ sub package_usage {
         or die "Can't open file handle to scalar : $!";
     open my $in, '<', \$pod or croak "Unable to read documentation file : $!";
     my $params = {
-        -input   => $in,
-        -output  => $out,
-        -exitval => 'NOEXIT',
-        -verbose => $verbosity,
+        -input    => $in,
+        -output   => $out,
+        -verbose  => $verbosity,
+        -exitval  => 'NOEXIT',
+        -sections => 'SYNOPSIS|OPTIONS|CONFIGURATION',
+
     };
     Pod::Usage::pod2usage($params);
     close $in  or return q{};

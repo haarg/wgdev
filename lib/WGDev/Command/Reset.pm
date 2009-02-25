@@ -55,7 +55,7 @@ sub parse_params {
         $self->option( 'profile', undef );
     }
     for my $profile (@profiles) {
-        my $profile_string = $self->wgd->my_config( 'profiles', $profile );
+        my $profile_string = $self->wgd->my_config( ['profiles', $profile ]);
         if ( !defined $profile_string ) {
             warn "Profile '$profile' does not exist!\n";
             next;
@@ -679,13 +679,16 @@ priority over other command line options.  This may change in the future.
 
 The config file is reset by taking the currently specified WebGUI config file,
 the WebGUI.conf.orig file that WGDev finds in the etc directory, and instructions in
-the L<.wgdevcfg> file.
+the WGDev config file (see L<WGDev::Command::Config>).
 
-From the .wgdevcfg file, it applies all override commands.  Then, it applies any copy
-commands from the .wgdevcfg file, and lastly, properties from the WebGUI.conf.orig
-file are applied.
+The reset config file contains in order of priority: options copied from the
+existing config file, override options, and options in the F<WebGUI.conf.orig>
+file.
 
-These keys are always copied for convenience:
+Overrides are specified in the config parameter C<-c reset.config.overide> as
+a hash of options to apply.  Copied parameters are specified in
+C<-c reset.config.copy> as a list of entries to copy.  In addition to the
+configured list, a set of parameters is always copied:
 
     dsn         dbuser          dbpass
     uploadsPath uploadsURL
@@ -695,26 +698,25 @@ These keys are always copied for convenience:
     sitename
     spectreIp   spectrePort     spectreSubnets
 
-=head2 .wgdevcfg
+=head1 CONFIGURATION
 
-It currently looks for the .wgdevcfg file in the current directory and
-your home directory.  It is a YAML formatted file that looks like this:
+=over 8
 
-    WGDev::Command::Reset:
-        config:
-            copy:
-                - exportPath
-                - searchIndexerPlugins
-            override:
-                availableDictionaries:
-                -   default: 1
-                    id: en_US
-                    name: English
-                emailToLog: 1
-                macros/Env: Env
+=item C<profiles.E<lt>profile nameE<gt>>
 
-The config section contains commands and instructions that are used when the config
-file is reset.
+Creates a profile to use with the C<--profile> option.  The value of the config
+parameter is a string with the command line parameters to apply when this
+profile is used.
+
+=item C<config.overide>
+
+Overrides to apply when resetting config file.
+
+=item C<config.copy>
+
+Parameters to copy from existing config file when resetting it.
+
+=back
 
 =head1 AUTHOR
 
