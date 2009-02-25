@@ -88,7 +88,7 @@ sub generate_docs {
     File::Find::find( {
             no_chdir => 1,
             wanted   => sub {
-                no warnings 'once';    ##no critic (ProhibitNoWarnings)
+                no warnings 'once';
                 my $code_file = $File::Find::name;
                 return
                     if -d $code_file;

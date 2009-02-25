@@ -8,7 +8,7 @@ our $VERSION = '0.1.0';
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
-sub new {    ##no critic (RequireArgUnpacking)
+sub new {
     my $class = shift;
     my $self  = $class->SUPER::new(@_);
     $self->{verbosity} = 1;
@@ -22,7 +22,7 @@ sub option_config {
     );
 }
 
-sub parse_params {    ##no critic (RequireArgUnpacking)
+sub parse_params {
     my $self   = shift;
     my $result = $self->SUPER::parse_params(@_);
     $self->{verbosity} += ( $self->option('verbose') || 0 )
@@ -30,7 +30,7 @@ sub parse_params {    ##no critic (RequireArgUnpacking)
     return $result;
 }
 
-sub verbosity {       ##no critic (RequireArgUnpacking)
+sub verbosity {
     my $self = shift;
     if (@_) {
         return $self->{verbosity} = shift;

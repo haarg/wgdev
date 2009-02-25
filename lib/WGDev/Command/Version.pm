@@ -136,7 +136,7 @@ sub update_version {
 }
 
 sub colored {
-    no warnings 'redefine';    ##no critic (ProhibitNoWarnings)
+    no warnings 'redefine';
     if ( eval { require Term::ANSIColor; 1 } ) {
         *colored = \&Term::ANSIColor::colored;
     }

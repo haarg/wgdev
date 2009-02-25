@@ -11,7 +11,7 @@ use Cwd          ();
 use Carp qw(croak carp);
 ##no critic (RequireCarping)
 
-sub run {    ##no critic (RequireArgUnpacking)
+sub run {
     my $class = shift;
     local @ARGV = @_;
     Getopt::Long::Configure(qw(default gnu_getopt pass_through));
@@ -224,7 +224,7 @@ sub command_list {
             return
                 if !/\Q.pm\E$/msx;
 
-            no warnings 'once';    ##no critic (ProhibitNoWarnings)
+            no warnings 'once';
             my $lib_path
                 = File::Spec->abs2rel( $File::Find::name, $inc_path );
             $lib_check{$lib_path} = 1;

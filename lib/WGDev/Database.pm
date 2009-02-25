@@ -44,7 +44,7 @@ sub new {
     return $self;
 }
 
-sub command_line {    ## no critic (RequireArgUnpacking)
+sub command_line {
     my $self   = shift;
     my @params = (
         '-h' . $self->hostname,

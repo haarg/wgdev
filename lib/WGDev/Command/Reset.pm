@@ -223,7 +223,7 @@ sub reset_uploads {
     File::Find::find( {
             no_chdir => 1,
             wanted   => sub {
-                no warnings 'once';    ##no critic (ProhibitNoWarnings)
+                no warnings 'once';
                 my $wg_path = $File::Find::name;
                 my $site_path
                     = File::Spec->rel2abs(

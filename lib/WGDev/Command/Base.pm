@@ -4,7 +4,6 @@ use warnings;
 use 5.008008;
 
 our $VERSION = '0.0.1';
-##no critic (RequireArgUnpacking);
 
 sub is_runnable {
     my $class = shift;

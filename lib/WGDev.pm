@@ -85,6 +85,7 @@ sub config_file {
             croak "Invalid WebGUI config file: $path\n";
         }
         if (!$self->root) {
+            ##no critic (RequireCheckingReturnValueOfEval)
             eval {
                 $self->root(File::Spec->catpath( (File::Spec->splitpath($path))[0,1], File::Spec->updir ));
             };
@@ -207,7 +208,7 @@ sub wgd_config {
     return $config;
 }
 
-sub my_config {    ## no critic (RequireArgUnpacking)
+sub my_config {
     my ($self)   = shift;
     my ($caller) = caller;
     return $self->wgd_config( $caller, @_ );
@@ -224,7 +225,7 @@ sub yaml_encode {
 }
 
 sub _load_yaml_lib {
-    ## no critic (RequireFinalReturn ProhibitCascadingIfElse ProhibitNoWarnings)
+    ## no critic (ProhibitCascadingIfElse)
     no warnings 'redefine';
     if ( eval { require YAML::XS } ) {
         *yaml_encode = \&YAML::XS::Dump;

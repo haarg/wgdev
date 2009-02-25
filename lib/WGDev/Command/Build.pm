@@ -19,7 +19,7 @@ sub option_config {
             ) );
 }
 
-sub parse_params {    ##no critic (RequireArgUnpacking)
+sub parse_params {
     my $self   = shift;
     my $result = $self->SUPER::parse_params(@_);
     if ( !defined $self->option('sql') && !defined $self->option('uploads') )
@@ -103,7 +103,7 @@ sub update_local_uploads {
     File::Path::mkpath($wg_uploads);
     my $site_uploads    = $wgd->config->get('uploadsPath');
     my $remove_files_cb = sub {
-        no warnings 'once';    ##no critic (ProhibitNoWarnings)
+        no warnings 'once';
         my $wg_path = $File::Find::name;
         my ( undef, undef, $filename ) = File::Spec->splitpath($wg_path);
         if ( $filename eq '.svn' || $filename eq 'temp' ) {
@@ -124,7 +124,7 @@ sub update_local_uploads {
     File::Find::find( { no_chdir => 1, wanted => $remove_files_cb },
         $wg_uploads );
     my $copy_files_cb = sub {
-        no warnings 'once';    ##no critic (ProhibitNoWarnings)
+        no warnings 'once';
         my $site_path = $File::Find::name;
         my ( undef, undef, $filename ) = File::Spec->splitpath($site_path);
         if ( $filename eq '.svn' || $filename eq 'temp' ) {

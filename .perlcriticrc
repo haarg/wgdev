@@ -6,6 +6,7 @@ theme       = core || strictersubs || pulp || more
 [-ErrorHandling::RequireUseOfExceptions]
 [-Miscellanea::RequireRcsKeywords]
 [-Subroutines::ProhibitCallsToUnexportedSubs]
+[-Subroutines::RequireArgUnpacking]
 [-ValuesAndExpressions::ProhibitConstantPragma]
 
 [CodeLayout::RequireTidyCode]
@@ -22,6 +23,9 @@ functions = opendir read readline readdir closedir
 
 [RegularExpressions::RequireExtendedFormatting]
 minimum_regex_length_to_complain_about = 5
+
+[TestingAndDebugging::ProhibitNoWarnings]
+allow_with_category_restriction = 1
 
 [ValuesAndExpressions::ProhibitMagicNumbers]
 allowed_values = -1 0 1 2 24 60 365 777 7777

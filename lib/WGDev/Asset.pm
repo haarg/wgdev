@@ -34,12 +34,12 @@ sub home {
     return WebGUI::Asset->getDefault( $self->{session} );
 }
 
-sub by_url {    ## no critic (RequireArgUnpacking)
+sub by_url {
     my $self = shift;
     return WebGUI::Asset->newByUrl( $self->{session}, @_ );
 }
 
-sub by_id {     ## no critic (RequireArgUnpacking)
+sub by_id {
     my $self = shift;
     return WebGUI::Asset->new( $self->{session}, @_ );
 }
