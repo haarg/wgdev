@@ -1,5 +1,11 @@
 Change log for WGDev
 
+0.3.0
+ - Added config command to set and retrieve WGDev config options
+ - Added option to reset command to reset WebGUI config
+ - Added simple import and export commands
+ - Reset now preserves permissions as much as possible on uploads
+
 0.2.0 - Feb 09 2009
  - Command API changed
  - Documentation now in POD form
