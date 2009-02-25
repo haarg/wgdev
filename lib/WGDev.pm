@@ -10,74 +10,34 @@ use Cwd        ();
 use Carp qw(croak);
 
 sub new {
-    my ( $class, $root, $config ) = @_;
+    my $class = shift;
     my $self = bless {}, $class;
-    if ( $config && -e $config ) {
-
-        # file exists as is, save absolute path
-        $self->{config_file} = $config = File::Spec->rel2abs($config);
+    my $root;
+    my $config;
+    if ( $_[0] && -d $_[0] ) {
+        ($root, $config) = @_;
+    }
+    else {
+        ($config, $root) = @_;
     }
     if ($root) {
-        $self->{root} = $root;
+        $self->root($root);
     }
-    elsif ( $config && -e $config ) {
-        my $config_dir = File::Spec->catpath(
-            ( File::Spec->splitpath($config) )[ 0, 1 ] );
-        $self->{root} = Cwd::realpath(
-            File::Spec->catdir( $config_dir, File::Spec->updir ) );
+    if ($config) {
+        $self->config_file($config);
     }
-    else {
-        my $dir = Cwd::getcwd();
-        while (1) {
-            if ( -e File::Spec->catfile( $dir, 'etc', 'WebGUI.conf.original' )
-                )
-            {
-                $self->{root} = $dir;
-                last;
-            }
-            my $parent = Cwd::realpath(
-                File::Spec->catdir( $dir, File::Spec->updir ) );
-            last
-                if $dir eq $parent;
-            $dir = $parent;
-        }
-    }
-    if ( $self->{root} ) {
-        if ( !$config ) {
-            if ( opendir my $dh, File::Spec->catdir( $self->{root}, 'etc' ) )
-            {
-                my @configs = readdir $dh;
-                closedir $dh
-                    or croak "Unable to close directory handle: $!";
-                @configs = grep {
-                    /\Q.conf\E$/msx
-                        && !/^(?:spectre|log)\Q.conf\E$/msx
-                } @configs;
-                if ( @configs == 1 ) {
-                    $config = $configs[0];
-                }
-            }
-        }
-        if ($config) {
-            $self->{config_file}
-                ||= File::Spec->catfile( $self->{root}, 'etc', $config );
-        }
-        $self->{lib} = File::Spec->catdir( $self->{root}, 'lib' );
-    }
-    else {
-        croak 'Unable to determine webgui root!';
-    }
-
-    $self->set_environment;
-
     return $self;
 }
 
 sub set_environment {
     my $self = shift;
+    croak 'WebGUI root not set'
+        if !$self->root;
+    $self->{orig_env} ||= {
+        map { $_ => $ENV{$_} } qw(WEBGUI_ROOT WEBGUI_CONFIG PERL5LIB)
+    };
     $ENV{WEBGUI_ROOT}   = $self->root;
     $ENV{WEBGUI_CONFIG} = $self->config_file;
-    unshift @INC, $self->lib;
     $ENV{PERL5LIB} = $ENV{PERL5LIB}
         ? do {
         require Config;
@@ -87,9 +47,57 @@ sub set_environment {
     return 1;
 }
 
-sub root        { return shift->{root} }
-sub config_file { return shift->{config_file} }
-sub lib         { return shift->{lib} }
+sub reset_environment {
+    my $self = shift;
+    my $orig_env = delete $self->{orig_env};
+    return
+        if !$orig_env;
+    @ENV{keys %{$orig_env}} = values %{$orig_env};
+    return 1;
+}
+
+sub root {
+    my $self = shift;
+    if (@_) {
+        my $path = shift;
+        if (-d $path && -d File::Spec->catdir($path, 'docs') ) {
+            $self->{root} = File::Spec->rel2abs($path);
+            $self->{lib} = File::Spec->catdir( $self->{root}, 'lib' );
+            unshift @INC, $self->lib;
+        }
+        else {
+            croak "Invalid WebGUI path: $path\n";
+        }
+    }
+    return $self->{root};
+}
+
+sub config_file {
+    my $self = shift;
+    if (@_) {
+        my $path = shift;
+        if (-f $path) {
+        }
+        elsif ( $self->root && -f (my $fullpath = File::Spec->catfile($self->root, 'etc', $path) ) ) {
+            $path = $fullpath;
+        }
+        else {
+            croak "Invalid WebGUI config file: $path\n";
+        }
+        if (!$self->root) {
+            eval {
+                $self->root(File::Spec->catpath( (File::Spec->splitpath($path))[0,1], File::Spec->updir ));
+            };
+        }
+        $self->close_session;
+        $self->close_config;
+        $self->{config_file} = File::Spec->rel2abs($path);
+        delete $self->{config_file_relative};
+    }
+    return $self->{config_file};
+}
+
+sub lib { return shift->{lib} }
 
 sub config {
     my $self = shift;
@@ -119,8 +127,7 @@ sub config_file_relative {
     return $self->{config_file_relative} ||= do {
         my $config_dir
             = Cwd::realpath( File::Spec->catdir( $self->root, 'etc' ) );
-        File::Spec->abs2rel( Cwd::realpath( $self->config_file ),
-            $config_dir );
+        File::Spec->abs2rel( $self->config_file, $config_dir );
     };
 }
 

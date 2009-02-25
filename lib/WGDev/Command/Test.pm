@@ -23,6 +23,7 @@ sub option_config {
 sub process {
     my $self = shift;
     my $wgd  = $self->wgd;
+    $wgd->set_environment;
     require Cwd;
     require App::Prove;
     if ( $self->option('slow') ) {
@@ -66,7 +67,7 @@ WGDev::Command::Test - Run WebGUI tests
 
 =head1 SYNOPSIS
 
-wgd test [-AS] [<prove options>]
+    wgd test [-AS] [<prove options>]
 
 =head1 DESCRIPTION
 
