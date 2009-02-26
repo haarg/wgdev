@@ -14,6 +14,7 @@ use WGDev::Command ();
 sub option_config {
     return qw(
         command|c
+        struct|s
     );
 }
 
@@ -28,7 +29,7 @@ sub process {
         return;
     }
 
-    my $config_param = shift @args;
+    my ( $config_param, $value ) = @args;
     my @config_path = split /[.]/msx, $config_param;
 
     if ( $self->option('command') ) {
@@ -37,8 +38,38 @@ sub process {
         unshift @config_path, $module;
     }
 
-    my $param = $wgd->wgd_config( \@config_path, @args );
-    if ( @args && defined $param ) {
+    if ( defined $value ) {
+        if ( $value =~ s/\A@//msx ) {
+            my $file = $value;
+            my $fh;
+            ##no critic (RequireBriefOpen)
+            if ( $file eq q{-} ) {
+                ##no critic (ProhibitTwoArgOpen)
+                open $fh, q{-} or die "Unable to read STDIN: $!\n";
+            }
+            else {
+                open $fh, '<', $file
+                    or die "Unable to read from $file\: $!\n";
+            }
+            $value = do { local $/ = undef; <$fh> };
+            close $fh or die "Unable to read from $file\: $!\n";
+        }
+        if ( $self->option('struct') ) {
+            if ( $value =~ /\A---[ ]/msx ) {
+            }
+            elsif ( $value =~ /\A\s*[[{]/msx ) {
+                $value = '--- ' . $value;
+            }
+            $value .= "\n";
+            eval {
+                $value = WGDev::yaml_decode($value);
+                1;
+            } or die "Invalid or unsupported format.\n";
+        }
+    }
+    my $param
+        = $wgd->wgd_config( \@config_path, defined $value ? $value : () );
+    if ( defined $value && defined $param ) {
         $wgd->write_wgd_config;
         return 1;
     }
