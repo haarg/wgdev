@@ -230,7 +230,7 @@ sub reset_uploads {
     ##no critic (ProhibitPunctuationVars ProhibitParensWithBuiltins)
     # make umask as permissive as required to match existing uploads folder
     # including sticky bits
-    umask( $uploads_mode ^ oct(7777) );
+    umask( oct(7777) &~ $uploads_mode );
 
     # set effective UID and GID
     local ( $>, $) ) = ( $uploads_uid, $uploads_gid );
@@ -252,7 +252,7 @@ sub reset_uploads {
                         $File::Find::prune = 1;
                         return;
                     }
-                    File::Path::mkpath( $site_path, 0, oct(7777) );
+                    File::Path::mkpath( $site_path, 0, $uploads_mode );
                 }
                 else {
                     File::Copy::copy( $wg_path, $site_path );
