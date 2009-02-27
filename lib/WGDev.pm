@@ -210,7 +210,7 @@ sub wgd_config {    ##no critic (ProhibitExcessComplexity)
     }
     while (@keys) {
         my $key     = shift @keys;
-        my $numeric = $key ne q{} && $key =~ /^[+]?-?\d+$/msx;
+        my $numeric = $key ne q{} && $key =~ /^[+]?-?\d*$/msx;
         my $type    = ref ${$config};
         if (   ( !$type && !defined $value )
             || $type eq 'SCALAR'
