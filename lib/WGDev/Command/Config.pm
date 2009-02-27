@@ -77,6 +77,9 @@ sub process {
         $param = WGDev::yaml_encode($param);
         $param =~ s/\A---(?:\Q {}\E)?\n?//msx;
     }
+    elsif ( !defined $param ) {
+        return 0;
+    }
     $param =~ s/\n?\z/\n/msx;
     print $param;
     return 1;
