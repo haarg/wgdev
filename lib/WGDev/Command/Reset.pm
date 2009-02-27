@@ -38,6 +38,7 @@ sub option_config {
             cleantags!
             index!
             runwf!
+            util=s@
 
             profile|pro|p=s@
             ) );
@@ -154,6 +155,21 @@ sub process {
     if ( $self->option('index') ) {
         $self->rebuild_lineage;
         $self->rebuild_index;
+    }
+
+    if ( $self->option('util') ) {
+        require WGDev::Command::Util;
+        for my $util ( @{ $self->option('util') } ) {
+            $self->report("Running utility script '$util'... ");
+            $self->report( 2, "\n" );
+            my $util_command = WGDev::Command::Util->new($wgd);
+            $util_command->parse_params_string($util);
+            $util_command->verbosity( $self->verbosity - 1 );
+            if ( !$util_command->process ) {
+                die "Error running util script!\n";
+            }
+            $self->report("Done.\n");
+        }
     }
 
     return 1;
@@ -513,12 +529,12 @@ sub rebuild_lineage {
 
         # silence output of rebuildLineage unless we're at max verbosity
         if ( $self->verbosity < 3 ) {    ##no critic (ProhibitMagicNumbers)
-            ##no critic (RequireCheckedOpen R)
+            ##no critic (RequireCheckedOpen)
             open STDIN,  '<', File::Spec->devnull;
             open STDOUT, '>', File::Spec->devnull;
             open STDERR, '>', File::Spec->devnull;
         }
-        print "\n\n";
+        $self->report("\n\n");
         chdir File::Spec->catdir( $wgd->root, 'sbin' );
         local @ARGV = ( '--configFile=' . $wgd->config_file_relative );
         ##no critic (ProhibitPunctuationVars)
@@ -666,6 +682,12 @@ Rebuild the site lineage and reindex all of the content
 =item B<--runwf --no-runwf>
 
 Attempt to finish any running workflows
+
+=item B<--util=>
+
+Run a utility script.  Script will be run last, being passed to the util
+command (L<WGDev::Command::Util>).  Parameter can be specified multiple times
+to run additional scripts.
 
 =item B<--profile= --pro= -p>
 
