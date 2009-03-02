@@ -25,11 +25,29 @@ sub wgd { return $_[0]->{wgd} }
 sub parse_params {
     my $self = shift;
     local @ARGV = @_;
+
     require Getopt::Long;
     Getopt::Long::Configure( 'default', $self->option_parse_config );
-    my $result
-        = Getopt::Long::GetOptions( $self->{options}, $self->option_config );
-    @{ $self->{arguments} } = @ARGV;
+
+    my %getopt_params = ( '<>' => sub { $self->argument(@_) } );
+
+    for my $option ( $self->option_config ) {
+
+        # for complex options, name is first word segment
+        ( my $option_name ) = ( $option =~ /(\w+)/msx );
+        if ( $self->can("option_$option_name") ) {
+            my $method = "option_$option_name";
+            $getopt_params{$option} = sub {
+                $self->$method( @_[ 1 .. $#_ ] );
+            };
+        }
+        else {
+            $getopt_params{$option} = \( $self->{options}{$option_name} );
+        }
+    }
+
+    my $result = Getopt::Long::GetOptions(%getopt_params);
+    push @{ $self->{arguments} }, @ARGV;
     return $result;
 }
 
@@ -52,7 +70,12 @@ sub option {
     return $self->{options}{$option};
 }
 
+## depreciated, will be removed
 sub option_default {
+    goto &set_option_default;
+}
+
+sub set_option_default {
     my $self = shift;
     my $option = shift || return;
     if ( !defined $self->option($option) ) {
@@ -61,8 +84,22 @@ sub option_default {
     return;
 }
 
+sub argument {
+    my $self = shift;
+    if (@_) {
+        push @{ $self->{arguments} }, @_;
+        return wantarray ? @_ : $_[-1];
+    }
+    return;
+}
+
 sub arguments {
-    return @{ $_[0]->{arguments} };
+    my $self = shift;
+    if ( @_ && ref $_[0] eq 'ARRAY' ) {
+        my $arguments = shift;
+        @{ $self->{arguments} } = @{$arguments};
+    }
+    return @{ $self->{arguments} };
 }
 
 sub run {
