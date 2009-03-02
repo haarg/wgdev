@@ -46,58 +46,60 @@ sub option_config {
 
 sub parse_params {
     my ( $self, @args ) = @_;
-    my $result = $self->SUPER::parse_params(@args);
+    $self->option( 'delcache' => 1 );
+    return $self->SUPER::parse_params(@args);
+}
 
-    my @profiles;
-    if ( $self->option('profile') ) {
-        @profiles = @{ $self->option('profile') };
+sub option_profile {
+    my $self           = shift;
+    my $profile        = shift;
+    my $profile_string = $self->wgd->my_config( [ 'profiles', $profile ] );
+    if ( !defined $profile_string ) {
+        warn "Profile '$profile' does not exist!\n";
+        return;
+    }
+    $self->parse_params_string($profile_string);
+    return;
+}
 
-   # we have the profiles, unset the option so they don't try to process again
-        $self->option( 'profile', undef );
-    }
-    for my $profile (@profiles) {
-        my $profile_string
-            = $self->wgd->my_config( [ 'profiles', $profile ] );
-        if ( !defined $profile_string ) {
-            warn "Profile '$profile' does not exist!\n";
-            next;
-        }
-        $self->parse_params_string($profile_string);
-    }
+sub option_fast {
+    my $self = shift;
+    $self->option( uploads   => 0 );
+    $self->option( backup    => 0 );
+    $self->option( delcache  => 0 );
+    $self->option( purge     => 0 );
+    $self->option( cleantags => 0 );
+    $self->option( index     => 0 );
+    $self->option( runwf     => 0 );
+    return;
+}
 
-    if ( $self->option('fast') ) {
-        $self->option_default( uploads   => 0 );
-        $self->option_default( backup    => 0 );
-        $self->option_default( delcache  => 0 );
-        $self->option_default( purge     => 0 );
-        $self->option_default( cleantags => 0 );
-        $self->option_default( index     => 0 );
-        $self->option_default( runwf     => 0 );
-    }
-    if ( $self->option('dev') ) {
-        $self->option_default( backup  => 1 );
-        $self->option_default( import  => 1 );
-        $self->option_default( uploads => 1 );
-        $self->option_default( upgrade => 1 );
-        $self->option_default( starter => 0 );
-        $self->option_default( debug   => 1 );
-        $self->option_default( clear   => 1 );
-    }
-    if ( $self->option('build') ) {
-        $self->verbosity( $self->verbosity + 1 );
-        $self->option_default( backup    => 1 );
-        $self->option_default( uploads   => 1 );
-        $self->option_default( import    => 1 );
-        $self->option_default( starter   => 1 );
-        $self->option_default( debug     => 0 );
-        $self->option_default( upgrade   => 1 );
-        $self->option_default( purge     => 1 );
-        $self->option_default( cleantags => 1 );
-        $self->option_default( index     => 1 );
-        $self->option_default( runwf     => 1 );
-    }
-    $self->option_default( 'delcache', 1 );
-    return $result;
+sub option_dev {
+    my $self = shift;
+    $self->option( backup  => 1 );
+    $self->option( import  => 1 );
+    $self->option( uploads => 1 );
+    $self->option( upgrade => 1 );
+    $self->option( starter => 0 );
+    $self->option( debug   => 1 );
+    $self->option( clear   => 1 );
+    return;
+}
+
+sub option_build {
+    my $self = shift;
+    $self->verbosity( $self->verbosity + 1 );
+    $self->option( backup    => 1 );
+    $self->option( uploads   => 1 );
+    $self->option( import    => 1 );
+    $self->option( starter   => 1 );
+    $self->option( debug     => 0 );
+    $self->option( upgrade   => 1 );
+    $self->option( purge     => 1 );
+    $self->option( cleantags => 1 );
+    $self->option( index     => 1 );
+    $self->option( runwf     => 1 );
+    return;
 }
 
 sub process {
@@ -230,7 +232,7 @@ sub reset_uploads {
     ##no critic (ProhibitPunctuationVars ProhibitParensWithBuiltins)
     # make umask as permissive as required to match existing uploads folder
     # including sticky bits
-    umask( oct(7777) &~ $uploads_mode );
+    umask( oct(7777) & ~$uploads_mode );
 
     # set effective UID and GID
     local ( $>, $) ) = ( $uploads_uid, $uploads_gid );
@@ -693,8 +695,7 @@ to run additional scripts.
 
 Specify a profile of options to use for resetting.  Profiles are specified in
 the WGDev config file under the 'profiles' section.  A profile is defined as
-a string to be used as additional command line options.  Profiles take
-priority over other command line options.  This may change in the future.
+a string to be used as additional command line options.
 
 =back
 
