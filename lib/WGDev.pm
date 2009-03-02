@@ -31,18 +31,15 @@ sub new {
 
 sub set_environment {
     my $self = shift;
+    require Config;
     croak 'WebGUI root not set'
         if !$self->root;
     $self->{orig_env}
         ||= { map { $_ => $ENV{$_} } qw(WEBGUI_ROOT WEBGUI_CONFIG PERL5LIB) };
     $ENV{WEBGUI_ROOT}   = $self->root;
     $ENV{WEBGUI_CONFIG} = $self->config_file;
-    $ENV{PERL5LIB}      = $ENV{PERL5LIB}
-        ? do {
-        require Config;
-        $self->lib . $Config::Config{path_sep} . $ENV{PERL5LIB};
-        }
-        : $self->lib;
+    $ENV{PERL5LIB}      = join $Config::Config{path_sep}, $self->lib,
+        $ENV{PERL5LIB} || ();
     return 1;
 }
 
@@ -106,7 +103,32 @@ sub config_file {
     return $self->{config_file};
 }
 
-sub lib { return shift->{lib} }
+sub lib {
+    my $self = shift;
+    if ( !wantarray ) {
+        return $self->{lib};
+    }
+    my @lib = $self->{lib};
+    if ( !$self->{custom_lib} ) {
+        my @custom_lib;
+        $self->{custom_lib} = \@custom_lib;
+        my $custom
+            = File::Spec->catfile( $self->root, 'sbin', 'preload.custom' );
+        if ( -f $custom && open my $fh, '<', $custom ) {
+            while ( my $line = <$fh> ) {
+                $line =~ s/[#].*//msx;
+                $line =~ s/\A\s+//msx;
+                $line =~ s/\s+\z//msx;
+                if ( -d $line ) {
+                    unshift @custom_lib, $line;
+                }
+            }
+            close $fh or die "Unable to read $custom\: $!\n";
+        }
+    }
+    unshift @lib, @{ $self->{custom_lib} };
+    return @lib;
+}
 
 sub config {
     my $self = shift;
