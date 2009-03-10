@@ -152,11 +152,92 @@ A super-class useful for implementing WGDev command modules.  Includes simple
 methods to override for parameter parsing and provides help text via
 Pod::Usage.
 
+While using WGDev::Command::Base is not required to write a command module,
+it is the recommended way to do so.
+
 =head1 METHODS
 
-=head2 is_runnable
+=over 8
 
-Must return true for the command to be run by WGDev::Command.
+=item is_runnable
+
+This is a class method that must be implemented and return true for all
+command modules.  The module in WGDev::Command::Base will return true for
+any subclass that implements the C<process> method.
+
+=item new ( $wgd )
+
+Instantiate a new command object.  Requires a L<WGDev> object as the first
+parameter.
+
+=item wgd
+
+Returns the L<WGDev> object used to instantiate the object.
+
+=item option_parse_config
+
+Returns an array of parameters used to configure command line parsing.  These
+options are passed directly to Getopt::Long.  See
+L<Getopt::Long/Configuring_Getopt::Long> for details on the available options.
+By default, returns 'gnu_getopt' and can be overridden to return others.
+
+=item option_config
+
+Returns an array of command line options to be parsed.  Should be overridden
+to set which options will be parsed.  Should be specified in the syntax
+accepted by L<Getopt::Long>.
+
+=item option
+
+Sets or returns a command line option.  Accepts the option name as the first
+parameter.  If specified, the option will be set the the value of the second
+parameter.
+
+=item argument
+
+Adds an argument to the argument list.  Any parameters specified will be added
+to the argument list.  Can be overridden to provide alternate behavior.
+
+=item arguments
+
+Sets or returns the bare arguments list.  If specified, the first parameter
+must be an array reference whose values will be set as the arguments list.
+
+=item parse_params
+
+Sets options based on an array of command line parameters.
+
+=item parse_params_string
+
+Sets options based on a string of command line parameters.  The string will be
+processed with L<Text::ParseWords> C<shellwords> sub then passed on to
+parse_params.
+
+=item set_option_default
+
+Sets an option only if it is not currently defined.  First parameter is the
+option to set, second parameter is the value to set it to.
+
+=item usage
+
+Returns the usage information for the command.  The optional first parameter
+is the verbosity to use.
+
+=item run
+
+Runs the command.  Parameters should be the command line parameters to use for
+running the command.  This sub should exit, not return.  The default method
+will first call process_params with the given parameters, call usage if there
+was a problem with parsing the parameters, or call process if there was not.
+If process returns a true value, it will exit with an error value of zero.
+
+=item process
+
+Needs to be subclasses to provide the main functionality of the command.  This
+method will be called as part of the run method.  Should return a true value
+on success.
+
+=back
 
 =head1 AUTHOR
 
