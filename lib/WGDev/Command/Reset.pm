@@ -40,6 +40,8 @@ sub option_config {
             runwf!
             util=s@
 
+            delusers
+
             profile|pro|p=s@
             ) );
 }
@@ -113,6 +115,11 @@ sub process {
     # Clear cache
     if ( $self->option('delcache') ) {
         $self->clear_cache;
+    }
+
+    # Delete non-system users
+    if ( $self->option('delusers') ) {
+        $self->delete_users;
     }
 
     # Clear and recreate uploads
@@ -211,6 +218,38 @@ sub clear_cache {
     }
     $self->report("Done.\n");
     return 1;
+}
+
+sub delete_users {
+    my $self = shift;
+    my $wgd  = $self->wgd;
+    
+    use IO::Prompt;
+    $self->report('Deleting non-system users... ');
+    
+    my $session = $wgd->session();
+    my @user_ids = grep { $_ ne '1' && $_ ne '3' } $session->db->buildArray('select userId from users');
+    if (@user_ids) {        
+        my $message = <<END_MESSAGE;
+The following users will be deleted:
+User ID                 Username
+---------------------------------------
+END_MESSAGE
+        $self->report("\n\n$message");
+        
+        foreach my $user_id (@user_ids) {
+            my $user = WebGUI::User->new( $session, $user_id );
+            $self->report($user->userId . "\t" . $user->username . "\n");
+        }
+        
+        if(prompt 'Continue [yn]:', -yesno, -onechar) {
+            foreach my $user_id (@user_ids) {
+                my $user = WebGUI::User->new( $session, $user_id );
+                $user->delete();
+            }
+        }
+    }
+    $self->report("Done.\n");
 }
 
 # Clear and recreate uploads
