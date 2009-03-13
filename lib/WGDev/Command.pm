@@ -88,20 +88,16 @@ sub guess_webgui_paths {
     if ($webgui_root) {
         $wgd->root($webgui_root);
     }
-    if (
-        !eval {
-            if (   $webgui_config
-                && $wgd->config_file($webgui_config)
-                && $wgd->root )
-            {
-                return $wgd;
-            }
-            1;
+    if ($webgui_config) {
+        my $can_set_config = eval { $wgd->config_file($webgui_config); 1; };
+
+        # if a config file and root were specified and they didn't work, error
+        if ( $webgui_root && !$can_set_config ) {
+            die $@;
         }
-        && $webgui_root
-        )
-    {
-        die $@;
+        if ( $can_set_config && $wgd->root ) {
+            return $wgd;
+        }
     }
 
     if ( !$wgd->root ) {
