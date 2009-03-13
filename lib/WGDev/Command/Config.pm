@@ -125,6 +125,14 @@ configuration information about.
 The WGDev config file is a YAML formatted file existing as either
 F</etc/wgdevcfg> or F<.wgdevcfg> in the current user's home directory.
 
+A simple config file looks like:
+
+ WGDev::Command:
+  webgui_root: /data/WebGUI
+  webgui_config: dev.localhost.localdomain.conf
+
+Note that YAML is whitespace-sensitive. 
+
 =head1 AUTHOR
 
 Graham Knop <graham@plainblack.com>
