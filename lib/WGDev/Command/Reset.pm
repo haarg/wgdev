@@ -223,16 +223,19 @@ sub clear_cache {
 sub delete_users {
     my $self = shift;
     my $wgd  = $self->wgd;
-    
+
     my $session = $wgd->session();
-    my @user_ids = grep { $_ ne '1' && $_ ne '3' } $session->db->buildArray('select userId from users');
+    my @user_ids = grep { $_ ne '1' && $_ ne '3' }
+        $session->db->buildArray('select userId from users');
     my $n_users = @user_ids;
     $self->report("Deleting ($n_users) non-system users... ");
+    require WebGUI::User;
     foreach my $user_id (@user_ids) {
         my $user = WebGUI::User->new( $session, $user_id );
         $user->delete();
     }
     $self->report("Done.\n");
+    return 1;
 }
 
 # Clear and recreate uploads
