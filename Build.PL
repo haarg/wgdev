@@ -16,6 +16,7 @@ my $build = WGDev::Builder->new(
         'Carp'          => 0,
         'version'       => 0,
         'DBI'           => 0,
+        'Pod::Perldoc'  => 0,
     },
 );
 $build->create_build_script;
