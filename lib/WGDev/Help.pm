@@ -7,6 +7,7 @@ our $VERSION = '0.0.1';
 
 use Carp qw(croak);
 use constant USE_SECTIONS => 99;
+use File::Spec ();
 
 sub package_usage {
     my $package   = shift;
@@ -39,6 +40,40 @@ sub package_usage {
     close $in  or return q{};
     close $out or return q{};
     return $output;
+}
+
+sub package_perldoc {
+    my $package = shift;
+    require Pod::Perldoc;
+    require File::Temp;
+    require File::Path;
+    ( my $file = $package . '.pm' ) =~ s{::}{/}msxg;
+    require $file;
+    my $actual_file = $INC{$file};
+    my $pod         = filter_pod( $actual_file, $package );
+    my $tmpdir      = File::Temp::tempdir( TMPDIR => 1, CLEANUP => 1 );
+    my @path_parts  = split /::/msx, $package;
+    my $filename    = pop @path_parts;
+    my $path        = File::Spec->catdir( $tmpdir, 'perl', @path_parts );
+    File::Path::mkpath($path);
+    my $out_file = File::Spec->catfile( $path, $filename );
+    open my $out, '>', $out_file
+        or croak "Unable to create temp file: $!";
+    print {$out} $pod;
+    close $out or return q{};
+
+    my $pid = fork;
+    if ( !$pid ) {
+        local @ARGV = ( '-w', 'section:3', '-F', $out_file );
+        exit Pod::Perldoc->run;
+    }
+    waitpid $pid, 0;
+
+    # error status of subprocess
+    if ($?) {    ##no critic (ProhibitPunctuationVars)
+        die "Error displaying help!\n";
+    }
+    return;
 }
 
 # naive pod filter.  looks for =head1 NAME section that has the correct

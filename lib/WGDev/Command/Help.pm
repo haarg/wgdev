@@ -5,40 +5,41 @@ use 5.008008;
 
 our $VERSION = '0.1.0';
 
-use WGDev::Command::Base;
-use Pod::Perldoc;
+use WGDev::Command::Base ();
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
+use WGDev::Command ();
 
 sub process {
     my $self = shift;
     my $wgd  = $self->wgd;
-    
-    my ($command) = $self->arguments or $self->die();
-    
-    my $command_module = WGDev::Command::_find_cmd_module($command);
-    
-    if (!$command_module) {
-        warn "Unknown command: $command";
-        $self->die();
+
+    my ($command) = $self->arguments or $self->error_with_list;
+
+    my $command_module = WGDev::Command::get_command_module($command);
+
+    if ( !$command_module ) {
+        warn "Unknown command: $command\n";
+        $self->error_with_list;
     }
-    
-    local @ARGV = ($command_module);
-    Pod::Perldoc->run();
-    
-    return 1;
+
+    require WGDev::Help;
+    if ( eval { WGDev::Help::package_perldoc($command_module); 1 } ) {
+        return 1;
+    }
+    return;
 }
 
-sub die {
-    my $self = shift;
-    my $message = $self->usage();
+sub error_with_list {
+    my $self    = shift;
+    my $message = $self->usage;
 
     $message .= "Try any of the following:\n";
     for my $command ( WGDev::Command->command_list ) {
         $message .= "\twgd help $command\n";
     }
     $message .= "\n";
-    warn $message;
-    exit 1;
+    ##no critic (RequireCarping)
+    die $message;
 }
 
 1;
@@ -51,7 +52,7 @@ WGDev::Command::Help - Displays perldoc help for WGDev command
 
 =head1 SYNOPSIS
 
-    wgd help command
+    wgd help <command>
 
 =head1 DESCRIPTION
 
@@ -62,6 +63,16 @@ More or less equivalent to running
      wgd command --help
 
 Except that the help message is displayed via Pod::Perldoc
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<E<lt>commandE<gt>>
+
+The subcommand to display help information about.
+
+=back
 
 =head1 AUTHOR
 
