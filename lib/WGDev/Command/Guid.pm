@@ -10,7 +10,7 @@ BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
 sub option_config {
     return qw(
-        n=s
+        number|n=i
         dashes!
     );
 }
@@ -20,15 +20,14 @@ sub process {
     my $wgd  = $self->wgd;
 
     my $session = $wgd->session();
-    
-    my $n = $self->option('n') || 1;
-    $self->set_option_default(dashes => 1);
 
-    for ( 1 .. $n ) {
-        my $guid;
-        $guid = $session->id->generate();
-        if (!$self->option('dashes')) {
-            $guid = $session->id->generate() while $guid =~ m/-|_/;
+    my $number = $self->option('number') || 1;
+    $self->set_option_default( dashes => 1 );
+
+    for ( 1 .. $number ) {
+        my $guid = $session->id->generate();
+        if ( !$self->option('dashes') && $guid =~ /[-_]/msx ) {
+            redo;
         }
         print "$guid\n";
     }
@@ -55,7 +54,7 @@ Generates GUIDs via WebGUI's $session->id->generate API. Optionally excludes GUI
 
 =over 8
 
-=item B<-n>
+=item B<--number> B<-n>
 
 Number of GUIDs to generate. Defaults to 1.
 

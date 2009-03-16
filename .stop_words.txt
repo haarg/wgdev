@@ -1,6 +1,7 @@
 API
 DSN
 Donelan
+GUIDs
 Knop
 Prepending
 SQL
