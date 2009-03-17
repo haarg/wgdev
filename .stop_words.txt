@@ -29,6 +29,7 @@ subcommand
 subcommands
 util
 webgui
+whitespace
 wgd
 wgdevcfg
 workflows
