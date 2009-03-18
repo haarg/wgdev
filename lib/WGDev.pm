@@ -36,6 +36,7 @@ sub set_environment {
         if !$self->root;
     $self->{orig_env}
         ||= { map { $_ => $ENV{$_} } qw(WEBGUI_ROOT WEBGUI_CONFIG PERL5LIB) };
+    ##no critic (RequireLocalizedPunctuationVars)
     $ENV{WEBGUI_ROOT}   = $self->root;
     $ENV{WEBGUI_CONFIG} = $self->config_file;
     $ENV{PERL5LIB}      = join $Config::Config{path_sep}, $self->lib,
@@ -48,6 +49,7 @@ sub reset_environment {
     my $orig_env = delete $self->{orig_env};
     return
         if !$orig_env;
+    ##no critic (RequireLocalizedPunctuationVars)
     @ENV{ keys %{$orig_env} } = values %{$orig_env};
     return 1;
 }
