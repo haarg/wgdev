@@ -27,6 +27,7 @@ sql
 stdout
 subcommand
 subcommands
+url
 util
 webgui
 whitespace
