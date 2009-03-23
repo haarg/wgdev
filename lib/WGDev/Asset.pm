@@ -100,7 +100,7 @@ sub serialize {
                 && defined $property_def->{defaultValue} )
             {
                 $asset_properties->{$property}
-                    = $property_def->{defaultValue};
+                    = $self->_get_property_default($property_def);
             }
 
             my $field_type = ucfirst $property_def->{fieldType};
@@ -211,6 +211,23 @@ sub deserialize {
     $properties{className} = $class;
 
     return \%properties;
+}
+
+sub _get_property_default {
+    my $self         = shift;
+    my $property_def = shift;
+    my $default      = $property_def->{defaultValue};
+    my $form_class   = $property_def->{fieldType};
+    if ($form_class) {
+        $form_class = "WebGUI::Form::\u$form_class";
+        my $form_module = join q{/}, ( split /::/msx, $form_class . '.pm' );
+        if ( eval { require $form_module; 1 } ) {
+            my $form = $form_class->new( $self->{session},
+                { defaultValue => $default } );
+            $default = $form->getDefaultValue;
+        }
+    }
+    return $default;
 }
 
 1;
