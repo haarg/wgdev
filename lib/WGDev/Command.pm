@@ -26,7 +26,7 @@ sub run {
 
     my $command_name = shift @params;
 
-    my $command_module = _find_cmd_module($command_name);
+    my $command_module = get_command_module($command_name);
     if ( $command_name && !$command_module ) {
         my $command_exec = _find_cmd_exec($command_name);
         if ($command_exec) {
@@ -70,7 +70,7 @@ sub run {
                 1;
             } )
         {
-            carp $@;
+            warn $@;
             exit 1;
         }
     }
@@ -167,7 +167,7 @@ sub report_help {
     return 1;
 }
 
-sub _find_cmd_module {
+sub get_command_module {
     my $command_name = shift;
     if ( $command_name && $command_name =~ /^[-\w]+$/mxs ) {
         my $module = command_to_module($command_name);

@@ -26,11 +26,6 @@ sub process {
     $wgd->set_environment;
     require Cwd;
     require App::Prove;
-    if ( $self->option('slow') ) {
-        $ENV{CODE_COP}    = 1;
-        $ENV{TEST_SYNTAX} = 1;
-        $ENV{TEST_POD}    = 1;
-    }
     if ( defined $self->option('reset') ) {
         my $reset_options = $self->option('reset');
         if ( $reset_options eq q{} ) {
@@ -40,6 +35,15 @@ sub process {
         my $reset = WGDev::Command::Reset->new($wgd);
         $reset->parse_params_string($reset_options);
         $reset->process;
+    }
+    local $ENV{CODE_COP}    = $ENV{CODE_COP};
+    local $ENV{TEST_SYNTAX} = $ENV{TEST_SYNTAX};
+    local $ENV{TEST_POD}    = $ENV{TEST_POD};
+    if ( $self->option('slow') ) {
+        ##no critic (RequireLocalizedPunctuationVars)
+        $ENV{CODE_COP}    = 1;
+        $ENV{TEST_SYNTAX} = 1;
+        $ENV{TEST_POD}    = 1;
     }
     my $prove = App::Prove->new;
     my @args  = $self->arguments;
