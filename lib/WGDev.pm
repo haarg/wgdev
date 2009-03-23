@@ -34,6 +34,8 @@ sub set_environment {
     require Config;
     croak 'WebGUI root not set'
         if !$self->root;
+    croak 'WebGUI config file not set'
+        if !$self->conig_file;
     $self->{orig_env}
         ||= { map { $_ => $ENV{$_} } qw(WEBGUI_ROOT WEBGUI_CONFIG PERL5LIB) };
     ##no critic (RequireLocalizedPunctuationVars)
