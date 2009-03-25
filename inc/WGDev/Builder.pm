@@ -13,6 +13,7 @@ sub new {
     my $class = shift;
     my %options = @_;
     $options{get_options}{compact} = {};
+    $options{test_types}{author} = ['.at'];
     my $self = $class->SUPER::new(%options);
     if ($self->args('compact')) {
         $self->notes(compact => 1);
@@ -21,6 +22,10 @@ sub new {
         $self->pm_files({});
     }
     return $self;
+}
+
+sub ACTION_testauthor  {
+    shift->generic_test(type => 'author');
 }
 
 sub process_script_files {
