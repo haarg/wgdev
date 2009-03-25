@@ -28,6 +28,24 @@ sub ACTION_testauthor  {
     shift->generic_test(type => 'author');
 }
 
+sub ACTION_testpodcoverage {
+    my $self = shift;
+
+    $self->depends_on('docs');
+
+    eval {require Test::Pod::Coverage; Test::Pod::Coverage->VERSION(1.0); 1}
+    or die "The 'testpodcoverage' action requires ",
+            "Test::Pod::Coverage version 1.00";
+
+    # XXX work-around a bug in Test::Pod::Coverage previous to v1.09
+    # Make sure we test the module in blib/
+    local @INC = @INC;
+    my $p = $self->{properties};
+    unshift @INC, File::Spec->catdir($p->{base_dir}, $self->blib, 'lib');
+
+    Test::Pod::Coverage::all_pod_coverage_ok({coverage_class => 'Pod::Coverage::CountParents'});
+}
+
 sub process_script_files {
     my $self = shift;
     if ($self->notes('compact')) {

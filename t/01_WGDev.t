@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 19;
+use Test::More 'no_plan'; #tests => 19;
 use Test::Exception;
 
 use WGDev ();
@@ -17,13 +17,17 @@ throws_ok { $wgd->set_environment } qr/^\QWebGUI root not set/,
 
 my $test_data = File::Spec->catdir(File::Spec->catpath( (File::Spec->splitpath(__FILE__))[0,1], q{} ), 'testdata');
 my $root_invalid = File::Spec->catdir($test_data, 'root_invalid');
-my $root = File::Spec->catdir($test_data, 'root_one_config');
+my $root = File::Spec->catdir($test_data, 'root');
 my $lib = File::Spec->catdir($root, 'lib');
 my $config = File::Spec->catfile($root, 'etc', 'localhost.conf');
+my $sbin = File::Spec->catdir($root, 'sbin');
 
 my $root_abs = File::Spec->rel2abs($root);
 my $lib_abs = File::Spec->rel2abs($lib);
 my $config_abs = File::Spec->rel2abs($config);
+
+mkdir File::Spec->catdir($root, 'sbin');
+unlink File::Spec->catfile($root, 'sbin', 'preload.custom');
 
 throws_ok { $wgd->root($root_invalid) } qr/^\QInvalid WebGUI path:/,
     'Exception thrown for ->root with invalid WebGUI root';
@@ -41,6 +45,9 @@ throws_ok { $wgd->set_environment } qr/^\QWebGUI config file not set/,
 
 lives_ok { $wgd->config_file('localhost.conf') }
     'Able to set valid WebGUI config relative to root/etc';
+
+isa_ok $wgd->config, 'Config::JSON',
+    'Config::JSON object returned returned from ->config';
 
 is $wgd->config_file, $config_abs, 'Config file path set correctly';
 
@@ -73,7 +80,7 @@ lives_ok { $wgd->config }
 
     $wgd->set_environment;
 
-    is $ENV{PERL5LIB}, $lib_abs . $Config::Config{path_sep} . $lib;
+    is $ENV{PERL5LIB}, $lib_abs . $Config::Config{path_sep} . $lib, 'set_environment adds lib path to existing PERL5LIB';
 
     $wgd->reset_environment;
 }
@@ -86,5 +93,47 @@ $wgd = WGDev->new($config, $root);
 
 is $wgd->root, $root_abs, 'Can initialize root on new call in reverse order';
 
+throws_ok { $wgd->root($lib) } qr/^\QInvalid WebGUI path: $lib/,
+    'Error thrown when trying to set root to directory that isn\'t a WebGUI root';
 
+my $nonexistant_path = File::Spec->catdir($root, 'nonexistant');
+throws_ok { $wgd->root($nonexistant_path) } qr/^\QInvalid WebGUI path: $nonexistant_path/,
+    'Error thrown when trying to set root to directory that doesn\'t exist';
+
+is $wgd->root, $root_abs, 'Root not modified after failed attempts to set';
+
+throws_ok { $wgd->config_file('nonexistant') } qr/^\QInvalid WebGUI config file: nonexistant/,
+    'Error thrown when trying to set config to nonexistant file with root set';
+
+$wgd = WGDev->new;
+
+throws_ok { $wgd->config_file('nonexistant') } qr/^\QInvalid WebGUI config file: nonexistant/,
+    'Error thrown when trying to set config to nonexistant file with no root set';
+
+lives_ok { $wgd->config_file($config_abs) }
+    'Can set just config file using full path';
+
+is Cwd::realpath($wgd->root), Cwd::realpath($root_abs), 'Root set correctly based on absolute config file';
+
+ok scalar(grep { $_ eq $wgd->lib } @INC), 'WebGUI lib path added to @INC';
+
+open my $fh, '>', File::Spec->catfile($sbin, 'preload.custom');
+print {$fh} $sbin . "\n";
+print {$fh} File::Spec->catdir($root, 'nonexistant') . "\n";
+print {$fh} $config . "\n";
+close $fh;
+
+$wgd = WGDev->new($config);
+
+is_deeply [map {Cwd::realpath($_)} $wgd->lib], [map {Cwd::realpath($_)} ($sbin, $lib)],
+    'WebGUI lib paths are read from preload.custom, ignoring invalid entries';
+
+is Cwd::realpath(scalar $wgd->lib), Cwd::realpath($lib), '->lib in scalar context returns primary lib path';
+
+chmod 0, File::Spec->catfile($sbin, 'preload.custom');
+
+$wgd = WGDev->new($config);
+
+is_deeply [map {Cwd::realpath($_)} $wgd->lib], [map {Cwd::realpath($_)} ($lib)],
+    'Unreadable preload.custom silently ignored';
 
