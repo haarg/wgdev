@@ -8,4 +8,5 @@
 /Makefile
 /Makefile.PL
 /pm_to_blib
+/cover_db
 
