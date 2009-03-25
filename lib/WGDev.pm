@@ -7,6 +7,7 @@ our $VERSION = '0.2.0';
 
 use File::Spec ();
 use Cwd        ();
+use JSON       ();
 use Carp qw(croak);
 
 sub new {
@@ -34,6 +35,8 @@ sub set_environment {
     require Config;
     croak 'WebGUI root not set'
         if !$self->root;
+    croak 'WebGUI config file not set'
+        if !$self->config_file;
     $self->{orig_env}
         ||= { map { $_ => $ENV{$_} } qw(WEBGUI_ROOT WEBGUI_CONFIG PERL5LIB) };
     ##no critic (RequireLocalizedPunctuationVars)
@@ -285,15 +288,28 @@ sub wgd_config {    ##no critic (ProhibitExcessComplexity)
     return;
 }
 
+my $json_formatter = JSON->new;
+$json_formatter->utf8;
+$json_formatter->relaxed;
+$json_formatter->canonical;
+$json_formatter->pretty;
+
 sub read_wgd_config {
     my $self = shift;
     for my $config_file ( "$ENV{HOME}/.wgdevcfg", '/etc/wgdevcfg' ) {
         if ( -f $config_file ) {
+            my $config;
             open my $fh, '<', $config_file or next;
             my $content = do { local $/ = undef; <$fh> };
             close $fh or next;
             $self->{wgd_config_path} = Cwd::realpath($config_file);
-            return $self->{wgd_config} = yaml_decode($content);
+            if ( $content eq q{} ) {
+                $config = {};
+            }
+            elsif ( !eval { $config = $json_formatter->decode($content); } ) {
+                $config = yaml_decode($content);
+            }
+            return $self->{wgd_config} = $config;
         }
     }
     return $self->{wgd_config} = {};
@@ -306,8 +322,7 @@ sub write_wgd_config {
         $config_path = $self->{wgd_config_path} = $ENV{HOME} . '/.wgdevcfg';
     }
     my $config = $self->{wgd_config} || {};
-    my $encoded = yaml_encode($config);
-    $encoded =~ s/\A---(?:\Q {}\E)?\n?//msx;
+    my $encoded = $json_formatter->encode($config);
     $encoded =~ s/\n?\z/\n/msx;
     open my $fh, '>', $config_path
         or croak "Unable to write to $config_path: $!";

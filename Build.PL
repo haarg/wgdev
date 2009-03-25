@@ -18,6 +18,7 @@ my $build = WGDev::Builder->new(
         'File::Spec'        => 0,
         'File::Temp'        => 0,
         'Getopt::Long'      => 0,
+        'JSON'              => '2.00',
         'Pod::Html'         => 0,
         'Pod::Perldoc'      => 0,
         'Pod::Select'       => 0,
