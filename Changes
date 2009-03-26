@@ -21,6 +21,7 @@ Change log for WGDev
  - Reset command learned --profile option to load sets of options from config file
  - Reset command learned --util option to run utility scripts using Util command
  - Reset command now preserves permissions as much as possible on uploads
+ - Reset command now only performs upgrades on the site it is resetting instead of all sites
  - Test command learned --reset parameter to run a reset before performing tests
  - Various small bug fixes
  - Improved documentation, including an example command
