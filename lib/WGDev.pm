@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.2.0';
+our $VERSION = '0.3.0';
 
 use File::Spec ();
 use Cwd        ();
