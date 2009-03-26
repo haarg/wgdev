@@ -13,10 +13,11 @@ use WGDev::Command ();
 
 sub option_config {
     return qw(
-        command|c
         struct|s
     );
 }
+
+sub option_parse_config { return qw(gnu_getopt pass_through) }
 
 sub process {
     my $self = shift;
@@ -31,12 +32,6 @@ sub process {
 
     my ( $config_param, $value ) = @args;
     my @config_path = split /[.]/msx, $config_param;
-
-    if ( $self->option('command') ) {
-        my $command = shift @config_path;
-        my $module  = WGDev::Command::command_to_module($command);
-        unshift @config_path, $module;
-    }
 
     if ( defined $value ) {
         if ( $value =~ s/\A@//msx ) {
@@ -55,11 +50,7 @@ sub process {
             close $fh or die "Unable to read from $file\: $!\n";
         }
         if ( $self->option('struct') ) {
-            if ( $value =~ /\A---[ ]/msx ) {
-            }
-            elsif ( $value =~ /\A\s*[[{]/msx ) {
-                $value = '--- ' . $value;
-            }
+            $value =~ s/\A \s* ( [[{] ) /--- $1/msx;
             $value .= "\n";
             eval {
                 $value = WGDev::yaml_decode($value);
@@ -95,17 +86,20 @@ WGDev::Command::Config - Report WGDev configuration parameters
 
 =head1 SYNOPSIS
 
-    wgd config [--command] <config path>
+    wgd config [--struct] <config path> [<value>]
 
 =head1 DESCRIPTION
 
-Reports WGDev configuration parameters.  The WGDev config file is a YAML
-formatted file existing as either /etc/wgdevcfg or .wgdevcfg in the current
-user's home directory.
+Reports WGDev configuration parameters.
 
 =head1 OPTIONS
 
 =over 8
+
+=item B<--struct -s>
+
+When setting a config value, specifies that the value should be treated as a
+data structure formatted as YAML or JSON.
 
 =item B<E<lt>config pathE<gt>>
 
@@ -113,25 +107,25 @@ Path of the the config variable to retrieve.  Sub-level options are specified
 as a period separated list of keys.  Complex options will be returned formatted
 as YAML.
 
-=item B<--command -c>
+=item B<E<lt>valueE<gt>>
 
-Treats the first segment of the config path as a command name to retrieve
-configuration information about.
+The value to set the config option to.
 
 =back
 
 =head1 CONFIGURATION
 
-The WGDev config file is a YAML formatted file existing as either
+The WGDev config file is a JSON formatted file existing as either
 F</etc/wgdevcfg> or F<.wgdevcfg> in the current user's home directory.
 
 A simple config file looks like:
 
- WGDev::Command:
-  webgui_root: /data/WebGUI
-  webgui_config: dev.localhost.localdomain.conf
-
-Note that YAML is whitespace-sensitive. 
+ {
+    "command" : {
+       "webgui_root" : "/data/WebGUI",
+       "webgui_config" : "dev.localhost.localdomain.conf"
+    }
+ }
 
 =head1 AUTHOR
 
