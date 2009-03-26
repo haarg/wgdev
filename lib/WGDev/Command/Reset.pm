@@ -322,8 +322,17 @@ sub upgrade {
     my $pid = fork;
     if ( !$pid ) {
 
+        # replace sub in WebGUI::Config to only return a single config file
+        my $config_filename
+            = ( File::Spec->splitpath( $wgd->config_file ) )[2];
+        my $config_hash = { $config_filename => $wgd->config };
+        require WebGUI::Config;
+        no warnings qw(once redefine);
+        local *WebGUI::Config::readAllConfigs = sub { return $config_hash };
+
         # child process, don't need to worry about restoring anything
         chdir File::Spec->catdir( $wgd->root, 'sbin' );
+
         local @ARGV = qw(--doit --override --skipBackup);
         if ( $self->verbosity < 2 ) {
             push @ARGV, '--quiet';
