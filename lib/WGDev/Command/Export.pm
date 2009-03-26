@@ -83,11 +83,11 @@ Exports asset to files.
 
 =over 8
 
-=item B<--stdout>
+=item C<--stdout>
 
 Exports to standard out instead of a file.  This only makes sense with a single asset specified.
 
-=item B<E<lt>assetE<gt>>
+=item C<E<lt>assetE<gt>>
 
 Either an asset URL, ID, class name.  As many can be specified as desired.
 Prepending with a slash will force it to be interpreted as a URL.  Asset

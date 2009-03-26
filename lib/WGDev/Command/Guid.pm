@@ -40,7 +40,7 @@ __END__
 
 =head1 NAME
 
-WGDev::Command::Guid - Generates GUIDs via WebGUI's $session->id->generate API
+WGDev::Command::Guid - Generates GUIDs via WebGUI's C<$session->id->generate> API
 
 =head1 SYNOPSIS
 
@@ -48,17 +48,18 @@ WGDev::Command::Guid - Generates GUIDs via WebGUI's $session->id->generate API
 
 =head1 DESCRIPTION
 
-Generates GUIDs via WebGUI's $session->id->generate API. Optionally excludes GUIDs with dashes (for easy double-click copy/pasting)
+Generates GUIDs via WebGUI's C<$session->id->generate> API. Optionally
+excludes GUIDs with dashes (for easy double-click copy/pasting).
 
 =head1 OPTIONS
 
 =over 8
 
-=item B<--number> B<-n>
+=item C<--number> C<-n>
 
 Number of GUIDs to generate. Defaults to 1.
 
-=item B<--dashes>
+=item C<--dashes>
 
 Whether or not to filter GUIDs containing dashes (for easy double-click copy/pasting)
 

@@ -101,26 +101,27 @@ Assets specified as standalone arguments are exported as packages.
 
 =over 8
 
-=item B<--import -i>
+=item C<--import> C<-i>
 
 Package file (or files) to import.  Will be imported to the import node if no
 other parent is specified.
 
-=item B<--parent>
+=item C<--parent>
 
 Specify the parent asset to import packages into.
 
-=item B<--upgrade -u>
+=item C<--upgrade> C<-u>
 
 If specified, packages will be exported to the directory for the upgrade to
 the current local version.
 
-=item B<--output-dir --out-dir>
+=item C<--output-dir> C<--out-dir>
 
-Specify a directory to output the package files to.  If neither --upgrade or
---output-dir is specified, packages will be output to the current directory.
+Specify a directory to output the package files to.  If neither C<--upgrade>
+or C<--output-dir> is specified, packages will be output to the current
+directory.
 
-=item B<E<lt>assetE<gt>>
+=item C<E<lt>assetE<gt>>
 
 Either an asset ID or an asset URL to specify an asset.
 

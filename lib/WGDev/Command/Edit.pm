@@ -177,27 +177,27 @@ If modifications are made, the assets are updated.
 
 =over 8
 
-=item B<--command>
+=item C<--command>
 
 Command to be executed.  If not specified, uses the EDITOR environment
-variable.  If that is not specified, uses vi.
+variable.  If that is not specified, uses C<vi>.
 
-=item B<E<lt>assetE<gt>>
+=item C<E<lt>assetE<gt>>
 
 Either an asset URL, ID, or class name.  As many can be specified as desired.
 Prepending with a slash will force it to be interpreted as a URL.  Class names
 specified will be opened with a skeleton for the asset type.
 
-=item B<--tree>
+=item C<--tree>
 
 Will open specified asset and all descendants in editor.  Can be specified
 multiple times.
 
-=item B<--class>
+=item C<--class>
 
 Only used with --tree option.  Limits exported assets to specified classes.
-Can be specified as a full (WebGUI::Asset::Template) or abbreviated (Template)
-class name.
+Can be specified as a full (C<WebGUI::Asset::Template>) or abbreviated
+(C<Template>) class name.
 
 =back
 

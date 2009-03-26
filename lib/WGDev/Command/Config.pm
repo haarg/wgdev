@@ -96,18 +96,18 @@ Reports WGDev configuration parameters.
 
 =over 8
 
-=item B<--struct -s>
+=item C<--struct> C<-s>
 
 When setting a config value, specifies that the value should be treated as a
 data structure formatted as YAML or JSON.
 
-=item B<E<lt>config pathE<gt>>
+=item C<E<lt>config pathE<gt>>
 
 Path of the the config variable to retrieve.  Sub-level options are specified
 as a period separated list of keys.  Complex options will be returned formatted
 as YAML.
 
-=item B<E<lt>valueE<gt>>
+=item C<E<lt>valueE<gt>>
 
 The value to set the config option to.
 

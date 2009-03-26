@@ -126,7 +126,7 @@ WGDev::Command::Dist - Create a distribution file for WebGUI
 
 =head1 SYNOPSIS
 
-wgd dist [-c] [-d]
+    wgd dist [-c] [-d]
 
 =head1 DESCRIPTION
 
@@ -138,11 +138,11 @@ By default, generates both a code and API documentation package.
 
 =over 8
 
-=item B<-c --code>
+=item C<-c> C<--code>
 
 Generates a code distribution
 
-=item B<-d --documentation>
+=item C<-d> C<--documentation>
 
 Generates an API documentation distribution
 

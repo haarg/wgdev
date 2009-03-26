@@ -30,12 +30,12 @@ WGDev::Command::Run - Run arbitrary shell command
 
 =head1 SYNOPSIS
 
-wgd run <command>
+    wgd run <command>
 
 =head1 DESCRIPTION
 
-Runs an arbitrary command, but sets the WEBGUI_CONFIG, WEBGUI_ROOT, and
-PERL5LIB environment variables first.
+Runs an arbitrary command, but sets the C<WEBGUI_CONFIG>, C<WEBGUI_ROOT>, and
+C<PERL5LIB> environment variables first.
 
 =head1 OPTIONS
 

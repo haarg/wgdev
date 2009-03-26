@@ -614,7 +614,7 @@ WGDev::Command::Reset - Reset a site to defaults
 
 =head1 SYNOPSIS
 
-wgd reset [-v] [-q] [-f] [-d | -b | -t]
+    wgd reset [-v] [-q] [-f] [-d | -b | -t]
 
 =head1 DESCRIPTION
 
@@ -626,97 +626,95 @@ without resetting a site.
 
 =over 8
 
-=item B<-v --verbose>
+=item C<-v> C<--verbose>
 
 Output more information
 
-=item B<-q --quiet>
+=item C<-q> C<--quiet>
 
 Output less information
 
-=item B<-f --fast>
+=item C<-f> C<--fast>
 
 Fast mode - equivalent to:
---no-upload --no-backup --no-delcache --no-purge --no-cleantags --no-index
---no-runwf
+C<--no-upload --no-backup --no-delcache --no-purge --no-cleantags --no-index --no-runwf>
 
-=item B<-t --test>
+=item C<-t> C<--test>
 
 Test mode - equivalent to:
---backup --import
+C<--backup --import>
 
-=item B<-d --dev>
+=item C<-d> C<--dev>
 
 Developer mode - equivalent to:
---backup --import --no-starter --debug --clear --upgrade --uploads
+C<--backup --import --no-starter --debug --clear --upgrade --uploads>
 
-=item B<-b --build>
+=item C<-b> C<--build>
 
 Build mode - equivalent to:
---verbose --backup --import --starter --no-debug --upgrade --purge --cleantags
---index --runwf
+C<--verbose --backup --import --starter --no-debug --upgrade --purge --cleantags --index --runwf>
 
-=item B<--backup --no-backup>
+=item C<--backup> C<--no-backup>
 
 Backup database before doing any other operations.  Defaults to on.
 
-=item B<--delcache --no-delcache>
+=item C<--delcache> C<--no-delcache>
 
 Delete the site's cache.  Defaults to on.
 
-=item B<--import --no-import>
+=item C<--import> C<--no-import>
 
 Import a database script
 
-=item B<--uploads --no-uploads>
+=item C<--uploads> C<--no-uploads>
 
 Recreate uploads directory
 
-=item B<--upgrade --no-upgrade>
+=item C<--upgrade> C<--no-upgrade>
 
-Perform an upgrade - also controls which DB script to import
+Perform an upgrade - also controls which database script to import
 
-=item B<--debug --no-debug>
+=item C<--debug> C<--no-debug>
 
 Enable debug mode and increase session timeout
 
-=item B<--starter --no-starter>
+=item C<--starter> C<--no-starter>
 
 Enable the site starter
 
-=item B<--clear --no-clear>
+=item C<--clear> C<--no-clear>
 
 Clear the content off the home page and its children
 
-=item B<--config --no-config>
+=item C<--config> C<--no-config>
 
 Resets the site's config file.  Some values like database information will be
 preserved.  Additional options can be set in the WGDev config file.
 
-=item B<--purge --no-purge>
+=item C<--purge> C<--no-purge>
 
 Purge all old revisions
 
-=item B<--cleantags --no-cleantags>
+=item C<--cleantags> C<--no-cleantags>
 
 Removes all version tags and sets all asset revisions to be
 under a new version tag marked with the current version number
 
-=item B<--index --no-index>
+=item C<--index> C<--no-index>
 
 Rebuild the site lineage and reindex all of the content
 
-=item B<--runwf --no-runwf>
+=item C<--runwf> C<--no-runwf>
 
 Attempt to finish any running workflows
 
-=item B<--util=>
+=item C<--util=>
 
-Run a utility script.  Script will be run last, being passed to the util
-command (L<WGDev::Command::Util>).  Parameter can be specified multiple times
+Run a utility script.  Script will be run last, being passed to the L<C<util>
+command|WGDev::Command::Util>.  Parameter can be specified multiple times
 to run additional scripts.
 
-=item B<--profile= --pro= -p>
+=item C<--profile=> C<--pro=> C<-p>
 
 Specify a profile of options to use for resetting.  Profiles are specified in
 the WGDev config file under the 'profiles' section.  A profile is defined as
@@ -724,19 +722,19 @@ a string to be used as additional command line options.
 
 =back
 
-=head2 Config Reset
+=head2 WebGUI Config File Reset
 
 The config file is reset by taking the currently specified WebGUI config file,
-the WebGUI.conf.orig file that WGDev finds in the etc directory, and instructions in
-the WGDev config file (see L<WGDev::Command::Config>).
+the F<WebGUI.conf.orig> file that WGDev finds in the F<etc> directory, and
+instructions in the WGDev config file (see L<WGDev::Command::Config>).
 
 The reset config file contains in order of priority: options copied from the
 existing config file, override options, and options in the F<WebGUI.conf.orig>
 file.
 
-Overrides are specified in the config parameter C<-c reset.config.overide> as
-a hash of options to apply.  Copied parameters are specified in
-C<-c reset.config.copy> as a list of entries to copy.  In addition to the
+Overrides are specified in the config parameter C<command.reset.config.overide>
+as a hash of options to apply.  Copied parameters are specified in
+C<command.reset.config.copy> as a list of entries to copy.  In addition to the
 configured list, a set of parameters is always copied:
 
     dsn         dbuser          dbpass

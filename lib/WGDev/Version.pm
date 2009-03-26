@@ -157,9 +157,9 @@ WGDev::Version - Extract version information from WebGUI
 
 =head1 DESCRIPTION
 
-Extracts version information from various places in WebGUI: the changelog, the
-upgrade script, the WebGUI module, the database creation script, or a live
-database.
+Extracts version information from various places in WebGUI: the change log,
+the upgrade script, the WebGUI module, the database creation script, or a
+live database.
 
 =head1 METHODS
 

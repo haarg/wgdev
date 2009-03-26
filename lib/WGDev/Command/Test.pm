@@ -84,19 +84,20 @@ Unrecognized options will be passed through to prove.
 
 =over 8
 
-=item B<-A --all>
+=item C<-A> C<--all>
 
 Run all tests recursively.  Otherwise, tests will need to be specified.
 
-=item B<-S --slow>
+=item C<-S> C<--slow>
 
 Includes slow tests by defining CODE_COP, TEST_SYNTAX, and TEST_POD.
 
-=item B<--reset=>
+=item C<--reset=>
 
 Perform a site reset before running the tests.  The value specified is used
-as the command line parameters for the reset command.  With no value, will use
-the --delcache --import --upgrade parameters to do a fast site reset.
+as the command line parameters for the L<C<reset> command|WGDev::Command::Reset>.
+With no value, will use the options C<--delcache --import --upgrade> to do a
+fast site reset.
 
 =back
 

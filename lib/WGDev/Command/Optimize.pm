@@ -126,11 +126,11 @@ Scans your site and suggests various optimizations
 
 =over 8
 
-=item B<--assets>
+=item C<--assets>
 
 Suggests Assets that you might be able to disable to reduce memory consumption
 
-=item B<--macros>
+=item C<--macros>
 
 Suggests Macros that you might be able to disable to reduce memory consumption
 
