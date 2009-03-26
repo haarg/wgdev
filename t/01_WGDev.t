@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan'; #tests => 19;
+use Test::More tests => 31;
 use Test::Exception;
 
 use WGDev ();
