@@ -10,79 +10,92 @@ use File::Path ();
 our @ISA = qw(Module::Build);
 
 sub new {
-    my $class = shift;
+    my $class   = shift;
     my %options = @_;
     $options{get_options}{compact} = {};
-    $options{test_types}{author} = ['.at'];
+    $options{test_types}{author}   = ['.at'];
     my $self = $class->SUPER::new(%options);
-    if ($self->args('compact')) {
-        $self->notes(compact => 1);
+    if ( $self->args('compact') ) {
+        $self->notes( compact => 1 );
         my $libs = $self->find_pm_files;
-        $self->notes(merge_pm_files => $libs);
-        $self->pm_files({});
+        $self->notes( merge_pm_files => $libs );
+        $self->pm_files( {} );
     }
     return $self;
 }
 
-sub ACTION_testauthor  {
-    shift->generic_test(type => 'author');
+sub ACTION_testauthor {
+    shift->generic_test( type => 'author' );
 }
 
+# we're overriding this to use Pod::Coverage::CountParent instead of the
+# default
 sub ACTION_testpodcoverage {
     my $self = shift;
 
     $self->depends_on('docs');
 
-    eval {require Test::Pod::Coverage; Test::Pod::Coverage->VERSION(1.0); 1}
-    or die "The 'testpodcoverage' action requires ",
-            "Test::Pod::Coverage version 1.00";
+    eval {
+        require Test::Pod::Coverage;
+        Test::Pod::Coverage->VERSION(1.0);
+        }
+        or die q{The 'testpodcoverage' action requires },
+        q{Test::Pod::Coverage version 1.00};
 
-    # XXX work-around a bug in Test::Pod::Coverage previous to v1.09
-    # Make sure we test the module in blib/
     local @INC = @INC;
     my $p = $self->{properties};
-    unshift @INC, File::Spec->catdir($p->{base_dir}, $self->blib, 'lib');
+    unshift @INC, File::Spec->catdir( $p->{base_dir}, $self->blib, 'lib' );
 
-    Test::Pod::Coverage::all_pod_coverage_ok({coverage_class => 'Pod::Coverage::CountParents'});
+    Test::Pod::Coverage::all_pod_coverage_ok(
+        { coverage_class => 'Pod::Coverage::CountParents' } );
 }
 
 sub process_script_files {
     my $self = shift;
-    if ($self->notes('compact')) {
+    if ( $self->notes('compact') ) {
         my $files = $self->find_script_files;
-        if (delete $files->{'bin/wgd'}) {
+        if ( delete $files->{'bin/wgd'} ) {
             my $script = 'bin/wgd';
-            my $script_dir = File::Spec->catdir($self->blib, 'script');
-            File::Path::mkpath( $script_dir );
-            my $to_path = File::Spec->catfile($script_dir, 'wgd');
+            my $script_dir = File::Spec->catdir( $self->blib, 'script' );
+            File::Path::mkpath($script_dir);
+            my $to_path = File::Spec->catfile( $script_dir, 'wgd' );
             my $need_update;
-            for my $file ( $script, keys %{ $self->notes('merge_pm_files') }) {
-                if (!$self->up_to_date($file, $to_path)) {
+            for my $file ( $script, keys %{ $self->notes('merge_pm_files') } )
+            {
+                if ( !$self->up_to_date( $file, $to_path ) ) {
                     $need_update = 1;
                     last;
                 }
             }
             if ($need_update) {
                 unlink $to_path;
-                my $result = $self->copy_if_modified(from => $script, to => $to_path);
-                my $mode = (stat($to_path))[2];
-                chmod $mode | 0222, $to_path;
-                open my $fh, '>>', $to_path or die "blaarg $result $to_path : $!\n";
+                my $result = $self->copy_if_modified(
+                    from => $script,
+                    to   => $to_path
+                );
+                my $mode = ( stat $to_path )[2];
+                chmod $mode | oct(222), $to_path;
+                open my $fh, '>>', $to_path
+                    or die "blaarg $result $to_path : $!\n";
 
                 print {$fh} "BEGIN {\n";
-                for my $pm_file ( sort keys %{ $self->notes('merge_pm_files') } ) {
-                    $pm_file =~ s{^lib/}{};
+                for my $pm_file (
+                    sort keys %{ $self->notes('merge_pm_files') } )
+                {
+                    $pm_file =~ s{\Alib/}{}msx;
                     print {$fh} "    \$INC{'$pm_file'} = __FILE__;\n";
                 }
                 print {$fh} "}\n\n";
 
-                my $end_data = '';
-                for my $pm_file ( sort keys %{ $self->notes('merge_pm_files') } ) {
+                my $end_data = q{};
+                for my $pm_file (
+                    sort keys %{ $self->notes('merge_pm_files') } )
+                {
                     my $past_end;
                     print {$fh} "{\n";
                     open my $in, '<', $pm_file;
-                    while (my $line = <$in>) {
-                        if ($line =~ /^__(?:END|DATA)__$/ms) {
+                    while ( my $line = <$in> ) {
+                        if ( $line =~ /^__(?:END|DATA)__$/msx ) {
                             $past_end = 1;
                             next;
                         }
@@ -101,13 +114,15 @@ sub process_script_files {
                 }
                 close $fh;
                 chmod $mode, $to_path;
-                $self->fix_shebang_line($to_path) unless $self->is_vmsish;
+                if ( !$self->is_vmsish ) {
+                    $self->fix_shebang_line($to_path);
+                }
                 $self->make_executable($to_path);
             }
         }
         $self->script_files($files);
     }
-    $self->SUPER::process_script_files;
+    return $self->SUPER::process_script_files;
 }
 
 1;
