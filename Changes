@@ -1,10 +1,28 @@
 Change log for WGDev
 
 0.3.0
- - Added config command to set and retrieve WGDev config options
- - Added option to reset command to reset WebGUI config
- - Added simple import and export commands
- - Reset now preserves permissions as much as possible on uploads
+ - WGDev instances can be created without a WebGUI root/config
+ - WGDev can now write to its config file
+ - More flexible command line parsing API
+ - Include paths from preload.custom when loading Perl modules
+ - WGDev config file changed to JSON format.  Can still read YAML formatted files for backward compatibility
+ - Util command added running utility scripts
+ - Ls command added to list assets
+ - Help command added to display help through Pod::Perldoc
+ - Optimize command added to scans your site and suggest simple optimizations
+ - Guid command added to generate GUIDs
+ - Config command added to retrieve and set WGDev config options
+ - Export command added to export assets to serialized files
+ - Edit command learned to edit entire entire branches of assets, with class restrictions
+ - Edit command learned to create new assets by specifying class name
+ - Reset command learned --delusers option to delete all non-system users
+ - Reset command learned --conig option to reset WebGUI config file
+ - Reset command learned --profile option to load sets of options from config file
+ - Reset command now preserves permissions as much as possible on uploads
+ - Test command learned --reset parameter to run a reset before performing tests
+ - Various small bug fixes
+ - Improved documentation, including an example command
+ - Improve testing
 
 0.2.0 - Feb 09 2009
  - Command API changed
