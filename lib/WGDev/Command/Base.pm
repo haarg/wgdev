@@ -70,11 +70,6 @@ sub option {
     return $self->{options}{$option};
 }
 
-## depreciated, will be removed
-sub option_default {
-    goto &set_option_default;
-}
-
 sub set_option_default {
     my $self = shift;
     my $option = shift || return;
