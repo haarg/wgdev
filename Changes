@@ -1,6 +1,6 @@
 Change log for WGDev
 
-0.3.0
+0.3.0 - Mar 26 2009
  - WGDev instances can be created without a WebGUI root/config
  - WGDev can now write to its config file
  - More flexible command line parsing API
