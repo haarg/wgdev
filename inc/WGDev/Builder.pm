@@ -2,12 +2,16 @@ package WGDev::Builder;
 use strict;
 use warnings;
 
-our $VERSION = '0.0.1';
+use 5.008008;
+our $VERSION = '0.0.2';
 
-use Module::Build;
-use File::Spec ();
-use File::Path ();
-our @ISA = qw(Module::Build);
+use Module::Build ();
+BEGIN { our @ISA = qw(Module::Build) }
+
+use File::Spec     ();
+use File::Path     ();
+use File::Basename ();
+##no critic (RequireCarping ProhibitMagicNumbers)
 
 sub new {
     my $class   = shift;
@@ -17,20 +21,17 @@ sub new {
     my $self = $class->SUPER::new(%options);
     if ( $self->args('compact') ) {
         $self->notes( compact => 1 );
-        my $libs = $self->find_pm_files;
-        $self->notes( merge_pm_files => $libs );
-        $self->pm_files( {} );
     }
     return $self;
 }
 
-sub ACTION_testauthor {
-    shift->generic_test( type => 'author' );
+sub ACTION_testauthor {    ##no critic (Capitalization)
+    return shift->generic_test( type => 'author' );
 }
 
 # we're overriding this to use Pod::Coverage::CountParent instead of the
 # default
-sub ACTION_testpodcoverage {
+sub ACTION_testpodcoverage {    ##no critic (Capitalization)
     my $self = shift;
 
     $self->depends_on('docs');
@@ -48,20 +49,31 @@ sub ACTION_testpodcoverage {
 
     Test::Pod::Coverage::all_pod_coverage_ok(
         { coverage_class => 'Pod::Coverage::CountParents' } );
+    return;
+}
+
+sub process_pm_files {
+    my $self = shift;
+    if ( $self->args('compact') || $self->notes('compact') ) {
+        return;
+    }
+    return $self->SUPER::process_pm_files(@_);
 }
 
 sub process_script_files {
     my $self = shift;
-    if ( $self->notes('compact') ) {
+    if ( $self->args('compact') || $self->notes('compact') ) {
         my $files = $self->find_script_files;
         if ( delete $files->{'bin/wgd'} ) {
             my $script = 'bin/wgd';
             my $script_dir = File::Spec->catdir( $self->blib, 'script' );
             File::Path::mkpath($script_dir);
-            my $to_path = File::Spec->catfile( $script_dir, 'wgd' );
+            my $filename = File::Basename::basename($script);
+            my $to_path = File::Spec->catfile( $script_dir, $filename );
             my $need_update;
-            for my $file ( $script, keys %{ $self->notes('merge_pm_files') } )
-            {
+            my $libs = $self->find_pm_files;
+            for my $file ( $script, keys %{$libs} ) {
+
                 if ( !$self->up_to_date( $file, $to_path ) ) {
                     $need_update = 1;
                     last;
@@ -76,43 +88,11 @@ sub process_script_files {
                 my $mode = ( stat $to_path )[2];
                 chmod $mode | oct(222), $to_path;
                 open my $fh, '>>', $to_path
-                    or die "blaarg $result $to_path : $!\n";
+                    or die "Can't modify $to_path : $!\n";
 
-                print {$fh} "BEGIN {\n";
-                for my $pm_file (
-                    sort keys %{ $self->notes('merge_pm_files') } )
-                {
-                    $pm_file =~ s{\Alib/}{}msx;
-                    print {$fh} "    \$INC{'$pm_file'} = __FILE__;\n";
-                }
-                print {$fh} "}\n\n";
+                $self->append_libs( $fh, $libs );
 
-                my $end_data = q{};
-                for my $pm_file (
-                    sort keys %{ $self->notes('merge_pm_files') } )
-                {
-                    my $past_end;
-                    print {$fh} "{\n";
-                    open my $in, '<', $pm_file;
-                    while ( my $line = <$in> ) {
-                        if ( $line =~ /^__(?:END|DATA)__$/msx ) {
-                            $past_end = 1;
-                            next;
-                        }
-                        if ($past_end) {
-                            $end_data .= $line;
-                        }
-                        else {
-                            print {$fh} $line;
-                        }
-                    }
-                    close $in;
-                    print {$fh} "}\n";
-                }
-                if ($end_data) {
-                    print {$fh} "__END__\n" . $end_data;
-                }
-                close $fh;
+                close $fh or die "Unable to write $to_path : $!\n";
                 chmod $mode, $to_path;
                 if ( !$self->is_vmsish ) {
                     $self->fix_shebang_line($to_path);
@@ -123,6 +103,45 @@ sub process_script_files {
         $self->script_files($files);
     }
     return $self->SUPER::process_script_files;
+}
+
+sub append_libs {
+    my $self = shift;
+    my $fh   = shift;
+    my $libs = shift;
+
+    print {$fh} "BEGIN {\n";
+    for my $pm_file ( sort keys %{$libs} ) {
+        $pm_file =~ s{\Alib/}{}msx;
+        print {$fh} "    \$INC{'$pm_file'} = __FILE__;\n";
+    }
+    print {$fh} "}\n\n";
+
+    my $end_data = q{};
+    for my $pm_file ( sort keys %{$libs} ) {
+        my $past_end;
+        print {$fh} "{\n";
+        ##no critic (RequireBriefOpen)
+        open my $in, q{<}, $pm_file or die "Unable to read $pm_file : $!\n";
+        while ( my $line = <$in> ) {
+            if ( $line =~ /^__(?:END|DATA)__$/msx ) {
+                $past_end = 1;
+                next;
+            }
+            if ($past_end) {
+                $end_data .= $line;
+            }
+            else {
+                print {$fh} $line;
+            }
+        }
+        close $in or die "Unable to read $in : $!\n";
+        print {$fh} "}\n";
+    }
+    if ($end_data) {
+        print {$fh} "__END__\n" . $end_data;
+    }
+    return;
 }
 
 1;
