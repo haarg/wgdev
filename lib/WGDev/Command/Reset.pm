@@ -224,15 +224,20 @@ sub delete_users {
     my $self = shift;
     my $wgd  = $self->wgd;
 
-    my $session = $wgd->session();
-    my @user_ids = grep { $_ ne '1' && $_ ne '3' }
-        $session->db->buildArray('select userId from users');
+    my $session = $wgd->session;
+    my @user_ids
+        = grep { $_ ne '1' && $_ ne '3' }
+        map { @{$_} }
+        @{ $wgd->db->fetchall_arrayref('SELECT userId FROM users') };
     my $n_users = @user_ids;
-    $self->report("Deleting ($n_users) non-system users... ");
+    $self->report("Deleting $n_users non-system users... ");
+    $self->report( 2, "\n" );
     require WebGUI::User;
-    foreach my $user_id (@user_ids) {
+
+    for my $user_id (@user_ids) {
         my $user = WebGUI::User->new( $session, $user_id );
-        $user->delete();
+        $self->report( 2, "\tDeleting user '" . $user->username . "'.\n" );
+        $user->delete;
     }
     $self->report("Done.\n");
     return 1;
@@ -435,8 +440,8 @@ sub clear_default_content {
         ['descendants'],
         {
             statesToInclude => [
-                'published', 'trash',
-                'clipboard', 'clipboard-limbo',
+                'published',       'clipboard',
+                'clipboard-limbo', 'trash',
                 'trash-limbo'
             ],
             statusToInclude => [ 'approved', 'pending', 'archive' ],
@@ -460,10 +465,10 @@ sub purge_old_revisions {
     $self->report('Purging old Asset revisions... ');
     $self->report( 2, "\n" );
     my $sth = $wgd->db->connect->prepare(<<'END_SQL');
-    SELECT assetData.assetId, asset.className, assetData.revisionDate
-    FROM asset
-        LEFT JOIN assetData on asset.assetId=assetData.assetId
-    ORDER BY assetData.revisionDate ASC
+    SELECT `assetData`.`assetId`, `asset`.`className`, `assetData`.`revisionDate`
+    FROM `asset`
+        LEFT JOIN `assetData` ON `asset`.`assetId` = `assetData`.`assetId`
+    ORDER BY `assetData`.`revisionDate` ASC
 END_SQL
     $sth->execute;
     while ( my ( $id, $class, $revision ) = $sth->fetchrow_array ) {
@@ -520,7 +525,7 @@ sub run_all_workflows {
     $self->report( 2, "\n" );
     require WebGUI::Workflow::Instance;
     my $sth = $wgd->db->connect->prepare(
-        q{SELECT instanceId FROM WorkflowInstance});
+        q{SELECT `instanceId` FROM `WorkflowInstance`});
     $sth->execute;
     while ( my ($instance_id) = $sth->fetchrow_array ) {
         my $instance
