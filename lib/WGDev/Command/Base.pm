@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.1.0';
 
 sub is_runnable {
     my $class = shift;
@@ -70,11 +70,6 @@ sub option {
     return $self->{options}{$option};
 }
 
-## depreciated, will be removed
-sub option_default {
-    goto &set_option_default;
-}
-
 sub set_option_default {
     my $self = shift;
     my $option = shift || return;
@@ -138,7 +133,7 @@ WGDev::Command::Base - Super-class for implementing WGDev commands
 
     package WGDev::Command::Mine;
     use WGDev::Command::Base;
-    @ISA = qw(WGDev::Command::Base);
+    BEGIN { @ISA = qw(WGDev::Command::Base) }
 
     sub process {
         my $self = shift;
@@ -148,8 +143,8 @@ WGDev::Command::Base - Super-class for implementing WGDev commands
 
 =head1 DESCRIPTION
 
-A super-class useful for implementing WGDev command modules.  Includes simple
-methods to override for parameter parsing and provides help text via
+A super-class useful for implementing L<WGDev> command modules.  Includes
+simple methods to override for parameter parsing and provides help text via
 Pod::Usage.
 
 While using WGDev::Command::Base is not required to write a command module,
@@ -162,24 +157,24 @@ it is the recommended way to do so.
 =item is_runnable
 
 This is a class method that must be implemented and return true for all
-command modules.  The module in WGDev::Command::Base will return true for
-any subclass that implements the C<process> method.
+command modules.  This method will return true for any subclass that
+implements the C<process> method.
 
 =item new ( $wgd )
 
 Instantiate a new command object.  Requires a L<WGDev> object as the first
 parameter.
 
-=item wgd
+=item $wgd
 
 Returns the L<WGDev> object used to instantiate the object.
 
 =item option_parse_config
 
 Returns an array of parameters used to configure command line parsing.  These
-options are passed directly to Getopt::Long.  See
+options are passed directly to L<Getopt::Long>.  See
 L<Getopt::Long/Configuring_Getopt::Long> for details on the available options.
-By default, returns 'gnu_getopt' and can be overridden to return others.
+By default, returns 'C<gnu_getopt>' and can be overridden to return others.
 
 =item option_config
 
@@ -211,7 +206,7 @@ Sets options based on an array of command line parameters.
 
 Sets options based on a string of command line parameters.  The string will be
 processed with L<Text::ParseWords> C<shellwords> sub then passed on to
-parse_params.
+C<parse_params>.
 
 =item set_option_default
 
@@ -227,9 +222,10 @@ is the verbosity to use.
 
 Runs the command.  Parameters should be the command line parameters to use for
 running the command.  This sub should exit, not return.  The default method
-will first call process_params with the given parameters, call usage if there
-was a problem with parsing the parameters, or call process if there was not.
-If process returns a true value, it will exit with an error value of zero.
+will first call C<process_params> with the given parameters, call usage if
+there was a problem with parsing the parameters, or call process if there was
+not.  If process returns a true value, it will exit with an error value of
+zero.
 
 =item process
 

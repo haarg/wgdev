@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.1.1';
+our $VERSION = '0.2.0';
 
 use Getopt::Long ();
 use File::Spec   ();
@@ -283,42 +283,41 @@ WGDev::Command - Run WGDev commands
 
 =head1 SYNOPSIS
 
-wgd [arguments] <subcommand> [subcommand arguments]
+    wgd [arguments] <subcommand> [subcommand arguments]
 
 =head1 DESCRIPTION
 
-Runs subcommands from the WGDev::Command namespace, or standalone scripts starting with wgd-
+Runs sub-commands from the C<WGDev::Command> namespace, or standalone scripts starting with F<wgd->
 
 =head1 OPTIONS
 
 =over 8
 
-=item B<-h -? --help>
+=item C<-h> C<-?> C<--help>
 
 Display help for any command.
 
-=item B<-V --version>
+=item C<-V> C<--version>
 
 Display version information
 
-=item B<-F --config-file>
+=item C<-F> C<--config-file>
 
-Specify WebGUI config file to use.  Can be absolute, relative to
-the current directory, or relative to WebGUI's config directory.
-If not specified, it will try to use the WEBGUI_CONFIG environment
-variable.  If that is not set and there is only one config file
-in WebGUI's config directory, that file will be used.
+Specify WebGUI config file to use.  Can be absolute, relative to the current
+directory, or relative to WebGUI's config directory.  If not specified, it
+will try to use the C<WEBGUI_CONFIG> environment variable.  If that is not
+set and there is only one config file in WebGUI's config directory, that file
+will be used.
 
-=item B<-R --webgui-root>
+=item C<-R> C<--webgui-root>
 
-Specify WebGUI's root directory.  Can be absolute or relative.
-If not specified, first the WEBGUI_ROOT environment variable will
-be checked, then will search upward from the current path for a
-WebGUI installation.
+Specify WebGUI's root directory.  Can be absolute or relative.  If not
+specified, first the C<WEBGUI_ROOT> environment variable will be checked,
+then will search upward from the current path for a WebGUI installation.
 
-=item B<E<lt>subcommandE<gt>>
+=item C<E<lt>subcommandE<gt>>
 
-Subcommand to run or get help for.
+Sub-command to run or get help for.
 
 =back
 

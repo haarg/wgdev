@@ -2,10 +2,13 @@
 /_build
 /blib
 /README
+/LICENSE
 /MANIFEST
 /WGDev-*
 /META.yml
 /Makefile
 /Makefile.PL
 /pm_to_blib
+/cover_db
+/t/testdata/root/sbin
 

@@ -66,36 +66,38 @@ __END__
 
 =head1 NAME
 
-WGDev::Command::Db - Connect to database with mysql
+WGDev::Command::Db - Connect to database with the MySQL client
 
 =head1 SYNOPSIS
 
-wgd db [-p | -d | -l | -c] [mysql options]
+    wgd db [-p | -d | -l | -c] [mysql options]
 
 =head1 DESCRIPTION
 
-Opens the mysql client to your WebGUI database, loads or dumps a database script, or clears a database's contents.
+Opens the C<mysql> client to your WebGUI database, loads or dumps a database
+script, or clears a database's contents.
 
 =head1 OPTIONS
 
-Any arguments not recognized will be passed through to the mysql or mysqldump commands in applicable.
+Any arguments not recognized will be passed through to the C<mysql> or
+C<mysqldump> commands in applicable.
 
 =over 8
 
-=item B<-p --print>
+=item C<-p> C<--print>
 
-Prints out the command options that would be passed to mysql
+Prints out the command options that would be passed to C<mysql>
 
-=item B<-d --dump>
+=item C<-d> C<--dump>
 
-Dumps the database as an SQL script.  If a file is specified,
-dumps to that file.  Otherwise, dumps to standard out.
+Dumps the database as an SQL script.  If a file is specified, dumps to that
+file.  Otherwise, dumps to standard out.
 
-=item B<-l --load>
+=item C<-l> C<--load>
 
 Loads a database script into the database.  Database script must be specified.
 
-=item B<-c --clear>
+=item C<-c> C<--clear>
 
 Clears the database, removing all tables.
 

@@ -157,32 +157,32 @@ WGDev::Command::Version - Reports and updates version numbers
 
 =head1 SYNOPSIS
 
-wgd version [-b | -c] [<version>]
+    wgd version [-b | -c] [<version>]
 
 =head1 DESCRIPTION
 
-Reports the current versions of the WebGUI.pm module, create.sql database
-script, changelog, and upgrade file.  Non-matching versions will be noted
+Reports the current versions of the F<WebGUI.pm> module, F<create.sql> database
+script, change log, and upgrade file.  Non-matching versions will be noted
 in red if possible.
 
 =head1 OPTIONS
 
 =over 8
 
-=item B<--create>
+=item C<--create>
 
-Adds a new section to the changelog for the new version, updates the version
-number in WebGUI.pm, and creates a new upgrade script.  The version number to
-update to can be specified on the command line.  If not specified, defaults
+Adds a new section to the change log for the new version, updates the version
+number in F<WebGUI.pm>, and creates a new upgrade script.  The version number
+to update to can be specified on the command line.  If not specified, defaults
 to incrementing the patch level by one.
 
-=item B<--bare>
+=item C<--bare>
 
-Outputs the version number taken from WebGUI.pm only
+Outputs the version number taken from F<WebGUI.pm> only
 
-=item B<E<lt>versionE<gt>>
+=item C<E<lt>versionE<gt>>
 
-version number to compare against or create
+The version number to compare against or create
 
 =back
 

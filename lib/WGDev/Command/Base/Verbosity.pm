@@ -62,7 +62,7 @@ WGDev::Command::Base::Verbosity - Super-class for implementing WGDev commands wi
 =head1 SYNOPSIS
 
     package WGDev::Command::Mine;
-    use WGDev::Command::Base::Verbisity;
+    use WGDev::Command::Base::Verbosity;
     @ISA = qw(WGDev::Command::Base::Verbosity);
 
     sub process {

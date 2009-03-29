@@ -133,8 +133,8 @@ WGDev::Database - Database connectivity and DSN parsing for WGDev
 =head1 DESCRIPTION
 
 Has methods to access various parts of the DSN that can be used for other
-programs such as command line mysql.  Also has methods to easily connect and
-reuse a database connection.
+programs such as command line C<mysql>.  Also has methods to easily connect
+and reuse a database connection.
 
 =head1 METHODS
 

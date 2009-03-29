@@ -76,21 +76,22 @@ WGDev::Command::Ls - List WebGUI assets
 
 =head1 DESCRIPTION
 
-Lists children on WebGUI assets
+Lists children of WebGUI assets
 
 =head1 OPTIONS
 
 =over 8
 
-=item B<--long> B<-l>
+=item C<--long> C<-l>
 
 Use long list format, which includes asset ID, URL, and title.
 
-=item B<--format=> B<-f>
+=item C<--format=> C<-f>
 
-Use arbitrary formatting.  Format looks like %url:30%, where 'url' is the
-field to display, and 30 is the length to left pad/cut to.  Negative lengths
-can be specified for right padding.  Percent signs can be included by using %%.
+Use arbitrary formatting.  Format looks like C<%url:30%>, where 'C<url>' is
+the field to display, and 30 is the length to left pad/cut to.  Negative
+lengths can be specified for right padding.  Percent signs can be included by
+using C<%%>.
 
 =back
 

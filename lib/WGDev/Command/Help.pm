@@ -48,7 +48,7 @@ __END__
 
 =head1 NAME
 
-WGDev::Command::Help - Displays perldoc help for WGDev command
+WGDev::Command::Help - Displays C<perldoc> help for WGDev command
 
 =head1 SYNOPSIS
 
@@ -56,7 +56,7 @@ WGDev::Command::Help - Displays perldoc help for WGDev command
 
 =head1 DESCRIPTION
 
-Displays perldoc page for WGDev command.
+Displays C<perldoc> page for WGDev command.
 
 More or less equivalent to running
 
@@ -68,9 +68,9 @@ Except that the help message is displayed via Pod::Perldoc
 
 =over 8
 
-=item B<E<lt>commandE<gt>>
+=item C<E<lt>commandE<gt>>
 
-The subcommand to display help information about.
+The sub-command to display help information about.
 
 =back
 

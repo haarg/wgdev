@@ -161,24 +161,25 @@ WGDev::Command::Build - Builds an SQL script and uploads for site creation
 
 =head1 SYNOPSIS
 
-wgd build [-s] [-u]
+    wgd build [-s] [-u]
 
 =head1 DESCRIPTION
 
-Uses the current database and uploads to build a new create.sql and update
-the local uploads directory.  With no options, builds both sql and uploads.
+Uses the current database and uploads to build a new F<create.sql> and update
+the local uploads directory.  With no options, builds both the database
+script and the uploads directory.
 
 =head1 OPTIONS
 
 =over 8
 
-=item B<-s --sql>
+=item C<-s> C<--sql>
 
-make create.sql based on current database contents
+Make F<create.sql> based on current database contents
 
-=item B<-u --uploads>
+=item C<-u> C<--uploads>
 
-make uploads based on current site's uploads
+Make uploads based on current site's uploads
 
 =back
 

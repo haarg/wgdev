@@ -3,11 +3,10 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.2.0';
+our $VERSION = '0.3.0';
 
 use File::Spec ();
 use Cwd        ();
-use JSON       ();
 use Carp qw(croak);
 
 sub new {
@@ -288,11 +287,7 @@ sub wgd_config {    ##no critic (ProhibitExcessComplexity)
     return;
 }
 
-my $json_formatter = JSON->new;
-$json_formatter->utf8;
-$json_formatter->relaxed;
-$json_formatter->canonical;
-$json_formatter->pretty;
+my $json;
 
 sub read_wgd_config {
     my $self = shift;
@@ -306,8 +301,18 @@ sub read_wgd_config {
             if ( $content eq q{} ) {
                 $config = {};
             }
-            elsif ( !eval { $config = $json_formatter->decode($content); } ) {
-                $config = yaml_decode($content);
+            else {
+                if ( !$json ) {
+                    require JSON;
+                    $json = JSON->new;
+                    $json->utf8;
+                    $json->relaxed;
+                    $json->canonical;
+                    $json->pretty;
+                }
+                eval { $config = $json->decode($content); } || do {
+                    $config = {};
+                };
             }
             return $self->{wgd_config} = $config;
         }
@@ -322,7 +327,15 @@ sub write_wgd_config {
         $config_path = $self->{wgd_config_path} = $ENV{HOME} . '/.wgdevcfg';
     }
     my $config = $self->{wgd_config} || {};
-    my $encoded = $json_formatter->encode($config);
+    if ( !$json ) {
+        require JSON;
+        $json = JSON->new;
+        $json->utf8;
+        $json->relaxed;
+        $json->canonical;
+        $json->pretty;
+    }
+    my $encoded = $json->encode($config);
     $encoded =~ s/\n?\z/\n/msx;
     open my $fh, '>', $config_path
         or croak "Unable to write to $config_path: $!";
@@ -332,9 +345,8 @@ sub write_wgd_config {
 }
 
 sub my_config {
-    my $self     = shift;
-    my $key      = shift;
-    my ($caller) = caller;
+    my $self = shift;
+    my $key  = shift;
     my @keys;
     if ( ref $key && ref $key eq 'ARRAY' ) {
         @keys = @{$key};
@@ -342,7 +354,10 @@ sub my_config {
     else {
         @keys = split /[.]/msx, $key;
     }
-    unshift @keys, $caller;
+    my $caller = caller;
+    my $remove = ( ref $self ) . q{::};
+    $caller =~ s/^\Q$remove//msx;
+    unshift @keys, map { lcfirst $_ } split /::/msx, $caller;
     return $self->wgd_config( \@keys, @_ );
 }
 
