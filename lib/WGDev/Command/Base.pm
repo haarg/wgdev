@@ -165,7 +165,7 @@ implements the C<process> method.
 Instantiate a new command object.  Requires a L<WGDev> object as the first
 parameter.
 
-=item $wgd
+=item wgd
 
 Returns the L<WGDev> object used to instantiate the object.
 
