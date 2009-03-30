@@ -68,9 +68,20 @@ Except that the help message is displayed via Pod::Perldoc
 
 =over 8
 
-=item C<E<lt>commandE<gt>>
+=item C<< <command> >>
 
 The sub-command to display help information about.
+
+=back
+
+=head1 METHODS
+
+=over 8
+
+=item error_with_list
+
+Throws an error that includes the modules usage message, followed by a list
+of available WGDev commands.
 
 =back
 
