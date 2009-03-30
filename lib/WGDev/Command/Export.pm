@@ -87,11 +87,24 @@ Exports asset to files.
 
 Exports to standard out instead of a file.  This only makes sense with a single asset specified.
 
-=item C<E<lt>assetE<gt>>
+=item C<< <asset> >>
 
 Either an asset URL, ID, class name.  As many can be specified as desired.
 Prepending with a slash will force it to be interpreted as a URL.  Asset
 classes will generate skeletons of export files for the given class.
+
+=back
+
+=head1 METHODS
+
+=over 8
+
+=item export_filename
+
+Calculates the filename to export an asset as.  Accepts a parameter of the
+asset object or an asset class name.  The filename will be the last portion of
+the asset's URL, with an extension based on the asset's class name.  If
+provided only a class name, the filename will also be based on the class name.
 
 =back
 
