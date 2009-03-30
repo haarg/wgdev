@@ -426,13 +426,128 @@ WGDev - WebGUI Developer Utilities
 Performs common actions needed by WebGUI developers, such as recreating their
 site from defaults, checking version numbers, exporting packages, and more.
 
+=head1 SUBROUTINES
+
+=over 8
+
+=item yaml_encode
+
+Loads a YAML module if needed and encodes a data structure with it.
+
+=item yaml_decode
+
+Loads a YAML module if needed and decodes a data structure with it.
+
+=back
+
+=head1 METHODS
+
+=over 8
+
+=item new
+
+Creates a new WGDev object.  Optionally accepts a WebGUI root path and config
+file.  These will be passed on to the C<root> and C<config_file> methods.
+
+=item root
+
+Sets or returns the WebGUI root path the object will be interacting with.  If
+the path can't be recognized as a WebGUI root, an error will be thrown.  The
+return value will always be an absolute path to the WebGUI root.
+
+=item config_file
+
+Sets or returns the site config file path.  The given path can be relative to
+the current directory or to the etc directory in the WebGUI root.  If the
+config file is found and the WebGUI root is not yet set, it will set the root
+based on the config file path.  If the specified config file can't be found,
+an error will be thrown.
+
+=item config_file_relative
+
+Returns the config file path relative to the WebGUI config directory.  Useful
+for initializing WebGUI sessions, which require the config path to be relative
+to that directory.
+
+=item lib
+
+In scalar context, returns the WebGUI library path based on the WebGUI root.
+In array context, it also includes the library paths specified in the
+F<preload.custom> file.
+
+=item config
+
+Returns a Config::JSON object based on the file set using C<config_file>.
+
+=item session
+
+Returns a WebGUI session initialized using the WebGUI root and config file.
+
+=item asset
+
+Returns a L<WGDev::Asset> object for simple asset operations.
+
+=item db
+
+Returns a L<WGDev::Database> object for database interaction without starting
+a WebGUI session.
+
+=item version
+
+Returns a L<WGDev::Version> object for checking the WebGUI version number in
+several different places.
+
+=item close_config
+
+Closes the link to the WebGUI config file.  Future calls to C<config> will
+load a new object based on the file.
+
+=item close_session
+
+Closes the WebGUI session.  If the session object has expired or is no longer
+valid, it will first be re-opened, then closed properly.
+
+=item set_environment
+
+Sets the C<WEBGUI_ROOT>, C<WEBGUI_CONFIG>, and C<PERL5LIB> environment variables
+based on C<root>, C<config_file>, and C<lib>.
+
+=item reset_environment
+
+Resets the C<WEBGUI_ROOT>, C<WEBGUI_CONFIG>, and C<PERL5LIB> based to what they
+were prior to set_environment being called.
+
+=item wgd_config
+
+Get or set WGDev config file parameters.  Accepts two parameters, the config
+directive and optionally the value to set it to.  The config directive is the
+path in a data structure specified either as an array reference of keys or a
+period separated string of keys.
+
+=item my_config
+
+Similar to wgd_config, but prefixes the specified path with keys based on the
+caller's package.  For example, a package of C<WGDev::Command::Reset> becomes
+C<command.reset>.
+
+=item read_wgd_config
+
+Reads and parses the WGDev config file into memory.  Will be automatically
+called by C<wgd_config> as needed.
+
+=item write_wgd_config
+
+Saves the current configuration back to the WGDev config file.
+
+=back
+
 =head1 AUTHOR
 
 Graham Knop <graham@plainblack.com>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) Graham Knop.
 
 This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.
