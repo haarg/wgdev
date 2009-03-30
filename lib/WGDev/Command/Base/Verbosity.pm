@@ -73,9 +73,25 @@ WGDev::Command::Base::Verbosity - Super-class for implementing WGDev commands wi
 
 =head1 DESCRIPTION
 
-A super-class useful for implementing WGDev command modules.  Includes simple
-methods to override for parameter parsing and provides help text via
-Pod::Usage.
+A super-class useful for implementing WGDev command modules.  Parses the
+C<--verbose> and C<--quiet> command line options.
+
+=head1 METHODS
+
+=over 8
+
+=item verbosity
+
+Sets or returns the verbosity.  This is modified when parsing parameters.  Defaults to 1.
+
+=item report
+
+Prints messages based on the current verbosity level.  If given two
+parameters, the first must be the verbosity level to start printing the
+message at.  The second parameter is the message to print.  Will also accept
+a single parameter of a message to print starting at verbosity level 1.
+
+=back
 
 =head1 AUTHOR
 
