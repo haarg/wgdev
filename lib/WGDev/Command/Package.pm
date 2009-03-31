@@ -121,7 +121,7 @@ Specify a directory to output the package files to.  If neither C<--upgrade>
 or C<--output-dir> is specified, packages will be output to the current
 directory.
 
-=item C<E<lt>assetE<gt>>
+=item C<< <asset> >>
 
 Either an asset ID or an asset URL to specify an asset.
 

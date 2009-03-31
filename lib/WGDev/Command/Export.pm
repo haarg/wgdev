@@ -97,16 +97,13 @@ classes will generate skeletons of export files for the given class.
 
 =head1 METHODS
 
-=over 8
+=head2 C<export_filename ( $asset_or_class )>
 
-=item export_filename
-
-Calculates the filename to export an asset as.  Accepts a parameter of the
-asset object or an asset class name.  The filename will be the last portion of
-the asset's URL, with an extension based on the asset's class name.  If
-provided only a class name, the filename will also be based on the class name.
-
-=back
+Calculates the file name to export an asset as.  Accepts a parameter of the
+asset object or an asset class name.  The file name will be the last portion
+of the asset's URL, with an extension based on the asset's class name.  If
+provided only a class name, the file name will also be based on the class
+name.
 
 =head1 AUTHOR
 

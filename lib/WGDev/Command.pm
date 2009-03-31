@@ -21,7 +21,7 @@ sub run {
 
         'F|config-file=s' => \( my $opt_config ),
         'R|webgui-root=s' => \( my $opt_root ),
-    ) || warn $class->usage && exit 1;
+    ) || warn $class->usage(0) && exit 1;
     my @params = @ARGV;
 
     my $command_name = shift @params;
@@ -40,7 +40,8 @@ sub run {
         else {
             warn $class->usage(
                 message          => "Can't find command $command_name!\n",
-                include_cmd_list => 1
+                include_cmd_list => 1,
+                verbosity        => 0,
             );
             exit 2;
         }
@@ -55,7 +56,8 @@ sub run {
     elsif ( !$command_name ) {
         warn $class->usage(
             message          => "No command specified!\n",
-            include_cmd_list => 1
+            include_cmd_list => 1,
+            verbosity        => 1,
         );
         exit 1;
     }
@@ -162,7 +164,10 @@ sub report_help {
         }
     }
     else {
-        print $class->usage;
+        print $class->usage(
+            verbosity        => 2,
+            include_cmd_list => 1,
+        );
     }
     return 1;
 }
@@ -205,14 +210,22 @@ sub _find_cmd_exec {
 
 sub usage {
     my $class = shift;
-    require WGDev::Help;
-    my $message = WGDev::Help::package_usage( $class, 2 );
+    my %options = ( @_ % 2 == 0 ) ? @_ : ( verbosity => shift );
 
-    $message .= "SUBCOMMANDS\n";
-    for my $command ( $class->command_list ) {
-        $message .= "    $command\n";
+    require WGDev::Help;
+    my $message = q{};
+    if ( $options{message} ) {
+        $message .= $options{message};
     }
-    $message .= "\n";
+    $message .= WGDev::Help::package_usage( $class, $options{verbosity} );
+
+    if ( $options{include_cmd_list} ) {
+        $message .= "SUBCOMMANDS\n";
+        for my $command ( $class->command_list ) {
+            $message .= "    $command\n";
+        }
+        $message .= "\n";
+    }
     return $message;
 }
 
@@ -315,7 +328,7 @@ Specify WebGUI's root directory.  Can be absolute or relative.  If not
 specified, first the C<WEBGUI_ROOT> environment variable will be checked,
 then will search upward from the current path for a WebGUI installation.
 
-=item C<E<lt>subcommandE<gt>>
+=item C<< <subcommand> >>
 
 Sub-command to run or get help for.
 
@@ -327,7 +340,7 @@ Graham Knop <graham@plainblack.com>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) Graham Knop.
 
 This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.

@@ -138,11 +138,11 @@ and reuse a database connection.
 
 =head1 METHODS
 
-=head2 new ( $wgd )
+=head2 C<new ( $wgd )>
 
 Creates a new WGDev::Database object.
 
-=head3 $wgd
+=head3 C<$wgd>
 
 An instantiated WGDev object.
 

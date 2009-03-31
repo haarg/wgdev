@@ -76,9 +76,9 @@ sub export_files {
 }
 
 sub generate_docs {
-    my $self     = shift;
-    my $to_root  = shift;
-    my $from     = $self->wgd->root;
+    my $self    = shift;
+    my $to_root = shift;
+    my $from    = $self->wgd->root;
     require File::Find;
     require File::Path;
     require Pod::Html;
@@ -150,19 +150,15 @@ Generates an API documentation distribution
 
 =head1 METHODS
 
-=over 8
-
-=item export_files
+=head2 C<export_files ( $directory )>
 
 Exports the WebGUI root directory, excluding common site specific files, to
 the specified directory.
 
-=item generate_docs
+=head2 C<generate_docs ( $directory )>
 
 Generate API documentation for WebGUI using Pod::Html in the specified
 directory.
-
-=back
 
 =head1 AUTHOR
 

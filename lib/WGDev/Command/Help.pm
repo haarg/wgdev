@@ -76,14 +76,10 @@ The sub-command to display help information about.
 
 =head1 METHODS
 
-=over 8
-
-=item error_with_list
+=head2 C<error_with_list>
 
 Throws an error that includes the modules usage message, followed by a list
 of available WGDev commands.
-
-=back
 
 =head1 AUTHOR
 

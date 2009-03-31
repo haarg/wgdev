@@ -114,18 +114,19 @@ sections when multiple POD documents exist in a single file.
 
 =head1 SUBROUTINES
 
-=head2 package_usage ( $package, $verbosity )
+=head2 C<package_usage ( $package [, $verbosity] )>
 
 Returns usage information for a package, using L<Pod::Usage>.  Can be used on
 packages that have been combined into a single file.
 
-=head3 $package
+=head2 C<package_perldoc ( $package )>
 
-Package to return usage documentation for
+Displays documentation for a package using L<Pod::Perldoc>.  Can be used on
+packages that have been combined into a single file.
 
-=head3 $verbosity
+=head2 C<filter_pod ( $file, $package )>
 
-Verbosity level as documented in L<Pod::Usage>
+Filters out the POD for a specific package from a file based on the NAME sections.
 
 =head1 AUTHOR
 

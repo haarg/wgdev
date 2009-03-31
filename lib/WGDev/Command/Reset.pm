@@ -225,8 +225,7 @@ sub delete_users {
     my $wgd  = $self->wgd;
 
     my $session = $wgd->session;
-    my @user_ids
-        = grep { $_ ne '1' && $_ ne '3' }
+    my @user_ids = grep { $_ ne '1' && $_ ne '3' }
         map { @{$_} }
         @{ $wgd->db->fetchall_arrayref('SELECT userId FROM users') };
     my $n_users = @user_ids;

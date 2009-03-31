@@ -163,11 +163,11 @@ live database.
 
 =head1 METHODS
 
-=head2 new ( $webgui_root )
+=head2 C<new ( $webgui_root )>
 
 Creates a new WGDev::Version object.  Needs a WebGUI directory to be specified.
 
-=head3 $webgui_root
+=head3 C<$webgui_root>
 
 The root of the WebGUI directory to use for finding each file.
 

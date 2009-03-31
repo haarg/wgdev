@@ -136,6 +136,16 @@ Suggests Macros that you might be able to disable to reduce memory consumption
 
 =back
 
+=head1 METHODS
+
+=head2 C<optimise_assets>
+
+Suggests Assets that you might be able to disable to reduce memory consumption
+
+=head2 C<optimise_macros>
+
+Suggests Macros that you might be able to disable to reduce memory consumption
+
 =head1 AUTHOR
 
 Patrick Donelan <pat@patspam.com>

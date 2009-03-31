@@ -183,6 +183,18 @@ Make uploads based on current site's uploads
 
 =back
 
+=head1 METHODS
+
+=head2 C<create_db_script>
+
+Builds the F<create.sql> database script.  This is done as a dump of the current
+database structure and data, excluding the data from some tables.
+
+=head2 C<update_local_uploads>
+
+Updates the working directory's uploads from the current site.  Files will be
+deleted or created so the two match.
+
 =head1 AUTHOR
 
 Graham Knop <graham@plainblack.com>
