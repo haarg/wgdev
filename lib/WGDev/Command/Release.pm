@@ -14,7 +14,7 @@ sub process {
     my $self = shift;
     my $wgd = $self->wgd;
     my $summary = $self->get_summary;
-#    $self->upload_sourceforge($summary);
+    $self->upload_sourceforge($summary);
 #    $self->post_advisory($summary);
 #    $self->post_freshmeat($summary);
     $self->post_sourceforge($summary);
@@ -98,14 +98,15 @@ sub post_sourceforge {
     my $summary = shift;
     my $wgd = $self->wgd;
 
-    my ($version, $status) = $wgd->version->module;
-    my $release_date = POSIX::strftime('%F', localtime);
-    my $filename = "webgui-$version-$status.tar.gz";
-
     require URI;
     require URI::QueryParam;
     require LWP::UserAgent;
     require POSIX;
+
+    my ($version, $status) = $wgd->version->module;
+    my $release_date = POSIX::strftime('%F', localtime);
+    my $filename = "webgui-$version-$status.tar.gz";
+
     my $ua = LWP::UserAgent->new;
     $ua->cookie_jar( {} );
 
@@ -134,13 +135,15 @@ sub post_sourceforge {
         'https://sourceforge.net/project/admin/newrelease.php',
         Content => {
             group_id     => $group_id,
-            package_id   => $release_id,
+            package_id   => $package_id,
             release_name => "$version ($status)",
             newrelease   => 'yes',
             submit       => 'Create This Release',
         },
     );
     if (! $response->header('Location')) {
+        use Data::Dumper;
+        warn Data::Dumper::Dumper($response);
         die "Unable to create new release.\n";
     }
     my $release_url = URI->new($response->header('Location'));
@@ -149,9 +152,12 @@ sub post_sourceforge {
     my $notes = $summary;
     my @gotchas = @{ $self->read_gotchas };
     if (@gotchas) {
-        $notes = "\n\nGotchas:\n";
+        $notes .= "\n\nGotchas:\n";
         for my $gotcha (@gotchas) {
-            $notes .= " * $gotcha\n";
+            my $formatted_gotcha = $gotcha;
+            $formatted_gotcha =~ s/^/   /msxg;
+            $formatted_gotcha =~ s/\A\Q  / */msxg;
+            $notes .= $formatted_gotcha . "\n";
         }
     }
     my $changelog = q{};
@@ -168,9 +174,9 @@ sub post_sourceforge {
             release_id       => $release_id,
             step1            => 1,
             release_date     => $release_date,
-            release_name     => "$release ($status)",
+            release_name     => "$version ($status)",
             status_id        => 1,
-            new_package_id   => $release_id,
+            new_package_id   => $package_id,
             release_notes    => $notes,
             release_changes  => $changelog,
             submit           => 'Submit/Refresh',
@@ -197,14 +203,20 @@ sub post_sourceforge {
         die "Unable to attach file\n";
     }
 
-    if ( ! $response->content =~ m{
-        <input \s+
-        name="file_id" \s+
-        value="(\d+)"
+    my $file_id;
+    if ( $response->content =~ m{
+        <input
+        \s+ type="hidden"
+        \s+ name="file_id"
+        \s+ value="(\d+)"
         .*?
-        >$filename<}msx ) {
+        >\Q$filename\E<}msx ) {
+        $file_id = $1;
     }
-    my $file_id = $1;
+    else {
+        die "Can't determine file id!\n";
+    }
+    warn "file_id: $file_id\n";
 
     $response = $ua->post(
         'https://sourceforge.net/project/admin/editreleases.php',
@@ -231,7 +243,6 @@ sub post_sourceforge {
             group_id       => $group_id,
             release_id     => $release_id,
             package_id     => $package_id,
-            file_id        => $file_id,
             step4          => 'Email Release',
             sure           => 1,
         },
@@ -315,8 +326,8 @@ sub read_gotchas {
 }
 
 sub get_summary {
-    require File::Temp;
     my $self = shift;
+    require File::Temp;
     my $wgd = $self->{wgd};
     my $changes = $self->read_changelog;
     my $gotchas = $self->read_gotchas;
@@ -351,11 +362,12 @@ END_TEXT
     my $summary = q{};
     while (my $line = <$fh>) {
         next
-            if $line =~ /^#/msx;
+            if $line =~ /^\#/msx;
         $summary .= $line;
     }
     return
         if $summary =~ /^\s+$/msx;
+    $summary =~ s/\n+\z//msx;
     return $summary;
 }
 
