@@ -171,6 +171,46 @@ Creates a new WGDev::Version object.  Needs a WebGUI directory to be specified.
 
 The root of the WebGUI directory to use for finding each file.
 
+=head2 C<module>
+
+In scalar context, returns the version number from the F<lib/WebGUI.pm>
+module.  In array context, returns the version number and the status
+(beta/stable).
+
+=head2 C<pm>
+
+An alias for the L</module> method.
+
+=head2 C<changelog>
+
+Returns the most recent version number noted in the change log.
+
+=head2 C<upgrade>
+
+    my ($upgrade_file, $from_version, $to_version, $to_version_file) = $wgv->upgrade;
+
+Finds the most recent upgrade script and returns an array of
+information about it.  The array contains the script's file name,
+the version number it will upgrade from and to based on its file name,
+and the version it will upgrade to noted in the script itself.
+
+=head2 C<database_script>
+
+Returns the version noted in the F<create.sql> database script.
+
+=head2 C<db_script>
+
+An alias for the L</database_script> method.
+
+=head2 C<database ( $dbh )>
+
+Accepts a database handle, and returns the latest version from the
+C<webguiVersion> table.
+
+=head2 C<db>
+
+An alias for the L</database> method.
+
 =head1 AUTHOR
 
 Graham Knop <graham@plainblack.com>

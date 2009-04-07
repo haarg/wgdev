@@ -59,10 +59,13 @@ sub process {
         if ( $file->{asset_id} ) {
             $asset = $wgd->asset->by_id( $file->{asset_id}, undef,
                 $file->{revision} );
-            $asset = $asset->addRevision($asset_data, undef, {
-                skipAutoCommitWorkflows => 1,
-                skipNotification        => 1,
-            });
+            $asset = $asset->addRevision(
+                $asset_data,
+                undef,
+                {
+                    skipAutoCommitWorkflows => 1,
+                    skipNotification        => 1,
+                } );
             if ($parent) {
                 $asset->setParent($parent);
             }
@@ -70,10 +73,14 @@ sub process {
         else {
             $parent ||= $wgd->asset->import_node;
             my $asset_id = $asset_data->{assetId};
-            $asset = $parent->addChild( $asset_data, $asset_id, undef, {
-                skipAutoCommitWorkflows => 1,
-                skipNotification        => 1,
-            });
+            $asset = $parent->addChild(
+                $asset_data,
+                $asset_id,
+                undef,
+                {
+                    skipAutoCommitWorkflows => 1,
+                    skipNotification        => 1,
+                } );
         }
         printf $output_format, ( $file->{asset_id} ? 'Updating' : 'Adding' ),
             $asset->get('url'), $asset->getId, $asset->get('title');

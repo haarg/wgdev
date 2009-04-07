@@ -334,6 +334,70 @@ Sub-command to run or get help for.
 
 =back
 
+=head1 SUBROUTINES
+
+=head2 C<command_to_module ( $command )>
+
+Converts a command into the module that would implement it.  Returns
+that module name.
+
+=head2 C<get_command_module ( $command )>
+
+Converts the command to a module, then attempts to load that module.
+If the module loads successfully, implements the C<run> and
+C<is_runnable> methods, and C<is_runnable> returns true, returns
+the module.  If not, returns C<undef>.
+
+=head1 METHODS
+
+=head2 C<run ( @arguments )>
+
+Runs C<wgd>, processing the arguments specified and running a sub-command if possible.
+
+=head2 C<usage ( %options )>
+
+Returns usage information for C<wgd>.  The options hash specifies additional options:
+
+=head3 C<verbosity>
+
+The verbosity level of the usage information.  This is passed on
+to L<WGDev::Help::package_usage|WGDev::Help/package_usage>.
+
+=head3 C<message>
+
+An additional message to include before the usage information.
+
+=head3 C<include_cmd_list>
+
+Include the list of available sub-commands with the usage information.
+
+=head2 C<command_list>
+
+Searches for available sub-commands and returns them as an array.  This list includes available Perl modules that pass the L</get_command_module> check and executable files beginning with F<wgd->.
+
+=head2 C<guess_webgui_paths ( $wgd, [$webgui_root], [$webgui_config] )>
+
+Attempts to detect the paths to use for the WebGUI root and config
+file.  Initializes the specified $wgd object.  If specified, attempts
+to use the specified paths first.  If not specified, first checks
+the environment variables C<WEBGUI_ROOT> and C<WEBGUI_CONFIG>.
+Next, attempts to search upward from the current path to find the
+WebGUI root.  If a WebGUI root has been found but not a config file,
+checks for available config files.  If only one is available, it
+is used as the config file.
+
+=head2 C<report_help ( [$command, $module] )>
+
+Shows help information for C<wgd> or a sub-command.  If a command
+and module is specified, attempts to call C<usage> on the module
+or displays an error.  Otherwise, displays help information for
+C<wgd>.
+
+=head2 C<report_version ( [$command, $module] )>
+
+Reports version information about C<wgd>.  If specified, also
+includes version information about a sub-command.
+
 =head1 AUTHOR
 
 Graham Knop <graham@plainblack.com>
