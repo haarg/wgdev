@@ -19,10 +19,7 @@ sub package_usage {
     if ( $verbosity == 1 ) {
         $verbosity = USE_SECTIONS;
     }
-    ( my $file = $package . '.pm' ) =~ s{::}{/}msxg;
-    require $file;
-    my $actual_file = $INC{$file};
-    my $pod         = filter_pod( $actual_file, $package );
+    my $pod         = package_pod( $package );
     my $output      = q{};
     ##no critic (RequireCarping RequireBriefOpen)
     open my $out, '>', \$output
@@ -47,10 +44,7 @@ sub package_perldoc {
     require Pod::Perldoc;
     require File::Temp;
     require File::Path;
-    ( my $file = $package . '.pm' ) =~ s{::}{/}msxg;
-    require $file;
-    my $actual_file = $INC{$file};
-    my $pod         = filter_pod( $actual_file, $package );
+    my $pod         = package_pod( $package );
     my $tmpdir      = File::Temp::tempdir( TMPDIR => 1, CLEANUP => 1 );
     my @path_parts  = split /::/msx, $package;
     my $filename    = pop @path_parts;
@@ -74,6 +68,15 @@ sub package_perldoc {
         die "Error displaying help!\n";
     }
     return;
+}
+
+sub package_pod {
+    my $package = shift;
+    ( my $file = $package . '.pm' ) =~ s{::}{/}msxg;
+    require $file;
+    my $actual_file = $INC{$file};
+    my $pod = filter_pod( $actual_file, $package );
+    return $pod;
 }
 
 # naive pod filter.  looks for =head1 NAME section that has the correct
@@ -123,6 +126,10 @@ packages that have been combined into a single file.
 
 Displays documentation for a package using L<Pod::Perldoc>.  Can be used on
 packages that have been combined into a single file.
+
+=head2 C<package_pod ( $package )>
+
+Filters out the POD for a specific package from the module file for the package.
 
 =head2 C<filter_pod ( $file, $package )>
 
