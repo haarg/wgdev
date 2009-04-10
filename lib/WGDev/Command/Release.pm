@@ -373,3 +373,11 @@ END_TEXT
 
 1;
 
+__END__
+
+=head1 NAME
+
+WGDev::Command::Release - Publish a release build to various sites
+
+=cut
+
