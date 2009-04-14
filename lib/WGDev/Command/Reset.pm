@@ -36,6 +36,7 @@ sub option_config {
             config!
             purge!
             cleantags!
+            emptytrash!
             index!
             runwf!
             util=s@
@@ -91,16 +92,17 @@ sub option_dev {
 sub option_build {
     my $self = shift;
     $self->verbosity( $self->verbosity + 1 );
-    $self->option( backup    => 1 );
-    $self->option( uploads   => 1 );
-    $self->option( import    => 1 );
-    $self->option( starter   => 1 );
-    $self->option( debug     => 0 );
-    $self->option( upgrade   => 1 );
-    $self->option( purge     => 1 );
-    $self->option( cleantags => 1 );
-    $self->option( index     => 1 );
-    $self->option( runwf     => 1 );
+    $self->option( backup     => 1 );
+    $self->option( uploads    => 1 );
+    $self->option( import     => 1 );
+    $self->option( starter    => 1 );
+    $self->option( debug      => 0 );
+    $self->option( upgrade    => 1 );
+    $self->option( purge      => 1 );
+    $self->option( emptytrash => 1 );
+    $self->option( cleantags  => 1 );
+    $self->option( index      => 1 );
+    $self->option( runwf      => 1 );
     return;
 }
 
@@ -151,6 +153,10 @@ sub process {
 
     if ( $self->option('purge') ) {
         $self->purge_old_revisions;
+    }
+
+    if ( $self->option('emptytrash') ) {
+        $self->empty_trash;
     }
 
     if ( $self->option('cleantags') ) {
@@ -489,6 +495,27 @@ END_SQL
     return 1;
 }
 
+sub empty_trash {
+    my $self = shift;
+    my $wgd  = $self->wgd;
+    $self->report('Emptying trash... ');
+    $self->report( 2, "\n" );
+    my $assets = $wgd->asset->root->getLineage(
+        ['descendants'],
+        {
+            statesToInclude => [qw(trash)],
+            statusToInclude => [qw(approved archived pending)],
+        } );
+    for my $asset_id ( @{$assets} ) {
+        my $asset = $wgd->asset->by_id($asset_id);
+        $self->report( 2, sprintf "\tPurging \%-35s '\%s'\n",
+            $asset->getName, $asset->get('title') );
+        $asset->purge;
+    }
+    $self->report("Done\n");
+    return 1;
+}
+
 sub clean_version_tags {
     my $self = shift;
     my $wgd  = $self->wgd;
@@ -704,6 +731,10 @@ Clear the content off the home page and its children
 Resets the site's config file.  Some values like database information will be
 preserved.  Additional options can be set in the WGDev config file.
 
+=item C<--emptytrash> C<--no-emptytrash>
+
+Purges all items from the trash
+
 =item C<--purge> C<--no-purge>
 
 Purge all old revisions
@@ -785,16 +816,17 @@ Parameters to copy from existing config file when resetting it.
 Enables options for creating a release build.  Equivalent to
 
     $reset->verbosity( $reset->verbosity + 1 );
-    $reset->option( backup    => 1 );
-    $reset->option( uploads   => 1 );
-    $reset->option( import    => 1 );
-    $reset->option( starter   => 1 );
-    $reset->option( debug     => 0 );
-    $reset->option( upgrade   => 1 );
-    $reset->option( purge     => 1 );
-    $reset->option( cleantags => 1 );
-    $reset->option( index     => 1 );
-    $reset->option( runwf     => 1 );
+    $reset->option( backup     => 1 );
+    $reset->option( uploads    => 1 );
+    $reset->option( import     => 1 );
+    $reset->option( starter    => 1 );
+    $reset->option( debug      => 0 );
+    $reset->option( upgrade    => 1 );
+    $reset->option( emptytrash => 1 );
+    $reset->option( purge      => 1 );
+    $reset->option( cleantags  => 1 );
+    $reset->option( index      => 1 );
+    $reset->option( runwf      => 1 );
 
 =head2 C<option_dev>
 
@@ -858,6 +890,10 @@ site starter based on C<< $reset->option('starter') >>.
 
 Resets the site's config file based on the rules listed in
 L</WebGUI Config File Reset>.
+
+=head2 C<empty_trash>
+
+Purges all items from the trash.
 
 =head2 C<purge_old_revisions>
 
