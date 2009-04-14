@@ -52,6 +52,36 @@ sub ACTION_testpodcoverage {    ##no critic (Capitalization)
     return;
 }
 
+sub ACTION_dist {    ##no critic (Capitalization)
+    my $self = shift;
+    if ( !$self->args('compact') && !$self->notes('compact') ) {
+        return $self->SUPER::ACTION_dist(@_);
+    }
+
+    my $sign = $self->sign;
+    $self->sign(0);
+
+    $self->depends_on('distdir');
+    $self->sign($sign);
+
+    my $dist_dir = $self->dist_dir;
+    my $dist_build;
+    $self->_do_in_dir(
+        $dist_dir,
+        sub {
+            $dist_build = Module::Build->new_from_context( compact => [] );
+            $dist_build->dispatch('build');
+        } );
+    my $dist_blib = File::Spec->abs2rel(
+        File::Spec->rel2abs( $dist_build->blib, $dist_dir ) );
+    my $result = $self->copy_if_modified(
+        from => File::Spec->catfile( $dist_blib, 'script', 'wgd' ),
+        to   => 'wgd-' . $self->dist_version,
+    );
+    $self->delete_filetree($dist_dir);
+    return;
+}
+
 sub process_pm_files {
     my $self = shift;
     if ( $self->args('compact') || $self->notes('compact') ) {
@@ -83,7 +113,7 @@ sub process_script_files {
                 unlink $to_path;
                 my $result = $self->copy_if_modified(
                     from => $script,
-                    to   => $to_path
+                    to   => $to_path,
                 );
                 my $mode = ( stat $to_path )[2];
                 chmod $mode | oct(222), $to_path;
