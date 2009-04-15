@@ -124,6 +124,20 @@ sub usage {
     return $usage;
 }
 
+sub help {
+    my $class = shift;
+    if ( ref $class ) {
+        $class = ref $class;
+    }
+    require WGDev::Help;
+    if ( eval { WGDev::Help::package_perldoc( $class, '!AUTHOR|LICENSE' ); 1 }
+        )
+    {
+        return 1;
+    }
+    return;
+}
+
 1;
 
 __END__
@@ -217,10 +231,15 @@ C<parse_params>.
 Sets an option only if it is not currently defined.  First parameter is the
 option to set, second parameter is the value to set it to.
 
-=head2 C<usage [ $verbosity ] )>
+=head2 C<usage ( [ $verbosity ] )>
 
 Returns the usage information for the command.  The optional first parameter
 is the verbosity to use.
+
+=head2 C<help>
+
+Display help information for this command using L<perldoc>.  Excludes AUTHOR
+and LICENSE sections.
 
 =head2 C<run ( @arguments )>
 

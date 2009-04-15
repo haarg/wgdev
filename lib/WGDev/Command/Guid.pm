@@ -40,7 +40,7 @@ __END__
 
 =head1 NAME
 
-WGDev::Command::Guid - Generates GUIDs via WebGUI's C<$session->id->generate> API
+WGDev::Command::Guid - Generates GUIDs via WebGUI's C<< $session->id->generate >> API
 
 =head1 SYNOPSIS
 

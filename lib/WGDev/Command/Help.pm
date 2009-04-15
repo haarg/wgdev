@@ -23,6 +23,10 @@ sub process {
         $self->error_with_list;
     }
 
+    if ( $command_module->can('help') ) {
+        return $command_module->help;
+    }
+
     require WGDev::Help;
     if ( eval { WGDev::Help::package_perldoc($command_module); 1 } ) {
         return 1;

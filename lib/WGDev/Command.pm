@@ -15,7 +15,7 @@ sub run {
     my $class = shift;
     local @ARGV = @_;
     Getopt::Long::Configure(
-        qw(default gnu_getopt pass_through no_auto_abbrev) );
+        qw(default gnu_getopt pass_through no_auto_abbrev));
     Getopt::Long::GetOptions(
         'h|?|help'      => \( my $opt_help ),
         'V|ver|version' => \( my $opt_version ),
