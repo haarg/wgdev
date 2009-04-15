@@ -19,8 +19,8 @@ sub package_usage {
     if ( $verbosity == 1 ) {
         $verbosity = USE_SECTIONS;
     }
-    my $pod         = package_pod( $package );
-    my $output      = q{};
+    my $pod    = package_pod($package);
+    my $output = q{};
     ##no critic (RequireCarping RequireBriefOpen)
     open my $out, '>', \$output
         or die "Can't open file handle to scalar : $!";
@@ -44,11 +44,11 @@ sub package_perldoc {
     require Pod::Perldoc;
     require File::Temp;
     require File::Path;
-    my $pod         = package_pod( $package );
-    my $tmpdir      = File::Temp::tempdir( TMPDIR => 1, CLEANUP => 1 );
-    my @path_parts  = split /::/msx, $package;
-    my $filename    = pop @path_parts;
-    my $path        = File::Spec->catdir( $tmpdir, 'perl', @path_parts );
+    my $pod        = package_pod($package);
+    my $tmpdir     = File::Temp::tempdir( TMPDIR => 1, CLEANUP => 1 );
+    my @path_parts = split /::/msx, $package;
+    my $filename   = pop @path_parts;
+    my $path       = File::Spec->catdir( $tmpdir, 'perl', @path_parts );
     File::Path::mkpath($path);
     my $out_file = File::Spec->catfile( $path, $filename );
     open my $out, '>', $out_file
