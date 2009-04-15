@@ -1,5 +1,9 @@
 Change log for WGDev
 
+0.4.0
+ - Full POD coverage of API added
+ - Reset command learned --emptytrash option to delete all content from trash
+
 0.3.0 - Mar 26 2009
  - WGDev instances can be created without a WebGUI root/config
  - WGDev can now write to its config file
