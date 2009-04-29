@@ -181,7 +181,10 @@ By default, returns C<gnu_getopt> and can be overridden to return others.
 
 Returns an array of command line options to be parsed.  Should be overridden
 to set which options will be parsed.  Should be specified in the syntax
-accepted by L<Getopt::Long>.
+accepted by L<Getopt::Long>.  Each option will be saved as the the first
+group of word characters in the option definition.  Alternately, if a method
+with the name C<< option_<name> >> exists, it will be called to set the
+option instead.
 
 =head2 C<option ( $option [, $value] )>
 
