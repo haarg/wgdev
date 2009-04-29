@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.2.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
@@ -11,9 +11,9 @@ BEGIN { our @ISA = qw(WGDev::Command::Base) }
 use Carp qw(croak);
 use File::Spec ();
 
-sub option_parse_config { return qw(no_getopt_compat) }
+sub config_parse_options { return qw(no_getopt_compat) }
 
-sub option_config {
+sub config_options {
     return qw(
         create|c
         bare|b

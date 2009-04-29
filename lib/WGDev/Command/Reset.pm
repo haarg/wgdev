@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.2.0';
+our $VERSION = '0.3.0';
 
 use WGDev::Command::Base::Verbosity;
 BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
@@ -14,9 +14,9 @@ use constant STAT_MODE => 2;
 use constant STAT_UID  => 4;
 use constant STAT_GID  => 5;
 
-sub option_config {
+sub config_options {
     return (
-        shift->SUPER::option_config, qw(
+        shift->SUPER::config_options, qw(
             fast|f
 
             backup!

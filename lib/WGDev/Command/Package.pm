@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.2.0';
+our $VERSION = '0.3.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
@@ -11,7 +11,7 @@ BEGIN { our @ISA = qw(WGDev::Command::Base) }
 use File::Spec ();
 use Carp qw(croak);
 
-sub option_config {
+sub config_options {
     return qw(
         import|i=s@
         parent=s

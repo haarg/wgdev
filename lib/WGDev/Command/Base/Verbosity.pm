@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.2.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
@@ -15,7 +15,7 @@ sub new {
     return $self;
 }
 
-sub option_config {
+sub config_options {
     return qw(
         verbose|v+
         quiet|q+

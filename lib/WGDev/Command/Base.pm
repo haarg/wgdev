@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.2.0';
 
 sub is_runnable {
     my $class = shift;
@@ -27,11 +27,15 @@ sub parse_params {
     local @ARGV = @_;
 
     require Getopt::Long;
-    Getopt::Long::Configure( 'default', $self->option_parse_config );
+    Getopt::Long::Configure( 'default', $self->config_parse_options );
 
-    my %getopt_params = ( '<>' => sub { $self->argument(@_) } );
+    my %getopt_params = (
+        '<>' => sub {
+            $self->argument( map {"$_"} @_ );
+        },
+    );
 
-    for my $option ( $self->option_config ) {
+    for my $option ( $self->config_options ) {
 
         # for complex options, name is first word segment
         ( my $option_name ) = ( $option =~ /(\w+)/msx );
@@ -45,7 +49,6 @@ sub parse_params {
             $getopt_params{$option} = \( $self->{options}{$option_name} );
         }
     }
-
     my $result = Getopt::Long::GetOptions(%getopt_params);
     push @{ $self->{arguments} }, @ARGV;
     return $result;
@@ -58,8 +61,8 @@ sub parse_params_string {
     return $self->parse_params( Text::ParseWords::shellwords($param_string) );
 }
 
-sub option_parse_config { return qw(gnu_getopt) }
-sub option_config       { }
+sub config_parse_options { return qw(gnu_getopt) }
+sub config_options       { }
 
 sub option {
     my $self = shift;
@@ -167,14 +170,14 @@ parameter.
 
 Returns the L<WGDev> object used to instantiate the object.
 
-=head2 C<option_parse_config>
+=head2 C<config_parse_options>
 
 Returns an array of parameters used to configure command line parsing.  These
 options are passed directly to L<Getopt::Long>.  See
 L<Getopt::Long/Configuring_Getopt::Long> for details on the available options.
-By default, returns 'C<gnu_getopt>' and can be overridden to return others.
+By default, returns C<gnu_getopt> and can be overridden to return others.
 
-=head2 C<option_config>
+=head2 C<config_options>
 
 Returns an array of command line options to be parsed.  Should be overridden
 to set which options will be parsed.  Should be specified in the syntax

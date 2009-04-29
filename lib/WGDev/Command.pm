@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.2.0';
+our $VERSION = '0.2.1';
 
 use Getopt::Long ();
 use File::Spec   ();
@@ -14,7 +14,8 @@ use Carp qw(croak carp);
 sub run {
     my $class = shift;
     local @ARGV = @_;
-    Getopt::Long::Configure(qw(default gnu_getopt pass_through));
+    Getopt::Long::Configure(
+        qw(default gnu_getopt pass_through no_auto_abbrev) );
     Getopt::Long::GetOptions(
         'h|?|help'      => \( my $opt_help ),
         'V|ver|version' => \( my $opt_version ),
