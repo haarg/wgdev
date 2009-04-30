@@ -8,7 +8,7 @@ our $VERSION = '0.0.1';
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
-sub option_config {
+sub config_options {
     return qw(
         all|A
     );
