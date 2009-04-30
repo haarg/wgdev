@@ -8,7 +8,7 @@ our $VERSION = '0.2.1';
 use Getopt::Long ();
 use File::Spec   ();
 use Cwd          ();
-use Carp qw(croak carp);
+use Carp qw(croak);
 ##no critic (RequireCarping)
 
 sub run {
@@ -161,7 +161,7 @@ sub report_help {
             print $module->usage;
         }
         else {
-            carp "No documentation for $name command.\n";
+            warn "No documentation for $name command.\n";
         }
     }
     else {
