@@ -60,7 +60,7 @@ sub root {
     my $self = shift;
     if (@_) {
         my $path = shift;
-        if ( -d $path && -d File::Spec->catdir( $path, 'docs' ) ) {
+        if ( -d $path && -e File::Spec->catfile( $path, 'etc', 'WebGUI.conf.original' ) ) {
             $self->{root} = File::Spec->rel2abs($path);
             $self->{lib} = File::Spec->catdir( $self->{root}, 'lib' );
             unshift @INC, $self->lib;

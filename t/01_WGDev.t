@@ -43,6 +43,7 @@ mkdir $sbin;
 
 my $config = catfile($etc, 'www.example.com.conf');
 copy catfile($test_data, 'www.example.com.conf'), $config;
+copy catfile($test_data, 'www.example.com.conf'), catfile($etc, 'WebGUI.conf.original');
 
 my $module = catfile($lib, 'WebGUI.pm');
 copy catfile($test_data, 'WebGUI.pm'), $module;
