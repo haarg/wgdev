@@ -276,7 +276,9 @@ sub command_list {
         }
     }
 
-    for my $command ( map { glob "$_/wgd-*" } File::Spec->path ) {
+    for my $command ( map { glob File::Spec->catfile( $_, 'wgd-*' ) }
+        File::Spec->path )
+    {
         next
             if !-x $command;
         my $file = ( File::Spec->splitpath($command) )[2];
