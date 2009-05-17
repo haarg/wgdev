@@ -17,6 +17,7 @@ sub config_options {
         all|A
         slow|S
         reset:s
+        coverage|cover:s
     );
 }
 
@@ -24,6 +25,17 @@ sub process {
     my $self = shift;
     my $wgd  = $self->wgd;
     $wgd->set_environment;
+    local $ENV{HARNESS_PERL_SWITCHES} = $ENV{HARNESS_PERL_SWITCHES};
+    if ( defined $self->option('coverage') ) {
+        my $coverDir    = $self->option('coverage');
+        if ( -e $coverDir ) {
+            `cover -delete $coverDir`;
+        }
+        $ENV{HARNESS_PERL_SWITCHES} = '-MDevel::Cover';
+        if ( $coverDir ) {
+            $ENV{HARNESS_PERL_SWITCHES} .= '=-db,' . $coverDir;
+        }
+    }
     require Cwd;
     require App::Prove;
     if ( defined $self->option('reset') ) {
@@ -57,6 +69,10 @@ sub process {
     my $result = $prove->run;
     if ($orig_dir) {
         chdir $orig_dir;
+    }
+    if ( defined $self->option('coverage') ) {
+        my $coverDir    = $self->option('coverage');
+        `cover -silent $coverDir`;
     }
     return $result;
 }
