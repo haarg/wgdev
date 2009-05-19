@@ -3,12 +3,12 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.2.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
-sub option_config {
+sub config_options {
     return qw(
         print|p
         dump|d:s
@@ -17,7 +17,7 @@ sub option_config {
     );
 }
 
-sub option_parse_config { return qw(gnu_getopt pass_through) }
+sub config_parse_options { return qw(gnu_getopt pass_through) }
 
 sub process {
     my $self         = shift;

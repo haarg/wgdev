@@ -3,12 +3,12 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.2.0';
 
 use WGDev::Command::Base::Verbosity;
 BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
 
-sub option_config {
+sub config_options {
     return qw(
         assets
         macros
@@ -135,6 +135,16 @@ Suggests Assets that you might be able to disable to reduce memory consumption
 Suggests Macros that you might be able to disable to reduce memory consumption
 
 =back
+
+=head1 METHODS
+
+=head2 C<optimise_assets>
+
+Suggests Assets that you might be able to disable to reduce memory consumption
+
+=head2 C<optimise_macros>
+
+Suggests Macros that you might be able to disable to reduce memory consumption
 
 =head1 AUTHOR
 

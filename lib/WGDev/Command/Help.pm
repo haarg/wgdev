@@ -7,6 +7,7 @@ our $VERSION = '0.1.0';
 
 use WGDev::Command::Base ();
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
+
 use WGDev::Command ();
 
 sub process {
@@ -20,6 +21,10 @@ sub process {
     if ( !$command_module ) {
         warn "Unknown command: $command\n";
         $self->error_with_list;
+    }
+
+    if ( $command_module->can('help') ) {
+        return $command_module->help;
     }
 
     require WGDev::Help;
@@ -76,14 +81,10 @@ The sub-command to display help information about.
 
 =head1 METHODS
 
-=over 8
-
-=item error_with_list
+=head2 C<error_with_list>
 
 Throws an error that includes the modules usage message, followed by a list
 of available WGDev commands.
-
-=back
 
 =head1 AUTHOR
 

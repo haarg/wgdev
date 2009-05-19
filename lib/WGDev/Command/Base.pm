@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.2.0';
 
 sub is_runnable {
     my $class = shift;
@@ -27,11 +27,15 @@ sub parse_params {
     local @ARGV = @_;
 
     require Getopt::Long;
-    Getopt::Long::Configure( 'default', $self->option_parse_config );
+    Getopt::Long::Configure( 'default', $self->config_parse_options );
 
-    my %getopt_params = ( '<>' => sub { $self->argument(@_) } );
+    my %getopt_params = (
+        '<>' => sub {
+            $self->argument( map {"$_"} @_ );
+        },
+    );
 
-    for my $option ( $self->option_config ) {
+    for my $option ( $self->config_options ) {
 
         # for complex options, name is first word segment
         ( my $option_name ) = ( $option =~ /(\w+)/msx );
@@ -45,7 +49,6 @@ sub parse_params {
             $getopt_params{$option} = \( $self->{options}{$option_name} );
         }
     }
-
     my $result = Getopt::Long::GetOptions(%getopt_params);
     push @{ $self->{arguments} }, @ARGV;
     return $result;
@@ -58,8 +61,8 @@ sub parse_params_string {
     return $self->parse_params( Text::ParseWords::shellwords($param_string) );
 }
 
-sub option_parse_config { return qw(gnu_getopt) }
-sub option_config       { }
+sub config_parse_options { return qw(gnu_getopt) }
+sub config_options       { }
 
 sub option {
     my $self = shift;
@@ -121,6 +124,20 @@ sub usage {
     return $usage;
 }
 
+sub help {
+    my $class = shift;
+    if ( ref $class ) {
+        $class = ref $class;
+    }
+    require WGDev::Help;
+    if ( eval { WGDev::Help::package_perldoc( $class, '!AUTHOR|LICENSE' ); 1 }
+        )
+    {
+        return 1;
+    }
+    return;
+}
+
 1;
 
 __END__
@@ -152,88 +169,92 @@ it is the recommended way to do so.
 
 =head1 METHODS
 
-=over 8
-
-=item is_runnable
+=head2 C<is_runnable>
 
 This is a class method that must be implemented and return true for all
 command modules.  This method will return true for any subclass that
 implements the C<process> method.
 
-=item new ( $wgd )
+=head2 C<new ( $wgd )>
 
 Instantiate a new command object.  Requires a L<WGDev> object as the first
 parameter.
 
-=item wgd
+=head2 C<wgd>
 
 Returns the L<WGDev> object used to instantiate the object.
 
-=item option_parse_config
+=head2 C<config_parse_options>
 
 Returns an array of parameters used to configure command line parsing.  These
 options are passed directly to L<Getopt::Long>.  See
 L<Getopt::Long/Configuring_Getopt::Long> for details on the available options.
-By default, returns 'C<gnu_getopt>' and can be overridden to return others.
+By default, returns C<gnu_getopt> and can be overridden to return others.
 
-=item option_config
+=head2 C<config_options>
 
 Returns an array of command line options to be parsed.  Should be overridden
 to set which options will be parsed.  Should be specified in the syntax
-accepted by L<Getopt::Long>.
+accepted by L<Getopt::Long>.  Each option will be saved as the the first
+group of word characters in the option definition.  Alternately, if a method
+with the name C<< option_<name> >> exists, it will be called to set the
+option instead.
 
-=item option
+=head2 C<option ( $option [, $value] )>
 
 Sets or returns a command line option.  Accepts the option name as the first
 parameter.  If specified, the option will be set the the value of the second
 parameter.
 
-=item argument
+=head2 C<argument ( $argument )>
 
 Adds an argument to the argument list.  Any parameters specified will be added
 to the argument list.  Can be overridden to provide alternate behavior.
 
-=item arguments
+=head2 C<arguments ( [ \@arguments ] )>
 
-Sets or returns the bare arguments list.  If specified, the first parameter
+Sets or returns the arguments list.  If specified, the first parameter
 must be an array reference whose values will be set as the arguments list.
 
-=item parse_params
+=head2 C<parse_params ( @parameters )>
 
 Sets options based on an array of command line parameters.
 
-=item parse_params_string
+=head2 C<parse_params_string ( $parameters )>
 
 Sets options based on a string of command line parameters.  The string will be
 processed with L<Text::ParseWords> C<shellwords> sub then passed on to
 C<parse_params>.
 
-=item set_option_default
+=head2 C<set_option_default ( $option, $value )>
 
 Sets an option only if it is not currently defined.  First parameter is the
 option to set, second parameter is the value to set it to.
 
-=item usage
+=head2 C<usage ( [ $verbosity ] )>
 
 Returns the usage information for the command.  The optional first parameter
 is the verbosity to use.
 
-=item run
+=head2 C<help>
+
+Display help information for this command using L<perldoc>.  Excludes AUTHOR
+and LICENSE sections.
+
+=head2 C<run ( @arguments )>
 
 Runs the command.  Parameters should be the command line parameters to use for
 running the command.  This sub should exit, not return.  The default method
-will first call C<process_params> with the given parameters, call usage if
-there was a problem with parsing the parameters, or call process if there was
-not.  If process returns a true value, it will exit with an error value of
-zero.
+will first call C<process_params> with the given parameters, call C<usage> if
+there was a problem with parsing the parameters, or call C<process> if there
+was not.  If C<process> returns a true value, it will exit with an error
+value of zero.
 
-=item process
+=head2 C<process>
 
 Needs to be subclasses to provide the main functionality of the command.  This
 method will be called as part of the run method.  Should return a true value
 on success.
-
-=back
 
 =head1 AUTHOR
 

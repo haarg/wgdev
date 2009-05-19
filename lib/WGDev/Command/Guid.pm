@@ -3,12 +3,12 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.2.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
-sub option_config {
+sub config_options {
     return qw(
         number|n=i
         dashes!
@@ -40,7 +40,7 @@ __END__
 
 =head1 NAME
 
-WGDev::Command::Guid - Generates GUIDs via WebGUI's C<$session->id->generate> API
+WGDev::Command::Guid - Generates GUIDs via WebGUI's C<< $session->id->generate >> API
 
 =head1 SYNOPSIS
 

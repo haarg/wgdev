@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.2.0';
+our $VERSION = '0.3.0';
 
 use WGDev::Command::Base::Verbosity;
 BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
@@ -14,9 +14,9 @@ use constant STAT_MODE => 2;
 use constant STAT_UID  => 4;
 use constant STAT_GID  => 5;
 
-sub option_config {
+sub config_options {
     return (
-        shift->SUPER::option_config, qw(
+        shift->SUPER::config_options, qw(
             fast|f
 
             backup!
@@ -36,6 +36,7 @@ sub option_config {
             config!
             purge!
             cleantags!
+            emptytrash!
             index!
             runwf!
             util=s@
@@ -91,16 +92,17 @@ sub option_dev {
 sub option_build {
     my $self = shift;
     $self->verbosity( $self->verbosity + 1 );
-    $self->option( backup    => 1 );
-    $self->option( uploads   => 1 );
-    $self->option( import    => 1 );
-    $self->option( starter   => 1 );
-    $self->option( debug     => 0 );
-    $self->option( upgrade   => 1 );
-    $self->option( purge     => 1 );
-    $self->option( cleantags => 1 );
-    $self->option( index     => 1 );
-    $self->option( runwf     => 1 );
+    $self->option( backup     => 1 );
+    $self->option( uploads    => 1 );
+    $self->option( import     => 1 );
+    $self->option( starter    => 1 );
+    $self->option( debug      => 0 );
+    $self->option( upgrade    => 1 );
+    $self->option( purge      => 1 );
+    $self->option( emptytrash => 1 );
+    $self->option( cleantags  => 1 );
+    $self->option( index      => 1 );
+    $self->option( runwf      => 1 );
     return;
 }
 
@@ -151,6 +153,10 @@ sub process {
 
     if ( $self->option('purge') ) {
         $self->purge_old_revisions;
+    }
+
+    if ( $self->option('emptytrash') ) {
+        $self->empty_trash;
     }
 
     if ( $self->option('cleantags') ) {
@@ -225,8 +231,7 @@ sub delete_users {
     my $wgd  = $self->wgd;
 
     my $session = $wgd->session;
-    my @user_ids
-        = grep { $_ ne '1' && $_ ne '3' }
+    my @user_ids = grep { $_ ne '1' && $_ ne '3' }
         map { @{$_} }
         @{ $wgd->db->fetchall_arrayref('SELECT userId FROM users') };
     my $n_users = @user_ids;
@@ -490,6 +495,27 @@ END_SQL
     return 1;
 }
 
+sub empty_trash {
+    my $self = shift;
+    my $wgd  = $self->wgd;
+    $self->report('Emptying trash... ');
+    $self->report( 2, "\n" );
+    my $assets = $wgd->asset->root->getLineage(
+        ['descendants'],
+        {
+            statesToInclude => [qw(trash)],
+            statusToInclude => [qw(approved archived pending)],
+        } );
+    for my $asset_id ( @{$assets} ) {
+        my $asset = $wgd->asset->by_id($asset_id);
+        $self->report( 2, sprintf "\tPurging \%-35s '\%s'\n",
+            $asset->getName, $asset->get('title') );
+        $asset->purge;
+    }
+    $self->report("Done\n");
+    return 1;
+}
+
 sub clean_version_tags {
     my $self = shift;
     my $wgd  = $self->wgd;
@@ -705,6 +731,10 @@ Clear the content off the home page and its children
 Resets the site's config file.  Some values like database information will be
 preserved.  Additional options can be set in the WGDev config file.
 
+=item C<--emptytrash> C<--no-emptytrash>
+
+Purges all items from the trash
+
 =item C<--purge> C<--no-purge>
 
 Purge all old revisions
@@ -724,15 +754,15 @@ Attempt to finish any running workflows
 
 =item C<--util=>
 
-Run a utility script.  Script will be run last, being passed to the L<C<util>
-command|WGDev::Command::Util>.  Parameter can be specified multiple times
-to run additional scripts.
+Run a utility script.  Script will be run last, being passed to the
+L<C<util> command|WGDev::Command::Util>.  Parameter can be specified multiple
+times to run additional scripts.
 
 =item C<--profile=> C<--pro=> C<-p>
 
 Specify a profile of options to use for resetting.  Profiles are specified in
-the WGDev config file under the 'profiles' section.  A profile is defined as
-a string to be used as additional command line options.
+the WGDev config file under the C<command.reset.profiles> section.  A profile
+is defined as a string to be used as additional command line options.
 
 =back
 
@@ -763,7 +793,7 @@ configured list, a set of parameters is always copied:
 
 =over 8
 
-=item C<profiles.E<lt>profile nameE<gt>>
+=item C<< profiles.<profile name> >>
 
 Creates a profile to use with the C<--profile> option.  The value of the config
 parameter is a string with the command line parameters to apply when this
@@ -778,6 +808,124 @@ Overrides to apply when resetting config file.
 Parameters to copy from existing config file when resetting it.
 
 =back
+
+=head1 METHODS
+
+=head2 C<option_build>
+
+Enables options for creating a release build.  Equivalent to
+
+    $reset->verbosity( $reset->verbosity + 1 );
+    $reset->option( backup     => 1 );
+    $reset->option( uploads    => 1 );
+    $reset->option( import     => 1 );
+    $reset->option( starter    => 1 );
+    $reset->option( debug      => 0 );
+    $reset->option( upgrade    => 1 );
+    $reset->option( emptytrash => 1 );
+    $reset->option( purge      => 1 );
+    $reset->option( cleantags  => 1 );
+    $reset->option( index      => 1 );
+    $reset->option( runwf      => 1 );
+
+=head2 C<option_dev>
+
+Enables options for doing development work.  Equivalent to
+
+    $reset->option( backup  => 1 );
+    $reset->option( import  => 1 );
+    $reset->option( uploads => 1 );
+    $reset->option( upgrade => 1 );
+    $reset->option( starter => 0 );
+    $reset->option( debug   => 1 );
+    $reset->option( clear   => 1 );
+
+=head2 C<option_fast>
+
+Enables options for doing a faster reset, usually used along with
+other group options or profiles.  Equivalent to
+
+    $reset->option( uploads   => 0 );
+    $reset->option( backup    => 0 );
+    $reset->option( delcache  => 0 );
+    $reset->option( purge     => 0 );
+    $reset->option( cleantags => 0 );
+    $reset->option( index     => 0 );
+    $reset->option( runwf     => 0 );
+
+=head2 C<option_profile>
+
+Reads a profile from the config section C<command.reset.profiles>
+and processes it as a string of command line options.
+
+=head2 C<clear_cache>
+
+Clears the site's cache.
+
+=head2 C<backup>
+
+Creates a backup of the site database in the system's temp directory.
+
+=head2 C<reset_uploads>
+
+Clears and recreates the uploads location for a site.
+
+=head2 C<import_db_script>
+
+Imports a base database script for the site.  If
+C<< $reset->option('upgrade') >> is set, F<previousVersion.sql> is
+used.  Otherwise, F<create.sql> is used.
+
+=head2 C<upgrade>
+
+Performs an upgrade on the site
+
+=head2 C<set_settings>
+
+Enabled/disables debug mode and extended/standard session timeout
+based on C<< $reset->option('debug') >> and enables/disables the
+site starter based on C<< $reset->option('starter') >>.
+
+=head2 C<reset_config>
+
+Resets the site's config file based on the rules listed in
+L</WebGUI Config File Reset>.
+
+=head2 C<empty_trash>
+
+Purges all items from the trash.
+
+=head2 C<purge_old_revisions>
+
+Purges all asset revisions aside from the most recent.
+
+=head2 C<clean_version_tags>
+
+Collapses all version tags into a single tag labeled based on the
+current WebGUI version.
+
+=head2 C<clear_default_content>
+
+Removes all content descending from the default asset, excluding
+Page Layout assets.
+
+=head2 C<delete_users>
+
+Removes all users from the site, excepting the default users of
+Admin and Visitor.
+
+=head2 C<rebuild_index>
+
+Rebuilds the search index of the site using the F<search.pl> script.
+
+=head2 C<rebuild_lineage>
+
+Rebuilds the lineage of the site using the F<rebuildLineage.pl> script.
+
+=head2 C<run_all_workflows>
+
+Attempts to finish processing all active workflows.  Waiting workflows
+will be run up to 10 times to complete them.
 
 =head1 AUTHOR
 

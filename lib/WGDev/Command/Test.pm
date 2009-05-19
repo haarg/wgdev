@@ -3,16 +3,16 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.1.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
 use File::Spec ();
 
-sub option_parse_config { return qw(gnu_getopt pass_through) }
+sub config_parse_options { return qw(gnu_getopt pass_through) }
 
-sub option_config {
+sub config_options {
     return qw(
         all|A
         slow|S

@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.2.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
@@ -11,9 +11,9 @@ BEGIN { our @ISA = qw(WGDev::Command::Base) }
 use Carp qw(croak);
 use File::Spec ();
 
-sub option_parse_config { return qw(no_getopt_compat) }
+sub config_parse_options { return qw(no_getopt_compat) }
 
-sub option_config {
+sub config_options {
     return qw(
         create|c
         bare|b
@@ -180,7 +180,7 @@ to incrementing the patch level by one.
 
 Outputs the version number taken from F<WebGUI.pm> only
 
-=item C<E<lt>versionE<gt>>
+=item C<< <version> >>
 
 The version number to compare against or create
 
@@ -188,16 +188,12 @@ The version number to compare against or create
 
 =head1 METHODS
 
-=over 8
-
-=item update_version
+=head2 C<update_version ( $new_version )>
 
 Updates WebGUI's version number to the specified version.  If not provided,
 the patch level of the version number is incremented.  The version number in
 F<WebGUI.pm> is changed, a new upgrade script is created, and a heading is
 added to the change log.
-
-=back
 
 =head1 AUTHOR
 
