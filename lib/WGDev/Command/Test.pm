@@ -17,7 +17,7 @@ sub config_options {
         all|A
         slow|S
         reset:s
-        coverage|cover:s
+        cover|C:s
     );
 }
 
@@ -26,15 +26,16 @@ sub process {
     my $wgd  = $self->wgd;
     $wgd->set_environment;
     local $ENV{HARNESS_PERL_SWITCHES} = $ENV{HARNESS_PERL_SWITCHES};
-    if ( defined $self->option('coverage') ) {
-        my $coverDir    = $self->option('coverage');
+
+    my $coverDir;
+    if ( defined $self->option('cover') ) {
+        $coverDir    = $self->option('cover') || "cover_db";
         if ( -e $coverDir ) {
             `cover -delete $coverDir`;
         }
-        $ENV{HARNESS_PERL_SWITCHES} = '-MDevel::Cover';
-        if ( $coverDir ) {
-            $ENV{HARNESS_PERL_SWITCHES} .= '=-db,' . $coverDir;
-        }
+        $ENV{HARNESS_PERL_SWITCHES} = '-MDevel::Cover=-silent,1,-select,WebGUI,+ignore,^t,'
+                                    . '-db,' . $coverDir
+                                    ;
     }
     require Cwd;
     require App::Prove;
@@ -70,8 +71,7 @@ sub process {
     if ($orig_dir) {
         chdir $orig_dir;
     }
-    if ( defined $self->option('coverage') ) {
-        my $coverDir    = $self->option('coverage');
+    if ( $coverDir ) {
         `cover -silent $coverDir`;
     }
     return $result;
@@ -114,6 +114,11 @@ Perform a site reset before running the tests.  The value specified is used
 as the command line parameters for the L<C<reset> command|WGDev::Command::Reset>.
 With no value, will use the options C<--delcache --import --upgrade> to do a
 fast site reset.
+
+=item C<--cover=>
+
+Run coverage using Devel::Cover. The value specified is used as the directory to 
+put the coverage data and defaults to C<cover_db>.
 
 =back
 
