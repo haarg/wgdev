@@ -25,18 +25,6 @@ sub process {
     my $self = shift;
     my $wgd  = $self->wgd;
     $wgd->set_environment;
-    local $ENV{HARNESS_PERL_SWITCHES} = $ENV{HARNESS_PERL_SWITCHES};
-
-    my $coverDir;
-    if ( defined $self->option('cover') ) {
-        $coverDir    = $self->option('cover') || "cover_db";
-        if ( -e $coverDir ) {
-            `cover -delete $coverDir`;
-        }
-        $ENV{HARNESS_PERL_SWITCHES} = '-MDevel::Cover=-silent,1,-select,WebGUI,+ignore,^t,'
-                                    . '-db,' . $coverDir
-                                    ;
-    }
     require Cwd;
     require App::Prove;
     if ( defined $self->option('reset') ) {
@@ -58,6 +46,18 @@ sub process {
         $ENV{TEST_SYNTAX} = 1;
         $ENV{TEST_POD}    = 1;
     }
+    local $ENV{HARNESS_PERL_SWITCHES} = $ENV{HARNESS_PERL_SWITCHES};
+    my $cover_dir;
+    if ( defined $self->option('cover') ) {
+        $cover_dir = $self->option('cover') || 'cover_db';
+        if ( -e $cover_dir ) {
+            system 'cover', '-silent', '-delete', $cover_dir;
+        }
+        ##no critic (RequireLocalizedPunctuationVars)
+        $ENV{HARNESS_PERL_SWITCHES}
+            = '-MDevel::Cover=-silent,1,-select,WebGUI,+ignore,^t,' . '-db,'
+            . $cover_dir;
+    }
     my $prove = App::Prove->new;
     my @args  = $self->arguments;
     my $orig_dir;
@@ -71,8 +71,8 @@ sub process {
     if ($orig_dir) {
         chdir $orig_dir;
     }
-    if ( $coverDir ) {
-        `cover -silent $coverDir`;
+    if ( defined $cover_dir ) {
+        system 'cover', '-silent', $cover_dir;
     }
     return $result;
 }
@@ -115,7 +115,7 @@ as the command line parameters for the L<C<reset> command|WGDev::Command::Reset>
 With no value, will use the options C<--delcache --import --upgrade> to do a
 fast site reset.
 
-=item C<--cover=>
+=item C<-C> C<--cover=>
 
 Run coverage using Devel::Cover. The value specified is used as the directory to 
 put the coverage data and defaults to C<cover_db>.
