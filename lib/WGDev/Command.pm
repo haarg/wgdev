@@ -91,12 +91,23 @@ sub guess_webgui_paths {
     if ($webgui_root) {
         $wgd->root($webgui_root);
     }
+    
     if ($webgui_config) {
         my $can_set_config = eval { $wgd->config_file($webgui_config); 1; };
+        my $original_error = $@;
+        
+        # if things didn't work out but config file is missing the standard ".conf" 
+        # extension, try again with the extension added
+        if ( $webgui_root && !$can_set_config && $webgui_config !~ m/.\.conf$/) {
+            $webgui_config .= '.conf';
+            $can_set_config = eval { $wgd->config_file($webgui_config); 1; };
+        }
 
         # if a config file and root were specified and they didn't work, error
         if ( $webgui_root && !$can_set_config ) {
-            die $@;
+            # use original_error if possible so that users don't get an error
+            # about a file not existing that they didn't ask us to use
+            die $original_error || $@;
         }
         if ( $can_set_config && $wgd->root ) {
             return $wgd;

@@ -267,6 +267,20 @@ copy catfile($test_data, 'www.example.com.conf'), catfile($etc, 'www.example2.co
 throws_ok { WGDev::Command->guess_webgui_paths($wgd, $root) } qr{^\QUnable to find WebGUI config file!},
     'guess_webgui_paths throws correct error for root with two config files';
 
+$ENV{WEBGUI_ROOT} = $root_abs;
+$wgd = WGDev->new;
+my $truncated_config = catfile($etc, 'www.example.com');
+my $truncated_config_abs = rel2abs($truncated_config);
+lives_and { is realpath(WGDev::Command->guess_webgui_paths($wgd, undef, $truncated_config_abs)->root), realpath($root_abs) }
+    'guess_webgui_paths intelligently adds .conf to config file';
+    
+$truncated_config = catfile($etc, 'duff');
+$truncated_config_abs = rel2abs($truncated_config);
+throws_ok { realpath(WGDev::Command->guess_webgui_paths($wgd, undef, $truncated_config_abs)->root) } 
+    qr{Invalid WebGUI config file: $truncated_config},
+    'guess_webgui_paths warns about the config file requested, not the extra one we checked for to be clever';
+$ENV{WEBGUI_ROOT} = undef;
+
 my $exit;
 warning_like {
     $exit = capture_exit {
