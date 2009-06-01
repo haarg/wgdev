@@ -3,12 +3,12 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.2.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
-sub option_config {
+sub config_options {
     return qw(
         command=s
         tree=s@
@@ -59,7 +59,13 @@ sub process {
         if ( $file->{asset_id} ) {
             $asset = $wgd->asset->by_id( $file->{asset_id}, undef,
                 $file->{revision} );
-            $asset = $asset->addRevision($asset_data);
+            $asset = $asset->addRevision(
+                $asset_data,
+                undef,
+                {
+                    skipAutoCommitWorkflows => 1,
+                    skipNotification        => 1,
+                } );
             if ($parent) {
                 $asset->setParent($parent);
             }
@@ -67,7 +73,14 @@ sub process {
         else {
             $parent ||= $wgd->asset->import_node;
             my $asset_id = $asset_data->{assetId};
-            $asset = $parent->addChild( $asset_data, $asset_id );
+            $asset = $parent->addChild(
+                $asset_data,
+                $asset_id,
+                undef,
+                {
+                    skipAutoCommitWorkflows => 1,
+                    skipNotification        => 1,
+                } );
         }
         printf $output_format, ( $file->{asset_id} ? 'Updating' : 'Adding' ),
             $asset->get('url'), $asset->getId, $asset->get('title');
@@ -127,7 +140,7 @@ sub write_temp {
     my $wgd_asset = $self->wgd->asset;
     if ( !ref $asset ) {
         $asset = eval { $wgd_asset->find($asset) }
-            || eval { $wgd_asset->validate_class($asset) };
+            || eval { scalar $wgd_asset->validate_class($asset) };
         if ( !$asset ) {
             die $@;    ##no critic (RequireCarping)
         }
@@ -139,6 +152,7 @@ sub write_temp {
     my ( $fh, $filename ) = File::Temp::tempfile();
     binmode $fh, ':utf8';
     my $asset_text = $self->wgd->asset->serialize($asset);
+
     print {$fh} $asset_text;
     close $fh or return;
     return {
@@ -182,7 +196,7 @@ If modifications are made, the assets are updated.
 Command to be executed.  If not specified, uses the EDITOR environment
 variable.  If that is not specified, uses C<vi>.
 
-=item C<E<lt>assetE<gt>>
+=item C<< <asset> >>
 
 Either an asset URL, ID, or class name.  As many can be specified as desired.
 Prepending with a slash will force it to be interpreted as a URL.  Class names
@@ -200,6 +214,19 @@ Can be specified as a full (C<WebGUI::Asset::Template>) or abbreviated
 (C<Template>) class name.
 
 =back
+
+=head1 METHODS
+
+=head2 C<export_asset_data>
+
+For each item in C<arguments>, exports the asset serialized to text to a
+temporary file.  Also follows the C<--tree> option.  Returns an array of
+hash references with information about the assets and exported files.
+
+=head2 C<write_temp ( $asset_or_class )>
+
+Accepts an asset or a class name and exports it serialized as a text file.
+Returns a hash reference of information about the file ans asset.
 
 =head1 AUTHOR
 

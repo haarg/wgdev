@@ -78,7 +78,7 @@ Imports asset from files.
 
 =over 8
 
-=item C<E<lt>asset fileE<gt>>
+=item C<< <asset file> >>
 
 File to import.
 

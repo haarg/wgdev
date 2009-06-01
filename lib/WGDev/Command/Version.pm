@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.2.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
@@ -11,9 +11,9 @@ BEGIN { our @ISA = qw(WGDev::Command::Base) }
 use Carp qw(croak);
 use File::Spec ();
 
-sub option_parse_config { return qw(no_getopt_compat) }
+sub config_parse_options { return qw(no_getopt_compat) }
 
-sub option_config {
+sub config_options {
     return qw(
         create|c
         bare|b
@@ -45,23 +45,23 @@ sub process {
     my $expect_ver = $ver || $perl_version;
     if ( $perl_version ne $expect_ver ) {
         $err_count++;
-        $perl_version = colored( $perl_version, 'bold red' );
+        $perl_version = _colored( $perl_version, 'bold red' );
     }
     if ( $db_version ne $expect_ver ) {
         $err_count++;
-        $db_version = colored( $db_version, 'bold red' );
+        $db_version = _colored( $db_version, 'bold red' );
     }
     if ( $change_version ne $expect_ver ) {
         $err_count++;
-        $change_version = colored( $change_version, 'bold red' );
+        $change_version = _colored( $change_version, 'bold red' );
     }
     if ( $up_version ne $expect_ver ) {
         $err_count++;
-        $up_version = colored( $up_version, 'bold red' );
+        $up_version = _colored( $up_version, 'bold red' );
     }
     if ( $up_file_ver ne $expect_ver ) {
         $err_count++;
-        $up_file = colored( $up_file, 'bold red' );
+        $up_file = _colored( $up_file, 'bold red' );
     }
 
     print <<"END_REPORT";
@@ -73,7 +73,7 @@ sub process {
 END_REPORT
 
     if ($err_count) {
-        print colored( "\n  Version numbers don't match!\n", 'bold red' );
+        print _colored( "\n  Version numbers don't match!\n", 'bold red' );
     }
     return 1;
 }
@@ -135,15 +135,15 @@ sub update_version {
     return $new_version;
 }
 
-sub colored {
+sub _colored {
     no warnings 'redefine';
     if ( eval { require Term::ANSIColor; 1 } ) {
-        *colored = \&Term::ANSIColor::colored;
+        *_colored = \&Term::ANSIColor::colored;
     }
     else {
-        *colored = sub { $_[0] };
+        *_colored = sub { $_[0] };
     }
-    goto &colored;
+    goto &_colored;
 }
 
 1;
@@ -180,11 +180,20 @@ to incrementing the patch level by one.
 
 Outputs the version number taken from F<WebGUI.pm> only
 
-=item C<E<lt>versionE<gt>>
+=item C<< <version> >>
 
 The version number to compare against or create
 
 =back
+
+=head1 METHODS
+
+=head2 C<update_version ( $new_version )>
+
+Updates WebGUI's version number to the specified version.  If not provided,
+the patch level of the version number is incremented.  The version number in
+F<WebGUI.pm> is changed, a new upgrade script is created, and a heading is
+added to the change log.
 
 =head1 AUTHOR
 

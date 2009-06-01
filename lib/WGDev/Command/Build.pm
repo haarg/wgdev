@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.2.0';
 
 use WGDev::Command::Base::Verbosity;
 BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
@@ -11,9 +11,9 @@ BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
 use File::Spec ();
 use Carp qw(croak);
 
-sub option_config {
+sub config_options {
     return (
-        shift->SUPER::option_config, qw(
+        shift->SUPER::config_options, qw(
             sql|s
             uploads|u
             ) );
@@ -182,6 +182,18 @@ Make F<create.sql> based on current database contents
 Make uploads based on current site's uploads
 
 =back
+
+=head1 METHODS
+
+=head2 C<create_db_script>
+
+Builds the F<create.sql> database script.  This is done as a dump of the current
+database structure and data, excluding the data from some tables.
+
+=head2 C<update_local_uploads>
+
+Updates the working directory's uploads from the current site.  Files will be
+deleted or created so the two match.
 
 =head1 AUTHOR
 

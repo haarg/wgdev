@@ -7,6 +7,7 @@ our $VERSION = '0.1.0';
 
 use WGDev::Command::Base ();
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
+
 use WGDev::Command ();
 
 sub process {
@@ -20,6 +21,10 @@ sub process {
     if ( !$command_module ) {
         warn "Unknown command: $command\n";
         $self->error_with_list;
+    }
+
+    if ( $command_module->can('help') ) {
+        return $command_module->help;
     }
 
     require WGDev::Help;
@@ -68,11 +73,18 @@ Except that the help message is displayed via Pod::Perldoc
 
 =over 8
 
-=item C<E<lt>commandE<gt>>
+=item C<< <command> >>
 
 The sub-command to display help information about.
 
 =back
+
+=head1 METHODS
+
+=head2 C<error_with_list>
+
+Throws an error that includes the modules usage message, followed by a list
+of available WGDev commands.
 
 =head1 AUTHOR
 

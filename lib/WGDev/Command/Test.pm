@@ -3,20 +3,21 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.1.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
 use File::Spec ();
 
-sub option_parse_config { return qw(gnu_getopt pass_through) }
+sub config_parse_options { return qw(gnu_getopt pass_through) }
 
-sub option_config {
+sub config_options {
     return qw(
         all|A
         slow|S
         reset:s
+        cover|C:s
     );
 }
 
@@ -24,6 +25,18 @@ sub process {
     my $self = shift;
     my $wgd  = $self->wgd;
     $wgd->set_environment;
+    local $ENV{HARNESS_PERL_SWITCHES} = $ENV{HARNESS_PERL_SWITCHES};
+
+    my $coverDir;
+    if ( defined $self->option('cover') ) {
+        $coverDir    = $self->option('cover') || "cover_db";
+        if ( -e $coverDir ) {
+            `cover -delete $coverDir`;
+        }
+        $ENV{HARNESS_PERL_SWITCHES} = '-MDevel::Cover=-silent,1,-select,WebGUI,+ignore,^t,'
+                                    . '-db,' . $coverDir
+                                    ;
+    }
     require Cwd;
     require App::Prove;
     if ( defined $self->option('reset') ) {
@@ -57,6 +70,9 @@ sub process {
     my $result = $prove->run;
     if ($orig_dir) {
         chdir $orig_dir;
+    }
+    if ( $coverDir ) {
+        `cover -silent $coverDir`;
     }
     return $result;
 }
@@ -98,6 +114,11 @@ Perform a site reset before running the tests.  The value specified is used
 as the command line parameters for the L<C<reset> command|WGDev::Command::Reset>.
 With no value, will use the options C<--delcache --import --upgrade> to do a
 fast site reset.
+
+=item C<--cover=>
+
+Run coverage using Devel::Cover. The value specified is used as the directory to 
+put the coverage data and defaults to C<cover_db>.
 
 =back
 

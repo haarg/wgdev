@@ -3,25 +3,26 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.2.0';
+our $VERSION = '0.2.1';
 
 use Getopt::Long ();
 use File::Spec   ();
 use Cwd          ();
-use Carp qw(croak carp);
+use Carp qw(croak);
 ##no critic (RequireCarping)
 
 sub run {
     my $class = shift;
     local @ARGV = @_;
-    Getopt::Long::Configure(qw(default gnu_getopt pass_through));
+    Getopt::Long::Configure(
+        qw(default gnu_getopt pass_through no_auto_abbrev));
     Getopt::Long::GetOptions(
         'h|?|help'      => \( my $opt_help ),
         'V|ver|version' => \( my $opt_version ),
 
         'F|config-file=s' => \( my $opt_config ),
         'R|webgui-root=s' => \( my $opt_root ),
-    ) || warn $class->usage && exit 1;
+    ) || warn $class->usage(0) && exit 1;
     my @params = @ARGV;
 
     my $command_name = shift @params;
@@ -40,7 +41,8 @@ sub run {
         else {
             warn $class->usage(
                 message          => "Can't find command $command_name!\n",
-                include_cmd_list => 1
+                include_cmd_list => 1,
+                verbosity        => 0,
             );
             exit 2;
         }
@@ -55,7 +57,8 @@ sub run {
     elsif ( !$command_name ) {
         warn $class->usage(
             message          => "No command specified!\n",
-            include_cmd_list => 1
+            include_cmd_list => 1,
+            verbosity        => 1,
         );
         exit 1;
     }
@@ -158,11 +161,14 @@ sub report_help {
             print $module->usage;
         }
         else {
-            carp "No documentation for $name command.\n";
+            warn "No documentation for $name command.\n";
         }
     }
     else {
-        print $class->usage;
+        print $class->usage(
+            verbosity        => 2,
+            include_cmd_list => 1,
+        );
     }
     return 1;
 }
@@ -205,14 +211,22 @@ sub _find_cmd_exec {
 
 sub usage {
     my $class = shift;
-    require WGDev::Help;
-    my $message = WGDev::Help::package_usage( $class, 2 );
+    my %options = ( @_ % 2 == 0 ) ? @_ : ( verbosity => shift );
 
-    $message .= "SUBCOMMANDS\n";
-    for my $command ( $class->command_list ) {
-        $message .= "    $command\n";
+    require WGDev::Help;
+    my $message = q{};
+    if ( $options{message} ) {
+        $message .= $options{message};
     }
-    $message .= "\n";
+    $message .= WGDev::Help::package_usage( $class, $options{verbosity} );
+
+    if ( $options{include_cmd_list} ) {
+        $message .= "SUBCOMMANDS\n";
+        for my $command ( $class->command_list ) {
+            $message .= "    $command\n";
+        }
+        $message .= "\n";
+    }
     return $message;
 }
 
@@ -262,7 +276,9 @@ sub command_list {
         }
     }
 
-    for my $command ( map { glob "$_/wgd-*" } File::Spec->path ) {
+    for my $command ( map { glob File::Spec->catfile( $_, 'wgd-*' ) }
+        File::Spec->path )
+    {
         next
             if !-x $command;
         my $file = ( File::Spec->splitpath($command) )[2];
@@ -315,11 +331,75 @@ Specify WebGUI's root directory.  Can be absolute or relative.  If not
 specified, first the C<WEBGUI_ROOT> environment variable will be checked,
 then will search upward from the current path for a WebGUI installation.
 
-=item C<E<lt>subcommandE<gt>>
+=item C<< <subcommand> >>
 
 Sub-command to run or get help for.
 
 =back
+
+=head1 SUBROUTINES
+
+=head2 C<command_to_module ( $command )>
+
+Converts a command into the module that would implement it.  Returns
+that module name.
+
+=head2 C<get_command_module ( $command )>
+
+Converts the command to a module, then attempts to load that module.
+If the module loads successfully, implements the C<run> and
+C<is_runnable> methods, and C<is_runnable> returns true, returns
+the module.  If not, returns C<undef>.
+
+=head1 METHODS
+
+=head2 C<run ( @arguments )>
+
+Runs C<wgd>, processing the arguments specified and running a sub-command if possible.
+
+=head2 C<usage ( %options )>
+
+Returns usage information for C<wgd>.  The options hash specifies additional options:
+
+=head3 C<verbosity>
+
+The verbosity level of the usage information.  This is passed on
+to L<WGDev::Help::package_usage|WGDev::Help/package_usage>.
+
+=head3 C<message>
+
+An additional message to include before the usage information.
+
+=head3 C<include_cmd_list>
+
+Include the list of available sub-commands with the usage information.
+
+=head2 C<command_list>
+
+Searches for available sub-commands and returns them as an array.  This list includes available Perl modules that pass the L</get_command_module> check and executable files beginning with F<wgd->.
+
+=head2 C<guess_webgui_paths ( $wgd, [$webgui_root], [$webgui_config] )>
+
+Attempts to detect the paths to use for the WebGUI root and config
+file.  Initializes the specified $wgd object.  If specified, attempts
+to use the specified paths first.  If not specified, first checks
+the environment variables C<WEBGUI_ROOT> and C<WEBGUI_CONFIG>.
+Next, attempts to search upward from the current path to find the
+WebGUI root.  If a WebGUI root has been found but not a config file,
+checks for available config files.  If only one is available, it
+is used as the config file.
+
+=head2 C<report_help ( [$command, $module] )>
+
+Shows help information for C<wgd> or a sub-command.  If a command
+and module is specified, attempts to call C<usage> on the module
+or displays an error.  Otherwise, displays help information for
+C<wgd>.
+
+=head2 C<report_version ( [$command, $module] )>
+
+Reports version information about C<wgd>.  If specified, also
+includes version information about a sub-command.
 
 =head1 AUTHOR
 
@@ -327,7 +407,7 @@ Graham Knop <graham@plainblack.com>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) Graham Knop.
 
 This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.

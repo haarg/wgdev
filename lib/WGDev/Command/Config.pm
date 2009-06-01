@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.1.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
@@ -11,13 +11,13 @@ BEGIN { our @ISA = qw(WGDev::Command::Base) }
 use WGDev          ();
 use WGDev::Command ();
 
-sub option_config {
+sub config_options {
     return qw(
         struct|s
     );
 }
 
-sub option_parse_config { return qw(gnu_getopt pass_through) }
+sub config_parse_options { return qw(gnu_getopt pass_through) }
 
 sub process {
     my $self = shift;
@@ -101,13 +101,13 @@ Reports WGDev configuration parameters.
 When setting a config value, specifies that the value should be treated as a
 data structure formatted as YAML or JSON.
 
-=item C<E<lt>config pathE<gt>>
+=item C<< <config path> >>
 
 Path of the the config variable to retrieve.  Sub-level options are specified
 as a period separated list of keys.  Complex options will be returned formatted
 as YAML.
 
-=item C<E<lt>valueE<gt>>
+=item C<< <value> >>
 
 The value to set the config option to.
 

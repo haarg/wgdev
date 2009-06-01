@@ -3,13 +3,13 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.2.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 use Carp qw(croak);
 
-sub option_config {
+sub config_options {
     return qw(
         stdout
     );
@@ -87,13 +87,23 @@ Exports asset to files.
 
 Exports to standard out instead of a file.  This only makes sense with a single asset specified.
 
-=item C<E<lt>assetE<gt>>
+=item C<< <asset> >>
 
 Either an asset URL, ID, class name.  As many can be specified as desired.
 Prepending with a slash will force it to be interpreted as a URL.  Asset
 classes will generate skeletons of export files for the given class.
 
 =back
+
+=head1 METHODS
+
+=head2 C<export_filename ( $asset_or_class )>
+
+Calculates the file name to export an asset as.  Accepts a parameter of the
+asset object or an asset class name.  The file name will be the last portion
+of the asset's URL, with an extension based on the asset's class name.  If
+provided only a class name, the file name will also be based on the class
+name.
 
 =head1 AUTHOR
 

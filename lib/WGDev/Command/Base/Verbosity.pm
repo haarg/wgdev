@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.2.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
@@ -15,7 +15,7 @@ sub new {
     return $self;
 }
 
-sub option_config {
+sub config_options {
     return qw(
         verbose|v+
         quiet|q+
@@ -73,9 +73,21 @@ WGDev::Command::Base::Verbosity - Super-class for implementing WGDev commands wi
 
 =head1 DESCRIPTION
 
-A super-class useful for implementing WGDev command modules.  Includes simple
-methods to override for parameter parsing and provides help text via
-Pod::Usage.
+A super-class useful for implementing WGDev command modules.  Parses the
+C<--verbose> and C<--quiet> command line options.
+
+=head1 METHODS
+
+=head2 C<verbosity ( [ $verbosity ] )>
+
+Sets or returns the verbosity.  This is modified when parsing parameters.  Defaults to 1.
+
+=head2 C<report ( [ $verbosity, ] $message )>
+
+Prints messages based on the current verbosity level.  If given two
+parameters, the first must be the verbosity level to start printing the
+message at.  The second parameter is the message to print.  Will also accept
+a single parameter of a message to print starting at verbosity level 1.
 
 =head1 AUTHOR
 

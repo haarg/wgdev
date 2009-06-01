@@ -11,11 +11,11 @@ BEGIN { our @ISA = qw(WGDev::Command::Base) }
 use File::Spec ();
 
 sub process {
+    my $self = shift;
+    my $wgd  = $self->wgd;
     require File::Temp;
     require File::Copy;
     require Cwd;
-    my $self = shift;
-    my $wgd  = $self->wgd;
 
     my ( $version, $status ) = $wgd->version->module;
     my $build_root   = File::Temp->newdir;
@@ -47,8 +47,8 @@ sub process {
 
 sub export_files {
     my $self    = shift;
-    my $from    = $self->wgd->root;
     my $to_root = shift;
+    my $from    = $self->wgd->root;
 
     if ( -e File::Spec->catdir( $from, '.git' ) ) {
         system 'git', '--git-dir=' . File::Spec->catdir( $from, '.git' ),
@@ -76,13 +76,13 @@ sub export_files {
 }
 
 sub generate_docs {
+    my $self    = shift;
+    my $to_root = shift;
+    my $from    = $self->wgd->root;
     require File::Find;
     require File::Path;
     require Pod::Html;
     require File::Temp;
-    my $self     = shift;
-    my $from     = $self->wgd->root;
-    my $to_root  = shift;
     my $code_dir = File::Spec->catdir( $from, 'lib', 'WebGUI' );
     my $temp_dir = File::Temp->newdir;
     File::Find::find( {
@@ -147,6 +147,18 @@ Generates a code distribution
 Generates an API documentation distribution
 
 =back
+
+=head1 METHODS
+
+=head2 C<export_files ( $directory )>
+
+Exports the WebGUI root directory, excluding common site specific files, to
+the specified directory.
+
+=head2 C<generate_docs ( $directory )>
+
+Generate API documentation for WebGUI using Pod::Html in the specified
+directory.
 
 =head1 AUTHOR
 

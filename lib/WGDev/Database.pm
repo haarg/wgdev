@@ -138,13 +138,93 @@ and reuse a database connection.
 
 =head1 METHODS
 
-=head2 new ( $wgd )
+=head2 C<new ( $wgd )>
 
 Creates a new WGDev::Database object.
 
-=head3 $wgd
+=head3 C<$wgd>
 
 An instantiated WGDev object.
+
+=head2 C<dsn>
+
+Returns the DSN for the database.
+
+=head2 C<database>
+
+Returns the name of the database.
+
+=head2 C<name>
+
+Alias for the L</database> method.
+
+=head2 C<hostname>
+
+Returns the host name for the database connection.
+
+=head2 C<host>
+
+Alias for the L</hostname> method.
+
+=head2 C<password>
+
+Returns the password for the database connection.
+
+=head2 C<pass>
+
+Alias for the L</password> method.
+
+=head2 C<port>
+
+Returns the port for the database connection.
+
+=head2 C<username>
+
+Returns the user name for the database connection.
+
+=head2 C<user>
+
+Alias for the L</username> method.
+
+=head2 C<command_line>
+
+Returns command line options suitable for passing to the F<mysql>
+or F<mysqldump> command line programs to connect to the database.
+
+=head2 C<connect>
+
+Connects to the database if it hasn't been connected to yet and
+returns the database handle for the connection.
+
+=head2 C<open>
+
+Alias for the L</connect> method.
+
+=head2 C<dbh>
+
+Returns the database handle of the current connection, or C<undef> if
+there is no active connection.
+
+=head2 C<disconnect>
+
+Closes the active database connection.  If there is no active
+connection, does nothing.
+
+=head2 C<close>
+
+Alias for the L</disconnect> method.
+
+=head2 C<clear>
+
+Removes all tables from the database, leaving it empty.
+
+=head2 C<dump ( $dumpfile )>
+
+Dumps the database content to the specified file.
+
+=head2 C<load ( $dumpfile )>
+
+Loads the specified database script into the database.
 
 =head1 AUTHOR
 

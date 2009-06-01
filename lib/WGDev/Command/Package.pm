@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.2.0';
+our $VERSION = '0.3.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
@@ -11,7 +11,7 @@ BEGIN { our @ISA = qw(WGDev::Command::Base) }
 use File::Spec ();
 use Carp qw(croak);
 
-sub option_config {
+sub config_options {
     return qw(
         import|i=s@
         parent=s
@@ -121,7 +121,7 @@ Specify a directory to output the package files to.  If neither C<--upgrade>
 or C<--output-dir> is specified, packages will be output to the current
 directory.
 
-=item C<E<lt>assetE<gt>>
+=item C<< <asset> >>
 
 Either an asset ID or an asset URL to specify an asset.
 
