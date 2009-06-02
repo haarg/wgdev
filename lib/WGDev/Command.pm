@@ -91,26 +91,34 @@ sub guess_webgui_paths {
     if ($webgui_root) {
         $wgd->root($webgui_root);
     }
-    
+
+    my $alternate_config;
+    if ($webgui_config && $webgui_config !~ /[.]conf$/msx) {
+        $alternate_config = $webgui_config . '.conf';
+    }
+
     if ($webgui_config) {
         my $can_set_config = eval { $wgd->config_file($webgui_config); 1; };
-        my $original_error = $@;
-        
-        # if things didn't work out but config file is missing the standard ".conf" 
-        # extension, try again with the extension added
-        if ( $webgui_root && !$can_set_config && $webgui_config !~ m/.\.conf$/) {
-            $webgui_config .= '.conf';
-            $can_set_config = eval { $wgd->config_file($webgui_config); 1; };
-        }
 
-        # if a config file and root were specified and they didn't work, error
-        if ( $webgui_root && !$can_set_config ) {
-            # use original_error if possible so that users don't get an error
-            # about a file not existing that they didn't ask us to use
-            die $original_error || $@;
-        }
+        # if we were able to set the config file and root is set either by
+        # being specified or calculated by the config path, we are done.
         if ( $can_set_config && $wgd->root ) {
             return $wgd;
+        }
+        # if things didn't work out but config file is missing the standard ".conf" 
+        # extension, try again with the extension added
+        elsif ($alternate_config) {
+            local $@;
+            $can_set_config = eval { $wgd->config_file($alternate_config); 1; };
+
+            if ( $can_set_config && $wgd->root ) {
+                return $wgd;
+            }
+        }
+
+        # if root was specified and we haven't found the config by now, die
+        if ( $wgd->root ) {
+            die $@;
         }
     }
 
@@ -130,8 +138,18 @@ sub guess_webgui_paths {
             $dir = $parent;
         }
         if ($webgui_config) {
-            $wgd->config_file($webgui_config);
-            return $wgd;
+            local $@;
+            if ( eval { $wgd->config_file($webgui_config); 1 } ) {
+                return $wgd;
+            }
+            elsif ( $alternate_config ) {
+                local $@;
+                if ( eval { $wgd->config_file($alternate_config); 1; } ) {
+                    return $wgd;
+                }
+            }
+            # if neither normal or alternate config files worked, die
+            die $@;
         }
     }
     if ( opendir my $dh, File::Spec->catdir( $wgd->root, 'etc' ) ) {

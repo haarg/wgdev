@@ -2,8 +2,8 @@ use strict;
 use warnings;
 
 {
-    my $EXIT_CODE;
-    my $CAPTURE_EXIT;
+    our $EXIT_CODE;
+    our $CAPTURE_EXIT;
     BEGIN {
         *CORE::GLOBAL::exit = sub {
             if (!$CAPTURE_EXIT) {
@@ -17,11 +17,12 @@ use warnings;
 
     sub capture_exit (&) {
         my $sub = shift;
+        local $EXIT_CODE;
         EXIT: {
-            $CAPTURE_EXIT = 1;
+            local $CAPTURE_EXIT = 1;
             $sub->();
+            return;
         }
-        $CAPTURE_EXIT = 0;
         return $EXIT_CODE;
     }
 }
@@ -267,19 +268,31 @@ copy catfile($test_data, 'www.example.com.conf'), catfile($etc, 'www.example2.co
 throws_ok { WGDev::Command->guess_webgui_paths($wgd, $root) } qr{^\QUnable to find WebGUI config file!},
     'guess_webgui_paths throws correct error for root with two config files';
 
+
 $ENV{WEBGUI_ROOT} = $root_abs;
 $wgd = WGDev->new;
 my $truncated_config = catfile($etc, 'www.example.com');
-my $truncated_config_abs = rel2abs($truncated_config);
-lives_and { is realpath(WGDev::Command->guess_webgui_paths($wgd, undef, $truncated_config_abs)->root), realpath($root_abs) }
+lives_and { is realpath(WGDev::Command->guess_webgui_paths($wgd, undef, $truncated_config)->config_file), realpath($config) }
     'guess_webgui_paths intelligently adds .conf to config file';
-    
-$truncated_config = catfile($etc, 'duff');
-$truncated_config_abs = rel2abs($truncated_config);
-throws_ok { realpath(WGDev::Command->guess_webgui_paths($wgd, undef, $truncated_config_abs)->root) } 
-    qr{Invalid WebGUI config file: $truncated_config},
-    'guess_webgui_paths warns about the config file requested, not the extra one we checked for to be clever';
+
+my $nonexistant_config = catfile($etc, 'duff');
+throws_ok { WGDev::Command->guess_webgui_paths($wgd, undef, $nonexistant_config) } qr{^\QInvalid WebGUI config file: $nonexistant_config\E$}m,
+    'guess_webgui_paths throws with the config file requested, not with an unspecified .conf appended to the end';
 $ENV{WEBGUI_ROOT} = undef;
+
+
+chdir $root;
+$wgd = WGDev->new;
+lives_and {
+        is realpath(WGDev::Command->guess_webgui_paths($wgd, undef, 'www.example.com')->config_file),
+            realpath($config);
+} 'guess_webgui_paths with guessed root intelligently adds .conf to config file';
+
+throws_ok {
+    WGDev::Command->guess_webgui_paths($wgd, undef, 'duff')
+} qr{^\QInvalid WebGUI config file: duff\E$}m,
+    'guess_webgui_paths with guessed root throws with the config file requested, not with an unspecified .conf appended to the end';
+chdir $cwd;
 
 my $exit;
 warning_like {
