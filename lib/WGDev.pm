@@ -208,6 +208,24 @@ sub close_session {
     return 1;
 }
 
+sub list_site_configs {
+    my $self = shift;
+    my $root = $self->root;
+    croak 'WebGUI root not set!'
+        if !$root;
+
+    if ( opendir my $dh, File::Spec->catdir( $root, 'etc' ) ) {
+        my @configs = readdir $dh;
+        closedir $dh
+            or croak "Unable to close directory handle: $!";
+        @configs = map { File::Spec->catdir( $root, 'etc', $_ ) }
+            grep { /\Q.conf\E$/msx && !/^(?:spectre|log)\Q.conf\E$/msx }
+            @configs;
+        return @configs;
+    }
+    return;
+}
+
 sub asset {
     my $self = shift;
     require WGDev::Asset;
