@@ -1,30 +1,11 @@
 use strict;
 use warnings;
 
-{
-    our $EXIT_CODE;
-    our $CAPTURE_EXIT;
-    BEGIN {
-        *CORE::GLOBAL::exit = sub {
-            if (!$CAPTURE_EXIT) {
-                goto &CORE::exit;
-            }
-            $EXIT_CODE = @_ ? 0+shift : 0;
-            no warnings 'exiting';
-            last EXIT;
-        };
-    }
-
-    sub capture_exit (&) {
-        my $sub = shift;
-        local $EXIT_CODE;
-        EXIT: {
-            local $CAPTURE_EXIT = 1;
-            $sub->();
-            return;
-        }
-        return $EXIT_CODE;
-    }
+# set this right now so we can override it later
+BEGIN {
+    *CORE::GLOBAL::exit = sub (;$) {
+        goto &CORE::exit;
+    };
 }
 
 use Test::More 'no_plan';
@@ -32,7 +13,6 @@ use Test::NoWarnings;
 use Test::Exception;
 use Test::Warn;
 
-use File::Spec ();
 use File::Spec::Functions qw(catdir catfile catpath rel2abs splitpath);
 use Cwd qw(realpath cwd);
 use File::Temp ();
@@ -65,6 +45,23 @@ sub capture_output (&) {
     select $orig_out;
     close $out_fh;
     return $output;
+}
+
+sub capture_exit (&) {
+    my $sub = shift;
+    my $exit_code;
+
+    EXIT: {
+        no warnings 'redefine';
+        local *CORE::GLOBAL::exit = sub (;$) {
+            $exit_code = @_ ? 0+shift : 0;
+            no warnings 'exiting';
+            last EXIT;
+        };
+        $sub->();
+        return;
+    }
+    return $exit_code;
 }
 
 # we don't want the user's configuration interfering with the test
