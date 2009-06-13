@@ -30,7 +30,7 @@ sub process {
     if ( defined $self->option('reset') ) {
         my $reset_options = $self->option('reset');
         if ( $reset_options eq q{} ) {
-            $reset_options = '--quiet --delcache --import --upgrade';
+            $reset_options = '--quiet --backup --delcache --import --upgrade';
         }
         require WGDev::Command::Reset;
         my $reset = WGDev::Command::Reset->new($wgd);
@@ -112,7 +112,7 @@ Includes slow tests by defining CODE_COP, TEST_SYNTAX, and TEST_POD.
 
 Perform a site reset before running the tests.  The value specified is used
 as the command line parameters for the L<C<reset> command|WGDev::Command::Reset>.
-With no value, will use the options C<--delcache --import --upgrade> to do a
+With no value, will use the options C<--delcache --backup --import --upgrade> to do a
 fast site reset.
 
 =item C<-C> C<--cover=>

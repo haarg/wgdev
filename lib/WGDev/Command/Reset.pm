@@ -696,7 +696,7 @@ C<--verbose --backup --import --starter --no-debug --upgrade --purge --cleantags
 
 =item C<--backup> C<--no-backup>
 
-Backup database before doing any other operations.  Defaults to on.
+Backup database before doing any other operations.
 
 =item C<--delcache> C<--no-delcache>
 
