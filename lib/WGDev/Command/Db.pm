@@ -14,6 +14,7 @@ sub config_options {
         dump|d:s
         load|l=s
         clear|c
+        show
     );
 }
 
@@ -57,6 +58,9 @@ sub process {
         }
         return 1;
     }
+    if ( defined $self->option('show') ) {
+        exec {'mysqlshow'} 'mysqlshow', @command_line;
+    }
     exec {'mysql'} 'mysql', @command_line;
 }
 
@@ -70,12 +74,12 @@ WGDev::Command::Db - Connect to database with the MySQL client
 
 =head1 SYNOPSIS
 
-    wgd db [-p | -d | -l | -c] [mysql options]
+    wgd db [-p | -d | -l | -c | --show] [mysql options]
 
 =head1 DESCRIPTION
 
 Opens the C<mysql> client to your WebGUI database, loads or dumps a database
-script, or clears a database's contents.
+script, or displays database information, or clears a database's contents.
 
 =head1 OPTIONS
 
@@ -100,6 +104,15 @@ Loads a database script into the database.  Database script must be specified.
 =item C<-c> C<--clear>
 
 Clears the database, removing all tables.
+
+=item C<--show>
+
+Shows database information via C<mysqlshow>.
+
+For example, to display a summary of the number of columns and rows in each table,
+use mysqlshow's C<--count> option:
+
+ wgd db --show --count
 
 =back
 
