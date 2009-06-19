@@ -492,7 +492,9 @@ F<preload.custom> file.
 
 =head2 C<list_site_configs>
 
-Returns a list of the available site configs in the C<etc> directory of the specified WebGUI root path.  The returned paths will include the full file path.
+Returns a list of the available site configuration files in the
+C<etc> directory of the specified WebGUI root path.  The returned
+paths will include the full file path.
 
 =head2 C<config>
 

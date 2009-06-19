@@ -27,7 +27,7 @@ sub process {
     if ( $self->option('macros') ) {
         $self->optimise_macros();
     }
-    
+
     if ( $self->option('db') ) {
         $self->optimise_db();
     }
@@ -111,35 +111,41 @@ END_MESSAGE
     return 1;
 }
 
+use constant OPTIMIZE_TABLES_LIMIT => 10;
+
 sub optimise_db {
     my $self    = shift;
     my $wgd     = $self->wgd;
     my $session = $wgd->session();
 
     my $sth = $session->db->read('show table status');
-    use Data::Dumper;
+
     my @tables;
-    while (my $r = $sth->hashRef) { 
+    while ( my $r = $sth->hashRef ) {
         push @tables, [ $r->{Name}, $r->{Data_length}, $r->{Rows} ];
     }
-    
+
     $self->report("Top 10 Tables, sorted by Data_length\n");
     my $ctr;
-    for my $table (sort { $b->[1] <=> $a->[1] } @tables) {
-        $self->report(sprintf("%10d\t $table->[0]\n", $table->[1]));
-        last if $ctr++ == 9;
+    for my $table ( sort { $b->[1] <=> $a->[1] } @tables ) {
+        ## no critic (ProhibitParensWithBuiltins)
+        $self->report( sprintf( "%10d\t%s\n", $table->[1], $table->[0] ) );
+        last
+            if ++$ctr == OPTIMIZE_TABLES_LIMIT;
     }
     $self->report("\n");
-    
+
     $self->report("Top 10 Tables, sorted by Rows\n");
     $ctr = 0;
-    for my $table (sort { $b->[2] <=> $a->[2] } @tables) {
-        $self->report(sprintf("%10d\t $table->[0]\n", $table->[2]));
-        last if $ctr++ == 9;
+    for my $table ( sort { $b->[2] <=> $a->[2] } @tables ) {
+        ## no critic (ProhibitParensWithBuiltins)
+        $self->report( sprintf( "%10d\t%s\n", $table->[2], $table->[0] ) );
+        last
+            if ++$ctr == OPTIMIZE_TABLES_LIMIT;
     }
     $self->report("\n");
-    
-    $self->report(<<END_ADVICE);
+
+    $self->report(<<'END_ADVICE');
 To reduce row count, you may want to investigate deleting old/unused data.
 To reduce row size, apart from deleting rows, you might want to investigate mysql's "optimize table" command.
 END_ADVICE
@@ -175,6 +181,10 @@ Suggests Assets that you might be able to disable to reduce memory consumption
 
 Suggests Macros that you might be able to disable to reduce memory consumption
 
+=item C<--db>
+
+Suggests database tables that may be able to be adjusted to increase speed.
+
 =back
 
 =head1 METHODS
@@ -186,6 +196,10 @@ Suggests Assets that you might be able to disable to reduce memory consumption
 =head2 C<optimise_macros>
 
 Suggests Macros that you might be able to disable to reduce memory consumption
+
+=head2 C<optimise_db>
+
+Suggests database tables that may be able to be adjusted to increase speed.
 
 =head1 AUTHOR
 
