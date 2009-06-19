@@ -1,4 +1,4 @@
-package WGDev::Command::Example;
+package WGDev::Command::_test;
 use strict;
 use warnings;
 use 5.008008;
@@ -7,6 +7,10 @@ our $VERSION = '0.0.1';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
+
+sub config_parse_options {
+    return qw(passthrough);
+}
 
 sub config_options {
     return qw(
@@ -32,15 +36,15 @@ __END__
 
 =head1 NAME
 
-WGDev::Command::Example - Example WGDev Command
+WGDev::Command::_test - Testing command
 
 =head1 SYNOPSIS
 
-    wgd example [-A]
+    wgd _test [-A]
 
 =head1 DESCRIPTION
 
-This is a sample command.
+Testing command.
 
 =head1 OPTIONS
 

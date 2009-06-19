@@ -3,12 +3,12 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.2.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
-sub option_config {
+sub config_options {
     return qw(
         command=s
         tree=s@
@@ -152,6 +152,7 @@ sub write_temp {
     my ( $fh, $filename ) = File::Temp::tempfile();
     binmode $fh, ':utf8';
     my $asset_text = $self->wgd->asset->serialize($asset);
+
     print {$fh} $asset_text;
     close $fh or return;
     return {

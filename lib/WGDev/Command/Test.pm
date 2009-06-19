@@ -3,20 +3,21 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.1.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
 use File::Spec ();
 
-sub option_parse_config { return qw(gnu_getopt pass_through) }
+sub config_parse_options { return qw(gnu_getopt pass_through) }
 
-sub option_config {
+sub config_options {
     return qw(
         all|A
         slow|S
         reset:s
+        cover|C:s
     );
 }
 
@@ -29,7 +30,7 @@ sub process {
     if ( defined $self->option('reset') ) {
         my $reset_options = $self->option('reset');
         if ( $reset_options eq q{} ) {
-            $reset_options = '--quiet --delcache --import --upgrade';
+            $reset_options = '--quiet --backup --delcache --import --upgrade';
         }
         require WGDev::Command::Reset;
         my $reset = WGDev::Command::Reset->new($wgd);
@@ -45,6 +46,18 @@ sub process {
         $ENV{TEST_SYNTAX} = 1;
         $ENV{TEST_POD}    = 1;
     }
+    local $ENV{HARNESS_PERL_SWITCHES} = $ENV{HARNESS_PERL_SWITCHES};
+    my $cover_dir;
+    if ( defined $self->option('cover') ) {
+        $cover_dir = $self->option('cover') || 'cover_db';
+        if ( -e $cover_dir ) {
+            system 'cover', '-silent', '-delete', $cover_dir;
+        }
+        ##no critic (RequireLocalizedPunctuationVars)
+        $ENV{HARNESS_PERL_SWITCHES}
+            = '-MDevel::Cover=-silent,1,-select,WebGUI,+ignore,^t,' . '-db,'
+            . $cover_dir;
+    }
     my $prove = App::Prove->new;
     my @args  = $self->arguments;
     my $orig_dir;
@@ -57,6 +70,9 @@ sub process {
     my $result = $prove->run;
     if ($orig_dir) {
         chdir $orig_dir;
+    }
+    if ( defined $cover_dir ) {
+        system 'cover', '-silent', $cover_dir;
     }
     return $result;
 }
@@ -96,8 +112,13 @@ Includes slow tests by defining CODE_COP, TEST_SYNTAX, and TEST_POD.
 
 Perform a site reset before running the tests.  The value specified is used
 as the command line parameters for the L<C<reset> command|WGDev::Command::Reset>.
-With no value, will use the options C<--delcache --import --upgrade> to do a
+With no value, will use the options C<--delcache --backup --import --upgrade> to do a
 fast site reset.
+
+=item C<-C> C<--cover=>
+
+Run coverage using Devel::Cover. The value specified is used as the directory to 
+put the coverage data and defaults to C<cover_db>.
 
 =back
 

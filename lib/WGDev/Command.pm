@@ -3,18 +3,19 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.2.0';
+our $VERSION = '0.2.1';
 
 use Getopt::Long ();
 use File::Spec   ();
 use Cwd          ();
-use Carp qw(croak carp);
+use Carp qw(croak);
 ##no critic (RequireCarping)
 
 sub run {
     my $class = shift;
     local @ARGV = @_;
-    Getopt::Long::Configure(qw(default gnu_getopt pass_through));
+    Getopt::Long::Configure(
+        qw(default gnu_getopt pass_through no_auto_abbrev));
     Getopt::Long::GetOptions(
         'h|?|help'      => \( my $opt_help ),
         'V|ver|version' => \( my $opt_version ),
@@ -90,51 +91,74 @@ sub guess_webgui_paths {
     if ($webgui_root) {
         $wgd->root($webgui_root);
     }
-    if ($webgui_config) {
-        my $can_set_config = eval { $wgd->config_file($webgui_config); 1; };
 
-        # if a config file and root were specified and they didn't work, error
-        if ( $webgui_root && !$can_set_config ) {
-            die $@;
-        }
+    if ($webgui_config) {
+        my $can_set_config
+            = eval { $class->set_config_by_input( $wgd, $webgui_config ); 1 };
+
+        # if we were able to set the config file and root is set either by
+        # being specified or calculated by the config path, we are done.
         if ( $can_set_config && $wgd->root ) {
             return $wgd;
+        }
+
+  # if root and the config file were specified and we haven't found the config
+  # yet, die
+        elsif ( $wgd->root ) {
+            die $@;
         }
     }
 
     if ( !$wgd->root ) {
-        my $dir = Cwd::getcwd();
-        while (1) {
-            if ( -e File::Spec->catfile( $dir, 'etc', 'WebGUI.conf.original' )
-                )
-            {
-                $wgd->root($dir);
-                last;
-            }
-            my $parent = Cwd::realpath(
-                File::Spec->catdir( $dir, File::Spec->updir ) );
-            croak "Unable to find WebGUI root directory!\n"
-                if $dir eq $parent;
-            $dir = $parent;
-        }
+        $class->set_root_relative($wgd);
         if ($webgui_config) {
-            $wgd->config_file($webgui_config);
+            $class->set_config_by_input( $wgd, $webgui_config );
             return $wgd;
         }
     }
-    if ( opendir my $dh, File::Spec->catdir( $wgd->root, 'etc' ) ) {
-        my @configs = readdir $dh;
-        closedir $dh
-            or croak "Unable to close directory handle: $!";
-        @configs
-            = grep { /\Q.conf\E$/msx && !/^(?:spectre|log)\Q.conf\E$/msx }
-            @configs;
-        if ( @configs == 1 ) {
-            $wgd->config_file( $configs[0] );
-            return $wgd;
-        }
+    my @configs = $wgd->list_site_configs;
+    if ( @configs == 1 ) {
+        $wgd->config_file( $configs[0] );
+        return $wgd;
     }
     croak "Unable to find WebGUI config file!\n";
+}
+
+sub set_root_relative {
+    my ( $class, $wgd ) = @_;
+    my $dir = Cwd::getcwd();
+    while (1) {
+        if ( -e File::Spec->catfile( $dir, 'etc', 'WebGUI.conf.original' ) ) {
+            $wgd->root($dir);
+            last;
+        }
+        my $parent
+            = Cwd::realpath( File::Spec->catdir( $dir, File::Spec->updir ) );
+        croak "Unable to find WebGUI root directory!\n"
+            if $dir eq $parent;
+        $dir = $parent;
+    }
+    return $wgd;
+}
+
+sub set_config_by_input {
+    my ( $class, $wgd, $webgui_config ) = @_;
+
+    # first, try the specified email
+    if ( eval { $wgd->config_file($webgui_config); 1 } ) {
+        return $wgd;
+    }
+
+    # if that didn't work, try it with .conf appended
+    elsif ( $webgui_config !~ /\Q.conf\E$/msx ) {
+        local $@ = undef;
+        if ( eval { $wgd->config_file( $webgui_config . '.conf' ); 1; } ) {
+            return $wgd;
+        }
+    }
+
+    # if neither normal or alternate config files worked, die
+    die $@;
 }
 
 sub report_version {
@@ -160,7 +184,7 @@ sub report_help {
             print $module->usage;
         }
         else {
-            carp "No documentation for $name command.\n";
+            warn "No documentation for $name command.\n";
         }
     }
     else {
@@ -275,7 +299,9 @@ sub command_list {
         }
     }
 
-    for my $command ( map { glob "$_/wgd-*" } File::Spec->path ) {
+    for my $command ( map { glob File::Spec->catfile( $_, 'wgd-*' ) }
+        File::Spec->path )
+    {
         next
             if !-x $command;
         my $file = ( File::Spec->splitpath($command) )[2];
@@ -385,6 +411,21 @@ Next, attempts to search upward from the current path to find the
 WebGUI root.  If a WebGUI root has been found but not a config file,
 checks for available config files.  If only one is available, it
 is used as the config file.
+
+=head2 C<set_root_relative ( $wgd )>
+
+Attempts to set the root WebGUI directory based on the current
+directory.  Searches upward from the current path for a valid WebGUI
+root directory, and sets it in the C<$wgd> object if found.  If no
+valid root is found, throws an error.
+
+=head2 C<set_config_by_input ( $wgd, $config )>
+
+Sets the config file in the C<$wgd> object based on the specified
+WebGUI config file.  If the specified file isn't found, but a file
+with the same name with the C<.conf> extension added to it does
+exist, that file will be used.  If a config file can't be found,
+throws an error.
 
 =head2 C<report_help ( [$command, $module] )>
 

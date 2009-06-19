@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.3.0';
+our $VERSION = '0.4.0';
 
 use File::Spec ();
 use Cwd        ();
@@ -60,7 +60,10 @@ sub root {
     my $self = shift;
     if (@_) {
         my $path = shift;
-        if ( -d $path && -d File::Spec->catdir( $path, 'docs' ) ) {
+        if (   -d $path
+            && -e File::Spec->catfile( $path, 'etc', 'WebGUI.conf.original' )
+            )
+        {
             $self->{root} = File::Spec->rel2abs($path);
             $self->{lib} = File::Spec->catdir( $self->{root}, 'lib' );
             unshift @INC, $self->lib;
@@ -203,6 +206,24 @@ sub close_session {
         delete $self->{session};
     }
     return 1;
+}
+
+sub list_site_configs {
+    my $self = shift;
+    my $root = $self->root;
+    croak 'WebGUI root not set!'
+        if !$root;
+
+    if ( opendir my $dh, File::Spec->catdir( $root, 'etc' ) ) {
+        my @configs = readdir $dh;
+        closedir $dh
+            or croak "Unable to close directory handle: $!";
+        @configs = map { File::Spec->catdir( $root, 'etc', $_ ) }
+            grep { /\Q.conf\E$/msx && !/^(?:spectre|log)\Q.conf\E$/msx }
+            @configs;
+        return @configs;
+    }
+    return;
 }
 
 sub asset {
@@ -468,6 +489,12 @@ to that directory.
 In scalar context, returns the WebGUI library path based on the WebGUI root.
 In array context, it also includes the library paths specified in the
 F<preload.custom> file.
+
+=head2 C<list_site_configs>
+
+Returns a list of the available site configuration files in the
+C<etc> directory of the specified WebGUI root path.  The returned
+paths will include the full file path.
 
 =head2 C<config>
 

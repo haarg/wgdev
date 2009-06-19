@@ -1,4 +1,4 @@
-package WGDev::Command::Example;
+package WGDev::Command::_tester;
 use strict;
 use warnings;
 use 5.008008;
@@ -14,16 +14,21 @@ sub config_options {
     );
 }
 
+our $have_run;
+our $option_all;
+
 sub process {
     my $self = shift;
     my $wgd  = $self->wgd;
+    $have_run = 1;
     if ( $self->option('all') ) {
-        print "Doing everything.\n";
-    }
-    else {
-        print "Doing something.\n";
+        $option_all = 1;
     }
     return 1;
+}
+
+sub extra_method {
+    return "extra method";
 }
 
 1;
@@ -32,25 +37,22 @@ __END__
 
 =head1 NAME
 
-WGDev::Command::Example - Example WGDev Command
+WGDev::Command::_tester - Tester Command
 
 =head1 SYNOPSIS
 
-    wgd example [-A]
+    wgd _tester
 
 =head1 DESCRIPTION
 
-This is a sample command.
+This is a command for the test suite which has a filename that doesn't
+match its package.
 
-=head1 OPTIONS
+=head1 METHODS
 
-=over 8
+=head2 C<extra_method>
 
-=item C<--all> C<-A>
-
-Does everything.
-
-=back
+Documentation for the extra method.
 
 =head1 AUTHOR
 
