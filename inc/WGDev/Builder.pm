@@ -39,7 +39,7 @@ sub ACTION_testpodcoverage {    ##no critic (Capitalization)
     eval {
         require Test::Pod::Coverage;
         Test::Pod::Coverage->VERSION(1.0);
-        }
+    }
         or die q{The 'testpodcoverage' action requires },
         q{Test::Pod::Coverage version 1.00};
 
@@ -172,6 +172,36 @@ sub append_libs {
         print {$fh} "__END__\n" . $end_data;
     }
     return;
+}
+
+# Run perltidy over all the Perl code
+# Borrowed from Test::Harness
+sub ACTION_tidy {
+    my $self = shift;
+
+    my %found_files = map {%$_} $self->find_pm_files,
+        $self->_find_file_by_type( 'pm', 't' ),
+        $self->_find_file_by_type( 'pm', 'inc' ),
+        $self->_find_file_by_type( 't',  't' ),
+        $self->_find_file_by_type( 'at', 't' ),
+        $self->_find_file_by_type( 'PL', '.' );
+
+    my @files = sort keys %found_files;
+
+    require Perl::Tidy;
+
+    print "Running perltidy on @{[ scalar @files ]} files...\n";
+    for my $file (@files) {
+        print "  $file\n";
+        if (
+            eval {
+                Perl::Tidy::perltidy( argv => [ '-b', '-nst', $file ], );
+                1;
+            } )
+        {
+            unlink("$file.bak");
+        }
+    }
 }
 
 1;
