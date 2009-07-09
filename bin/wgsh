@@ -4,7 +4,6 @@ use warnings;
 use Term::ReadLine;
 use 5.008008;
 our $VERSION = '0.1.0';
-use lib '/data/wgdev/lib';
 require WGDev::Command;
 {
     my $EXIT_CODE;
