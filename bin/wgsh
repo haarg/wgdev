@@ -1,0 +1,40 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use Term::ReadLine;
+use 5.008008;
+our $VERSION = '0.1.0';
+use lib '/data/wgdev/lib';
+require WGDev::Command;
+{
+    my $EXIT_CODE;
+    my $CAPTURE_EXIT;
+    BEGIN {
+        *CORE::GLOBAL::exit = sub {
+            if (!$CAPTURE_EXIT) {
+                goto &CORE::exit;
+            }
+            $EXIT_CODE = @_ ? 0+shift : 0;
+            no warnings 'exiting';
+            last EXIT;
+        };
+    }
+    sub capture_exit (&) {
+        my $sub = shift;
+        EXIT: {
+            $CAPTURE_EXIT = 1;
+            $sub->();
+        }
+        $CAPTURE_EXIT = 0;
+        return $EXIT_CODE;
+    }
+}
+my $term = new Term::ReadLine 'WebGUI Developer Shell';
+my $prompt = "WGsh >";
+while ( defined ($_ = $term->readline($prompt)) ) {
+    next if /^\s*$/;
+    last if /^(exit|quit|bye)$/i;
+    capture_exit( sub { WGDev::Command->run(split(/\s/,$_)) } );
+    $term->addhistory($_) if /\S/;
+}
+
