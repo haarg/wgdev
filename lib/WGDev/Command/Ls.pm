@@ -12,6 +12,7 @@ sub config_options {
     return qw(
         format|f=s
         long|l
+        recursive|r
     );
 }
 
@@ -25,6 +26,7 @@ sub process {
     elsif ( !$format ) {
         $format = '%url%';
     }
+    my $relatives = $self->option('recursive') ? 'descendants' : 'children';
     my @parents     = $self->arguments;
     my $show_header = @parents > 1;
     while ( my $parent = shift @parents ) {
@@ -37,7 +39,7 @@ sub process {
             print "$parent:\n";
         }
         my $children
-            = $asset->getLineage( ['children'], { returnObjects => 1 } );
+            = $asset->getLineage( [$relatives], { returnObjects => 1 } );
         for my $child ( @{$children} ) {
             my $output = $format;
             $output =~ s{% (?: (\w+) (?: :(-?\d+) )? )? %}{
@@ -72,7 +74,7 @@ WGDev::Command::Ls - List WebGUI assets
 
 =head1 SYNOPSIS
 
-    wgd ls [-l] [--format=<format>] <asset> [<asset> ...]
+    wgd ls [-l] [--format=<format>] [-r] <asset> [<asset> ...]
 
 =head1 DESCRIPTION
 
@@ -92,6 +94,10 @@ Use arbitrary formatting.  Format looks like C<%url:30%>, where 'C<url>' is
 the field to display, and 30 is the length to left pad/cut to.  Negative
 lengths can be specified for right padding.  Percent signs can be included by
 using C<%%>.
+
+=item C<--recursive=> C<-r>
+
+Recursively list all descendants (by default we only list children).
 
 =back
 
