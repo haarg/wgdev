@@ -70,7 +70,12 @@ sub process {
         );
         for my $child ( @{$children} ) {
             if (defined $filter_smartmatch) {
-                next unless $child->get($filter_prop) ~~ $filter_smartmatch;
+                # N.B. When we require perl 5.10 this can use ~~ for both cases
+                if (ref $filter_smartmatch eq 'Regexp') {
+                    next unless $child->get($filter_prop) =~ $filter_smartmatch;
+                } else {
+                    next unless $child->get($filter_prop) eq $filter_smartmatch;
+                }
                 
                 # Handle limit ourselves when filtering because filtering happens
                 # *after* getLineage returns its results
