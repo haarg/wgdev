@@ -17,6 +17,7 @@ sub config_options {
         includeOnlyClass=s@
         limit=n
         isa=s
+        filter=s
     );
 }
 
@@ -37,6 +38,18 @@ sub process {
     my $includeOnlyClasses = $self->option('includeOnlyClass');
     my $limit = $self->option('limit');
     my $isa = $self->option('isa');
+    my ($filter_prop, $filter_smartmatch);
+    if (my $filter = $self->option('filter')) {
+        # Try matching filter_smartmatch as a regex
+        ($filter_prop, $filter_smartmatch) = $filter =~ m{%(\w+)% \s* ~~ \s* /(.*)/}x;
+        if (defined $filter_smartmatch) {
+            $filter_smartmatch = eval { qr/$filter_smartmatch/ };
+        } else {
+            # otherwise, match filter_smatch as a simple string
+            ($filter_prop, $filter_smartmatch) = $filter =~ m{%(\w+)% \s* ~~ \s* (.*)}x;
+        }
+    }
+    PARENT:
     while ( my $parent = shift @parents ) {
         my $asset;
         if ( !eval { $asset = $wgd->asset->find($parent) } ) {
@@ -51,11 +64,18 @@ sub process {
             {   returnObjects => 1,
                 $excludeClasses     ? ( excludeClasses     => $excludeClasses )     : (),
                 $includeOnlyClasses ? ( includeOnlyClasses => $includeOnlyClasses ) : (),
-                defined $limit      ? ( limit              => $limit )              : (),
-                $isa                ? ( isa                => $isa )                : (),
+                defined $limit && !defined $filter_smartmatch ? ( limit => $limit ) : (),
+                $isa ? ( isa => $isa ) : (),
             }
         );
         for my $child ( @{$children} ) {
+            if (defined $filter_smartmatch) {
+                next unless $child->get($filter_prop) ~~ $filter_smartmatch;
+                
+                # Handle limit ourselves when filtering because filtering happens
+                # *after* getLineage returns its results
+                last PARENT if defined $limit && $limit-- <= 0;
+            }
             my $output = $format;
             $output =~ s{% (?: (\w+) (?: :(-?\d+) )? )? %}{
                 my $replace;
@@ -129,6 +149,12 @@ The maximum amount of entries to return
 =item C<--isa=>
 
 A classname where you can look for classes of a similar base class. For example, if you're looking for Donations, Subscriptions, Products and other subclasses of WebGUI::Asset::Sku, then set isa to 'WebGUI::Asset::Sku'.
+
+=item C<--filter=>
+
+Apply smartmatch filtering against the results. Format looks like C<%url% ~~ smartmatch>, where C<url> is
+the field to filter against, and C<smartmatch> is either a Perl regular expression such as C</(?i:partial_match)/> or
+a string such as C<my_exact_match>.
 
 =back
 
