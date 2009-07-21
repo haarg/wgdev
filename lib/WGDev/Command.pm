@@ -9,6 +9,8 @@ use Getopt::Long ();
 use File::Spec   ();
 use Cwd          ();
 use Carp qw(croak);
+use WGDev::X     ();
+
 ##no critic (RequireCarping)
 
 sub run {
@@ -22,7 +24,7 @@ sub run {
 
         'F|config-file=s' => \( my $opt_config ),
         'R|webgui-root=s' => \( my $opt_root ),
-    ) || warn $class->usage(0) && exit 1;
+    ) || WGDev::X::CommandLine->throw(usage => $class->usage(0));
     my @params = @ARGV;
 
     my $command_name = shift @params;
@@ -39,12 +41,10 @@ sub run {
                 $opt_version ? '--version' : (), @_;
         }
         else {
-            warn $class->usage(
-                message          => "Can't find command $command_name!\n",
-                include_cmd_list => 1,
-                verbosity        => 0,
+            WGDev::X::CommandLine::BadCommand->throw(
+                command_name => $command_name,
+                usage => $class->usage(0),
             );
-            exit 2;
         }
     }
 
@@ -55,29 +55,18 @@ sub run {
         $class->report_help( $command_name, $command_module );
     }
     elsif ( !$command_name ) {
-        warn $class->usage(
-            message          => "No command specified!\n",
-            include_cmd_list => 1,
-            verbosity        => 1,
+        WGDev::X::CommandLine::BadCommand->throw(
+            usage => $class->usage(1),
         );
-        exit 1;
     }
     else {
         require WGDev;
         my $wgd = $class->guess_webgui_paths( WGDev->new, $opt_root,
             $opt_config );
-        if (
-            !eval {
-                my $command = $command_module->new($wgd);
-                $command->run(@params);
-                1;
-            } )
-        {
-            warn $@;
-            exit 1;
-        }
+        my $command = $command_module->new($wgd);
+        return $command->run(@params);
     }
-    exit;
+    return 1;
 }
 
 sub guess_webgui_paths {
@@ -234,23 +223,8 @@ sub _find_cmd_exec {
 
 sub usage {
     my $class = shift;
-    my %options = ( @_ % 2 == 0 ) ? @_ : ( verbosity => shift );
-
     require WGDev::Help;
-    my $message = q{};
-    if ( $options{message} ) {
-        $message .= $options{message};
-    }
-    $message .= WGDev::Help::package_usage( $class, $options{verbosity} );
-
-    if ( $options{include_cmd_list} ) {
-        $message .= "SUBCOMMANDS\n";
-        for my $command ( $class->command_list ) {
-            $message .= "    $command\n";
-        }
-        $message .= "\n";
-    }
-    return $message;
+    return WGDev::Help::package_usage( $class, @_ );
 }
 
 sub command_list {

@@ -5,6 +5,8 @@ use 5.008008;
 
 our $VERSION = '0.2.0';
 
+use WGDev::X ();
+
 sub is_runnable {
     my $class = shift;
     return $class->can('process');
@@ -106,11 +108,9 @@ sub run {
     local $| = 1;
     if ( !$self->parse_params(@params) ) {
         my $usage = $self->usage(0);
-        warn $usage;    ##no critic (RequireCarping)
-        exit 1;
+        WGDev::X::CommandLine::BadParams->throw(usage => $usage);
     }
-    my $result = $self->process ? 0 : 1;
-    exit $result;
+    return $self->process;
 }
 
 sub usage {
@@ -243,12 +243,13 @@ and LICENSE sections.
 
 =head2 C<run ( @arguments )>
 
-Runs the command.  Parameters should be the command line parameters to use for
-running the command.  This sub should exit, not return.  The default method
-will first call C<process_params> with the given parameters, call C<usage> if
-there was a problem with parsing the parameters, or call C<process> if there
-was not.  If C<process> returns a true value, it will exit with an error
-value of zero.
+Runs the command.  Parameters should be the command line parameters
+to use for running the command.  This sub should return a true value
+on success and either die or return a false value on failure.  The
+default method will first call C<process_params> with the given
+parameters, call C<usage> if there was a problem with parsing the
+parameters, or call C<process> if there was not.  It will return
+C<process>'s return value to the caller.
 
 =head2 C<process>
 

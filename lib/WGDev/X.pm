@@ -10,8 +10,18 @@ use Exception::Class (
         description => 'A general WGDev error',
     },
     'WGDev::X::CommandLine' => {
+        isa => 'WGDev::X',
         description => 'An error with the command line.',
         fields => ['usage'],
+    },
+    'WGDev::X::CommandLine::BadCommand' => {
+        isa => 'WGDev::X::CommandLine',
+        description => 'An invalid command was requested.',
+        fields => ['command_name'],
+    },
+    'WGDev::X::CommandLine::BadParams' => {
+        isa => 'WGDev::X::CommandLine',
+        description => 'Invalid parameters were passed to a command.',
     },
 );
 
@@ -20,10 +30,23 @@ sub WGDev::X::CommandLine::full_message {
     my $message = $self->message;
     if (defined $self->usage) {
         if ($message) {
-            $message .= "\n"
+            $message =~ s/\n+\z/\n\n/msx;
         }
         $message .= $self->usage;
     }
+    $message =~ s/\n+\z/\n\n/msx;
+    return $message;
+}
+
+sub WGDev::X::CommandLine::BadCommand::full_message {
+    my $self = shift;
+    my $message = defined $self->command_name ? "Can't find command " . $self->command_name . "!\n"
+                                              : "No command specified!\n";
+    if (defined $self->usage) {
+        $message .= "\n" . $self->usage;
+    }
+    $message =~ s/\n+\z/\n\n/msx;
+    $message .= "Try the running 'wgd commands' for a list of available commands.\n\n";
     return $message;
 }
 
