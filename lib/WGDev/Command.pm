@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.2.1';
+our $VERSION = '0.3.0';
 
 use Getopt::Long ();
 use File::Spec   ();
@@ -33,12 +33,12 @@ sub run {
     if ( $command_name && !$command_module ) {
         my $command_exec = _find_cmd_exec($command_name);
         if ($command_exec) {
-            require WGDev;
-            my $wgd = $class->guess_webgui_paths( WGDev->new, $opt_root,
-                $opt_config );
-            $wgd->set_environment;
-            exec {$command_exec} $command_exec, $opt_help ? '--help' : (),
-                $opt_version ? '--version' : (), @_;
+            require WGDev::Command::Run;
+            $command_module = 'WGDev::Command::Run';
+            unshift @params, $command_exec, $opt_help ? '--help' : (),
+                $opt_version ? '--version' : ();
+            undef $opt_help;
+            undef $opt_version;
         }
         else {
             WGDev::X::CommandLine::BadCommand->throw(
@@ -56,7 +56,7 @@ sub run {
     }
     elsif ( !$command_name ) {
         WGDev::X::CommandLine::BadCommand->throw(
-            usage => $class->usage(1),
+            usage => $class->usage(0),
         );
     }
     else {
@@ -177,10 +177,7 @@ sub report_help {
         }
     }
     else {
-        print $class->usage(
-            verbosity        => 2,
-            include_cmd_list => 1,
-        );
+        print $class->usage(1);
     }
     return 1;
 }
