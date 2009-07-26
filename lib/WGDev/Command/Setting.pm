@@ -13,8 +13,8 @@ sub config_options {
 }
 
 sub process {
-    my $self = shift;
-    my $wgd  = $self->wgd;
+    my $self    = shift;
+    my $wgd     = $self->wgd;
     my $session = $wgd->session;
     foreach my $setting ( $self->arguments ) {
         print sprintf "%s:%s\n", $setting, $session->setting->get($setting);
@@ -38,7 +38,7 @@ WGDev::Command::Setting - Returns WebGUI settings from the database.
 =head1 DESCRIPTION
 
 Prints settings from the WebGUI settings table.  This is handy for doing quick lookups,
-or for using as part of other wgd commands.
+or for using as part of other C<wgd> commands.
 
 =head1 OPTIONS
 
