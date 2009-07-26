@@ -130,7 +130,7 @@ sub help {
         $class = ref $class;
     }
     require WGDev::Help;
-    if ( eval { WGDev::Help::package_perldoc( $class, '!AUTHOR|LICENSE' ); 1 }
+    if ( eval { WGDev::Help::package_perldoc( $class, '!AUTHOR|LICENSE|METHODS' ); 1 }
         )
     {
         return 1;

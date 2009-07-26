@@ -170,7 +170,7 @@ sub report_help {
     }
     if ($module) {
         if ( $module->can('usage') ) {
-            print $module->usage;
+            print $module->usage(0);
         }
         else {
             warn "No documentation for $name command.\n";

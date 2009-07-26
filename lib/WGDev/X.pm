@@ -6,29 +6,28 @@ use 5.008008;
 our $VERSION = '0.0.1';
 
 use Exception::Class (
-    'WGDev::X' => {
-        description => 'A general WGDev error',
-    },
+    'WGDev::X'              => { description => 'A general WGDev error', },
     'WGDev::X::CommandLine' => {
-        isa => 'WGDev::X',
+        isa         => 'WGDev::X',
         description => 'An error with the command line.',
-        fields => ['usage'],
+        fields      => ['usage'],
     },
     'WGDev::X::CommandLine::BadCommand' => {
-        isa => 'WGDev::X::CommandLine',
+        isa         => 'WGDev::X::CommandLine',
         description => 'An invalid command was requested.',
-        fields => ['command_name'],
+        fields      => ['command_name'],
     },
     'WGDev::X::CommandLine::BadParams' => {
-        isa => 'WGDev::X::CommandLine',
+        isa         => 'WGDev::X::CommandLine',
         description => 'Invalid parameters were passed to a command.',
     },
 );
 
+##no critic (ProhibitQualifiedSubDeclarations Capitalization)
 sub WGDev::X::CommandLine::full_message {
-    my $self = shift;
+    my $self    = shift;
     my $message = $self->message;
-    if (defined $self->usage) {
+    if ( defined $self->usage ) {
         if ($message) {
             $message =~ s/\n+\z/\n\n/msx;
         }
@@ -40,13 +39,16 @@ sub WGDev::X::CommandLine::full_message {
 
 sub WGDev::X::CommandLine::BadCommand::full_message {
     my $self = shift;
-    my $message = defined $self->command_name ? "Can't find command " . $self->command_name . "!\n"
-                                              : "No command specified!\n";
-    if (defined $self->usage) {
+    my $message
+        = defined $self->command_name
+        ? q{Can't find command } . $self->command_name . "!\n"
+        : "No command specified!\n";
+    if ( defined $self->usage ) {
         $message .= "\n" . $self->usage;
     }
     $message =~ s/\n+\z/\n\n/msx;
-    $message .= "Try the running 'wgd commands' for a list of available commands.\n\n";
+    $message
+        .= "Try the running 'wgd commands' for a list of available commands.\n\n";
     return $message;
 }
 
