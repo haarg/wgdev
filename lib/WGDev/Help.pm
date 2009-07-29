@@ -5,7 +5,7 @@ use 5.008008;
 
 our $VERSION = '0.1.0';
 
-use Carp qw(croak);
+use WGDev::X ();
 use File::Spec ();
 
 sub package_usage {
@@ -35,7 +35,7 @@ sub package_perldoc {
     File::Path::mkpath($path);
     my $out_file = File::Spec->catfile( $path, $filename );
     open my $out, '>', $out_file
-        or croak "Unable to create temp file: $!";
+        or WGDev::X::IO->throw("Unable to create temp file: $!");
     print {$out} $pod;
     close $out or return q{};
 

@@ -6,7 +6,9 @@ use 5.008008;
 our $VERSION = '0.0.1';
 
 use Exception::Class (
-    'WGDev::X'              => { description => 'A general WGDev error', },
+    'WGDev::X' => {
+        description => 'A general WGDev error',
+    },
     'WGDev::X::CommandLine' => {
         isa         => 'WGDev::X',
         description => 'An error with the command line.',
@@ -20,6 +22,10 @@ use Exception::Class (
     'WGDev::X::CommandLine::BadParams' => {
         isa         => 'WGDev::X::CommandLine',
         description => 'Invalid parameters were passed to a command.',
+    },
+    'WGDev::IO'     => {
+        isa         => 'WGDev::X',
+        description => 'IO error',
     },
 );
 
