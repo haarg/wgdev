@@ -26,7 +26,7 @@ sub process {
 
     if ( !@args ) {
         my $usage = $self->usage(0);
-        warn $usage;    ##no critic (RequireCarping)
+        warn $usage;
         return;
     }
 

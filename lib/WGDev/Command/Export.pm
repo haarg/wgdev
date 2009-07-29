@@ -23,7 +23,7 @@ sub process {
         my $asset = eval { $wgd_asset->find($asset_spec) }
             || eval { $wgd_asset->validate_class($asset_spec) };
         if ( !$asset ) {
-            warn $@;    ##no critic (RequireCarping)
+            warn $@;
             next;
         }
         my $asset_text = $self->wgd->asset->serialize($asset);

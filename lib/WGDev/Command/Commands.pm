@@ -39,7 +39,6 @@ sub command_abstracts {
             if !$command_module;
         my $pod           = WGDev::Help::package_pod($command_module);
         my $formatted_pod = q{};
-        ##no critic (RequireCarping)
         open my $pod_in, '<', \$pod
             or die "Can't open file handle to scalar : $!";
         open my $pod_out, '>', \$formatted_pod

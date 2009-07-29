@@ -11,8 +11,6 @@ use Cwd          ();
 use Carp qw(croak);
 use WGDev::X     ();
 
-##no critic (RequireCarping)
-
 sub run {
     my $class = shift;
     local @ARGV = @_;

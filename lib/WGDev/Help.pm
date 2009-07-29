@@ -84,7 +84,6 @@ sub package_pod {
         require Pod::Select;
         my $parser = Pod::Select->new;
         $parser->select(@sections);
-        ##no critic (RequireCarping)
         my $output = q{};
         open my $pod_in, '<', \$pod
             or die "Can't open file handle to scalar : $!";

@@ -3,6 +3,7 @@ theme       = core || strictersubs || pulp || more
 
 [-ClassHierarchies::ProhibitExplicitISA]
 [-Editor::RequireEmacsFileVariables]
+[-ErrorHandling::RequireCarping]
 [-ErrorHandling::RequireUseOfExceptions]
 [-Miscellanea::RequireRcsKeywords]
 [-Subroutines::ProhibitCallsToUnexportedSubs]

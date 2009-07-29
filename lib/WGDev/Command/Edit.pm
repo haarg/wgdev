@@ -142,7 +142,7 @@ sub write_temp {
         $asset = eval { $wgd_asset->find($asset) }
             || eval { scalar $wgd_asset->validate_class($asset) };
         if ( !$asset ) {
-            die $@;    ##no critic (RequireCarping)
+            die $@;
         }
     }
 
