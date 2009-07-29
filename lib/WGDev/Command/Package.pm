@@ -17,7 +17,7 @@ sub config_options {
         parent=s
 
         upgrade|u
-        output-dir|out-dir=s
+        to=s
     );
 }
 
@@ -26,7 +26,7 @@ sub process {
     my $wgd  = $self->wgd;
     require File::Copy;
     if ( $self->arguments ) {
-        my $package_dir = $self->option('output-dir') || q{.};
+        my $package_dir = $self->option('to') || q{.};
         if ( $self->option('upgrade') ) {
             $package_dir = File::Spec->catdir( $wgd->root, 'docs', 'upgrades',
                 'packages-' . $wgd->version->module );
@@ -87,7 +87,7 @@ WGDev::Command::Package - Export assets for upgrade
 
 =head1 SYNOPSIS
 
-    wgd package [--output-dir=<dir>] [--upgrade] [<asset> ...]
+    wgd package [--to=<dir>] [--upgrade] [<asset> ...]
     wgd package [--parent=<asset>] [--import=<package file>]
 
 =head1 DESCRIPTION
@@ -115,11 +115,10 @@ Specify the parent asset to import packages into.
 If specified, packages will be exported to the directory for the upgrade to
 the current local version.
 
-=item C<--output-dir> C<--out-dir>
+=item C<--to>
 
 Specify a directory to output the package files to.  If neither C<--upgrade>
-or C<--output-dir> is specified, packages will be output to the current
-directory.
+or C<--to> is specified, packages will be output to the current directory.
 
 =item C<< <asset> >>
 

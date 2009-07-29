@@ -1,6 +1,7 @@
 severity    = 1
 theme       = core || strictersubs || pulp || more
 
+[-BuiltinFunctions::ProhibitReverseSortBlock]
 [-ClassHierarchies::ProhibitExplicitISA]
 [-Editor::RequireEmacsFileVariables]
 [-ErrorHandling::RequireCarping]

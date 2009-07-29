@@ -3,8 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION
-    = '9.8.7';
+our $VERSION = '9.8.7';
 
 sub is_runnable {
     return 1;

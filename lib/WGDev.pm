@@ -490,6 +490,12 @@ In scalar context, returns the WebGUI library path based on the WebGUI root.
 In array context, it also includes the library paths specified in the
 F<preload.custom> file.
 
+=head2 C<list_site_configs>
+
+Returns a list of the available site configuration files in the
+C<etc> directory of the specified WebGUI root path.  The returned
+paths will include the full file path.
+
 =head2 C<config>
 
 Returns a Config::JSON object based on the file set using C<config_file>.
