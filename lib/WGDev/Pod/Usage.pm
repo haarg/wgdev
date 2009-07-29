@@ -5,15 +5,17 @@ use 5.008008;
 
 our $VERSION = '0.0.1';
 
-use Pod::PlainText ();
-use Pod::Select    ();
-BEGIN { our @ISA = qw(Pod::PlainText Pod::Select) }
-
 use constant OPTION_INDENT => 4;
 use constant OPTION_TEXT_INDENT => 24;
 
 sub new {
     my $proto = shift;
+    require Pod::PlainText;
+    require Pod::Select;
+    if (!our @ISA) {
+        @ISA = qw(Pod::PlainText Pod::Select);
+    }
+
     my $self = $proto->SUPER::new( indent => 0 );
     $self->select(qw(NAME SYNOPSIS OPTIONS/!.+));
     return $self;
@@ -86,8 +88,8 @@ sub item {
         $self->output( $indent_string . $tag . "\n" );
     }
     else {
-        my $option_name_length = OPTION_TEXT_INDENT - OPTION_INDENT;
-        $self->output( sprintf  "$indent_string%-${option_name_length}s%s\n", $tag, $item );
+        my $option_name_length = OPTION_TEXT_INDENT - OPTION_INDENT - 1;
+        $self->output( sprintf  "$indent_string%-${option_name_length}s %s\n", $tag, $item );
     }
     return;
 }
