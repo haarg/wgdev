@@ -694,61 +694,61 @@ C<--backup --import --no-starter --debug --clear --upgrade --uploads>
 Build mode - equivalent to:
 C<--verbose --backup --import --starter --no-debug --upgrade --purge --cleantags --index --runwf>
 
-=item C<--backup> C<--no-backup>
+=item C<--[no-]backup>
 
 Backup database before doing any other operations.
 
-=item C<--delcache> C<--no-delcache>
+=item C<--[no-]delcache>
 
 Delete the site's cache.  Defaults to on.
 
-=item C<--import> C<--no-import>
+=item C<--[no-]import>
 
 Import a database script
 
-=item C<--uploads> C<--no-uploads>
+=item C<--[no-]uploads>
 
 Recreate uploads directory
 
-=item C<--upgrade> C<--no-upgrade>
+=item C<--[no-]upgrade>
 
 Perform an upgrade - also controls which database script to import
 
-=item C<--debug> C<--no-debug>
+=item C<--[no-]debug>
 
 Enable debug mode and increase session timeout
 
-=item C<--starter> C<--no-starter>
+=item C<--[no-]starter>
 
 Enable the site starter
 
-=item C<--clear> C<--no-clear>
+=item C<--[no-]clear>
 
 Clear the content off the home page and its children
 
-=item C<--config> C<--no-config>
+=item C<--[no-]config>
 
 Resets the site's config file.  Some values like database information will be
 preserved.  Additional options can be set in the WGDev config file.
 
-=item C<--emptytrash> C<--no-emptytrash>
+=item C<--[no-]emptytrash>
 
 Purges all items from the trash
 
-=item C<--purge> C<--no-purge>
+=item C<--[no-]purge>
 
 Purge all old revisions
 
-=item C<--cleantags> C<--no-cleantags>
+=item C<--[no-]cleantags>
 
 Removes all version tags and sets all asset revisions to be
 under a new version tag marked with the current version number
 
-=item C<--index> C<--no-index>
+=item C<--[no-]index>
 
 Rebuild the site lineage and reindex all of the content
 
-=item C<--runwf> C<--no-runwf>
+=item C<--[no-]runwf>
 
 Attempt to finish any running workflows
 
@@ -758,11 +758,31 @@ Run a utility script.  Script will be run last, being passed to the
 L<C<util> command|WGDev::Command::Util>.  Parameter can be specified multiple
 times to run additional scripts.
 
-=item C<--profile=> C<--pro=> C<-p>
+=item C<-p> C<--pro[file]=>
 
 Specify a profile of options to use for resetting.  Profiles are specified in
 the WGDev config file under the C<command.reset.profiles> section.  A profile
 is defined as a string to be used as additional command line options.
+
+=back
+
+=head1 CONFIGURATION
+
+=over 8
+
+=item C<< profiles.<profile name> >>
+
+Creates a profile to use with the C<--profile> option.  The value of the config
+parameter is a string with the command line parameters to apply when this
+profile is used.
+
+=item C<config.overide>
+
+Overrides to apply when resetting config file.
+
+=item C<config.copy>
+
+Parameters to copy from existing config file when resetting it.
 
 =back
 
@@ -788,26 +808,6 @@ configured list, a set of parameters is always copied:
     cacheType   fileCacheRoot
     sitename
     spectreIp   spectrePort     spectreSubnets
-
-=head1 CONFIGURATION
-
-=over 8
-
-=item C<< profiles.<profile name> >>
-
-Creates a profile to use with the C<--profile> option.  The value of the config
-parameter is a string with the command line parameters to apply when this
-profile is used.
-
-=item C<config.overide>
-
-Overrides to apply when resetting config file.
-
-=item C<config.copy>
-
-Parameters to copy from existing config file when resetting it.
-
-=back
 
 =head1 METHODS
 

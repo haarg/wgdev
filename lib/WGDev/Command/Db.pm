@@ -84,7 +84,7 @@ script, or displays database information, or clears a database's contents.
 =head1 OPTIONS
 
 Any arguments not recognized will be passed through to the C<mysql> or
-C<mysqldump> commands in applicable.
+C<mysqldump> commands as applicable.
 
 =over 8
 
