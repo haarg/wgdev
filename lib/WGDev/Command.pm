@@ -168,7 +168,7 @@ sub report_help {
     }
     if ($module) {
         if ( $module->can('usage') ) {
-            print $module->usage(0);
+            print $module->usage(1);
         }
         else {
             warn "No documentation for $name command.\n";
@@ -349,22 +349,10 @@ the module.  If not, returns C<undef>.
 
 Runs C<wgd>, processing the arguments specified and running a sub-command if possible.
 
-=head2 C<usage ( %options )>
+=head2 C<usage ( [$verbosity] )>
 
-Returns usage information for C<wgd>.  The options hash specifies additional options:
-
-=head3 C<verbosity>
-
-The verbosity level of the usage information.  This is passed on
+Returns usage information for C<wgd>.  The verbosity level is passed on
 to L<WGDev::Help::package_usage|WGDev::Help/package_usage>.
-
-=head3 C<message>
-
-An additional message to include before the usage information.
-
-=head3 C<include_cmd_list>
-
-Include the list of available sub-commands with the usage information.
 
 =head2 C<command_list>
 
