@@ -112,24 +112,30 @@ sub pass_filter {
     return 1
         if !defined $filter_match;
 
-    return $asset->get($filter_prop) =~ $filter_match;
+    {
+        no warnings 'uninitialized';
+        return $asset->get($filter_prop) =~ $filter_match;
+    }
 }
 
 sub format_output {
     my ( $self, $format, $asset ) = @_;
-    $format =~ s{% (?: (\w+) (?: :(-?\d+) )? )? %}{
-        my $replace;
-        if ($1) {
-            $replace = $asset->get($1);
-            if ($2) {
-                $replace = sprintf("%$2s", $replace);
+    {
+        no warnings 'uninitialized';
+        $format =~ s{% (?: (\w+) (?: :(-?\d+) )? )? %}{
+            my $replace;
+            if ($1) {
+                $replace = $asset->get($1);
+                if ($2) {
+                    $replace = sprintf("%$2s", $replace);
+                }
             }
-        }
-        else {
-            $replace = '%';
-        }
-        $replace;
-    }msxeg;
+            else {
+                $replace = '%';
+            }
+            $replace;
+        }msxeg;
+    }
     return $format;
 }
 
