@@ -169,14 +169,14 @@ in red if possible.
 
 =over 8
 
-=item C<--create>
+=item C<-c> C<--create>
 
 Adds a new section to the change log for the new version, updates the version
 number in F<WebGUI.pm>, and creates a new upgrade script.  The version number
 to update to can be specified on the command line.  If not specified, defaults
 to incrementing the patch level by one.
 
-=item C<--bare>
+=item C<-b> C<--bare>
 
 Outputs the version number taken from F<WebGUI.pm> only
 
@@ -201,7 +201,7 @@ Graham Knop <graham@plainblack.com>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) Graham Knop.
 
 This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.

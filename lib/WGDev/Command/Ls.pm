@@ -153,18 +153,18 @@ Lists children of WebGUI assets
 
 =over 8
 
-=item C<--long> C<-l>
+=item C<-l> C<--long>
 
 Use long list format, which includes asset ID, URL, and title.
 
-=item C<--format=> C<-f>
+=item C<-f> C<--format=>
 
 Use arbitrary formatting.  Format looks like C<%url:30%>, where 'C<url>' is
 the field to display, and 30 is the length to left pad/cut to.  Negative
 lengths can be specified for right padding.  Percent signs can be included by
 using C<%%>.
 
-=item C<--recursive> C<-r>
+=item C<-r> C<--recursive>
 
 Recursively list all descendants (by default we only list children).
 

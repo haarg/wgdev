@@ -191,10 +191,10 @@ If modifications are made, the assets are updated.
 
 =over 8
 
-=item C<--command>
+=item C<--comman=>
 
 Command to be executed.  If not specified, uses the EDITOR environment
-variable.  If that is not specified, uses C<vi>.
+variable.  If that is not specified, uses C<$EDITOR> or C<vi>.
 
 =item C<< <asset> >>
 
@@ -202,12 +202,12 @@ Either an asset URL, ID, or class name.  As many can be specified as desired.
 Prepending with a slash will force it to be interpreted as a URL.  Class names
 specified will be opened with a skeleton for the asset type.
 
-=item C<--tree>
+=item C<--tree=>
 
 Will open specified asset and all descendants in editor.  Can be specified
 multiple times.
 
-=item C<--class>
+=item C<--class=>
 
 Only used with --tree option.  Limits exported assets to specified classes.
 Can be specified as a full (C<WebGUI::Asset::Template>) or abbreviated
@@ -234,7 +234,7 @@ Graham Knop <graham@plainblack.com>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) Graham Knop.
 
 This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.

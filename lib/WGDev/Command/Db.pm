@@ -92,12 +92,12 @@ C<mysqldump> commands as applicable.
 
 Prints out the command options that would be passed to C<mysql>
 
-=item C<-d> C<--dump>
+=item C<-d> C<--dump=>
 
 Dumps the database as an SQL script.  If a file is specified, dumps to that
 file.  Otherwise, dumps to standard out.
 
-=item C<-l> C<--load>
+=item C<-l> C<--load=>
 
 Loads a database script into the database.  Database script must be specified.
 
@@ -122,7 +122,7 @@ Graham Knop <graham@plainblack.com>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) Graham Knop.
 
 This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.

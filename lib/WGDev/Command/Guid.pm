@@ -44,7 +44,7 @@ WGDev::Command::Guid - Generates GUIDs via WebGUI's C<< $session->id->generate >
 
 =head1 SYNOPSIS
 
-    wgd guid [-n <number of GUIDs to generate>] [--no-dashes]
+    wgd guid [-n <quantity>] [--no-dashes]
 
 =head1 DESCRIPTION
 
@@ -55,11 +55,11 @@ excludes GUIDs with dashes (for easy double-click copy/pasting).
 
 =over 8
 
-=item C<--number> C<-n>
+=item C<-n> C<--number>
 
 Number of GUIDs to generate. Defaults to 1.
 
-=item C<--dashes>
+=item C<--[no-]dashes>
 
 Whether or not to filter GUIDs containing dashes (for easy double-click copy/pasting)
 

@@ -96,7 +96,7 @@ Reports WGDev configuration parameters.
 
 =over 8
 
-=item C<--struct> C<-s>
+=item C<-s> C<--struct>
 
 When setting a config value, specifies that the value should be treated as a
 data structure formatted as YAML or JSON.
@@ -133,7 +133,7 @@ Graham Knop <graham@plainblack.com>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) Graham Knop.
 
 This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.
