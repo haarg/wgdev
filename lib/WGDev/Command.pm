@@ -27,7 +27,7 @@ sub run {
 
     my $command_name = shift @params;
 
-    my $command_module = get_command_module($command_name);
+    my $command_module = eval { get_command_module($command_name) };
     if ( $command_name && !$command_module ) {
         my $command_exec = _find_cmd_exec($command_name);
         if ($command_exec) {
@@ -53,9 +53,9 @@ sub run {
         $class->report_help( $command_name, $command_module );
     }
     elsif ( !$command_name ) {
-        WGDev::X::CommandLine::BadCommand->throw(
-            usage => $class->usage(0),
-        );
+        print $class->usage(0);
+        require WGDev::Command::Commands;
+        return WGDev::Command::Commands->help;
     }
     else {
         require WGDev;
@@ -193,7 +193,7 @@ sub get_command_module {
             return $module;
         }
     }
-    return;
+    WGDev::X::BadCommand->throw('command_name' => $command_name);
 }
 
 sub command_to_module {

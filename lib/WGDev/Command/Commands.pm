@@ -34,7 +34,7 @@ sub command_abstracts {
     my $parser = Pod::PlainText->new( indent => 0, width => 1000 );
     $parser->select('NAME');
     for my $command ( keys %abstracts ) {
-        my $command_module = WGDev::Command::get_command_module($command);
+        my $command_module = eval { WGDev::Command::get_command_module($command) };
         next
             if !$command_module;
         my $pod           = WGDev::Help::package_pod($command_module);

@@ -41,7 +41,7 @@ sub package_perldoc {
 
     my $pid = fork;
     if ( !$pid ) {
-        local @ARGV = ( '-w', 'section:3', '-F', $out_file );
+        local @ARGV = ( '-w', 'section:1', '-F', $out_file );
         exit Pod::Perldoc->run;
     }
     waitpid $pid, 0;

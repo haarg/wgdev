@@ -19,11 +19,16 @@ use Exception::Class (
         description => 'An invalid command was requested.',
         fields      => ['command_name'],
     },
+    'WGDev::X::BadCommand' => {
+        isa         => 'WGDev::X',
+        description => 'An invalid command was requested.',
+        fields      => ['command_name'],
+    },
     'WGDev::X::CommandLine::BadParams' => {
         isa         => 'WGDev::X::CommandLine',
         description => 'Invalid parameters were passed to a command.',
     },
-    'WGDev::IO'     => {
+    'WGDev::X::IO'     => {
         isa         => 'WGDev::X',
         description => 'IO error',
     },

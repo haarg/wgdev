@@ -9,20 +9,29 @@ use WGDev::Command::Base ();
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
 use WGDev::Command ();
-use WGDev::X ();
+use WGDev::X       ();
 
 sub process {
     my $self = shift;
     my $wgd  = $self->wgd;
 
-    my ($command) = $self->arguments
-        or WGDev::X::CommandLine::BadCommand->throw(usage => $self->usage(0));
+    my ($command) = $self->arguments;
+    if (!defined $command) {
+        print WGDev::Command->usage(1);
+        return 1;
+    }
 
-    my $command_module = WGDev::Command::get_command_module($command);
+    my $command_module;
+    if ( $command eq 'wgd' ) {
+        $command_module = 'WGDev::Command';
+    }
+    else {
+        $command_module = WGDev::Command::get_command_module($command);
+    }
 
     if ( !$command_module ) {
         WGDev::X::CommandLine::BadCommand->throw(
-            usage => $self->usage,
+            usage        => $self->usage,
             command_name => $command,
         );
     }
@@ -32,7 +41,13 @@ sub process {
     }
 
     require WGDev::Help;
-    if ( eval { WGDev::Help::package_perldoc($command_module); 1 } ) {
+    if (
+        eval {
+            WGDev::Help::package_perldoc( $command_module,
+                '!AUTHOR|LICENSE|METHODS|SUBROUTINES' );
+            1;
+        } )
+    {
         return 1;
     }
     return;

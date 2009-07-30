@@ -5,24 +5,26 @@ use 5.008008;
 
 our $VERSION = '0.0.1';
 
-use constant OPTION_INDENT => 4;
+use constant OPTION_INDENT      => 4;
 use constant OPTION_TEXT_INDENT => 24;
 
 sub new {
     my $proto = shift;
+
+    # This is really ugly, but delay loading parent modules until first use.
     require Pod::PlainText;
     require Pod::Select;
-    if (!our @ISA) {
+    if ( !our @ISA ) {
         @ISA = qw(Pod::PlainText Pod::Select);
     }
 
     my $self = $proto->SUPER::new( indent => 0 );
-    $self->select(qw(NAME SYNOPSIS OPTIONS/!.+));
+    $self->verbosity(1);
     return $self;
 }
 
 sub verbosity {
-    my $self = shift;
+    my $self      = shift;
     my $verbosity = shift;
     if ($verbosity) {
         $self->select(qw(NAME SYNOPSIS OPTIONS/!.+));
@@ -68,7 +70,7 @@ sub item {
     my $item   = shift;
     my $tag    = delete $self->{ITEM};
     my $margin = $self->{MARGIN};
-    local $self->{MARGIN} = 0; ## no critic (ProhibitLocalVars)
+    local $self->{MARGIN} = 0;    ## no critic (ProhibitLocalVars)
 
     $tag = $self->reformat($tag);
     $tag =~ s/\n*\z//msx;
@@ -84,12 +86,13 @@ sub item {
     $item =~ s/\n/\n$option_indent_string/msxg;
 
     my $indent_string = q{ } x OPTION_INDENT;
-    if ($item eq q{}) {
+    if ( $item eq q{} ) {
         $self->output( $indent_string . $tag . "\n" );
     }
     else {
         my $option_name_length = OPTION_TEXT_INDENT - OPTION_INDENT - 1;
-        $self->output( sprintf  "$indent_string%-${option_name_length}s %s\n", $tag, $item );
+        $self->output( sprintf "$indent_string%-${option_name_length}s %s\n",
+            $tag, $item );
     }
     return;
 }
@@ -99,14 +102,14 @@ sub seq_c {
 }
 
 sub parse_from_string {
-    my $self = shift;
-    my $pod = shift;
+    my $self   = shift;
+    my $pod    = shift;
     my $output = q{};
     open my $out_fh, '>', \$output
         or die "Can't open file handle to scalar : $!";
     open my $in_fh, '<', \$pod
         or die "Can't open file handle to scalar : $!";
-    $self->parse_from_filehandle($in_fh, $out_fh);
+    $self->parse_from_filehandle( $in_fh, $out_fh );
     close $in_fh  or return q{};
     close $out_fh or return q{};
     return $output;

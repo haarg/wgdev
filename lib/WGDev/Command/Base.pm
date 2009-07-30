@@ -138,6 +138,14 @@ sub help {
     return;
 }
 
+sub needs_root {
+    return 1;
+}
+
+sub needs_config {
+    return 1;
+}
+
 1;
 
 __END__
