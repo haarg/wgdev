@@ -33,7 +33,7 @@ WGDev::Command::Setting - Returns WebGUI settings from the database.
 
 =head1 SYNOPSIS
 
-    wgd setting shopMySalesTemplateId shopStyleTemplateId
+    wgd setting <setting> [<setting> ...]
 
 =head1 DESCRIPTION
 
@@ -42,7 +42,11 @@ or for using as part of other C<wgd> commands.
 
 =head1 OPTIONS
 
-No options
+=over 8
+
+=item C<< <setting> >>
+
+The name of a setting to report the of.
 
 =back
 
@@ -56,7 +60,7 @@ Colin Kuskie <colink@perldreamer.com>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) Graham Knop.
 
 This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.

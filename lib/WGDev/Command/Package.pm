@@ -101,21 +101,21 @@ Assets specified as standalone arguments are exported as packages.
 
 =over 8
 
-=item C<--import> C<-i>
+=item C<-i> C<--import=>
 
 Package file (or files) to import.  Will be imported to the import node if no
 other parent is specified.
 
-=item C<--parent>
+=item C<--parent=>
 
 Specify the parent asset to import packages into.
 
-=item C<--upgrade> C<-u>
+=item C<-u> C<--upgrade>
 
 If specified, packages will be exported to the directory for the upgrade to
 the current local version.
 
-=item C<--to>
+=item C<--to=>
 
 Specify a directory to output the package files to.  If neither C<--upgrade>
 or C<--to> is specified, packages will be output to the current directory.
@@ -132,7 +132,7 @@ Graham Knop <graham@plainblack.com>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) Graham Knop.
 
 This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.
