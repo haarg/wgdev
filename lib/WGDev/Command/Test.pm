@@ -18,6 +18,7 @@ sub config_options {
         slow|S
         reset:s
         cover|C:s
+        coverOptions:s
     );
 }
 
@@ -53,9 +54,12 @@ sub process {
         if ( -e $cover_dir ) {
             system 'cover', '-silent', '-delete', $cover_dir;
         }
+        my $cover_options = $self->option('coverOptions') || '-select,WebGUI,+ignore,^t';
         ##no critic (RequireLocalizedPunctuationVars)
         $ENV{HARNESS_PERL_SWITCHES}
-            = '-MDevel::Cover=-silent,1,-select,WebGUI,+ignore,^t,' . '-db,'
+            = '-MDevel::Cover=-silent,1'
+            . ",$cover_options,"
+            . '-db,'
             . $cover_dir;
     }
     my $prove = App::Prove->new;
@@ -87,7 +91,7 @@ WGDev::Command::Test - Run WebGUI tests
 
 =head1 SYNOPSIS
 
-    wgd test [-AS] [<prove options>]
+    wgd test [-ASC] [<prove options>]
 
 =head1 DESCRIPTION
 
@@ -119,6 +123,10 @@ fast site reset.
 
 Run coverage using Devel::Cover. The value specified is used as the directory to 
 put the coverage data and defaults to C<cover_db>.
+
+=item C<--coverOptions=>
+
+Options to pass to L<Devel::Cover>. Defaults to C<-select,WebGUI,+ignore,^t>.
 
 =back
 
