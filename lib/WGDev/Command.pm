@@ -8,7 +8,6 @@ our $VERSION = '0.3.0';
 use Getopt::Long ();
 use File::Spec   ();
 use Cwd          ();
-use Carp qw(croak);
 use WGDev::X     ();
 
 sub run {
@@ -59,8 +58,12 @@ sub run {
     }
     else {
         require WGDev;
-        my $wgd = $class->guess_webgui_paths( WGDev->new, $opt_root,
-            $opt_config );
+        my $wgd = WGDev->new;
+        $class->guess_webgui_paths(
+            wgd => $wgd,
+            root => $opt_root,
+            config_file => $opt_config,
+        );
         my $command = $command_module->new($wgd);
         return $command->run(@params);
     }
@@ -68,13 +71,13 @@ sub run {
 }
 
 sub guess_webgui_paths {
-    my ( $class, $wgd, $webgui_root, $webgui_config ) = @_;
-    $webgui_root ||= $ENV{WEBGUI_ROOT} || $wgd->my_config('webgui_root');
-    $webgui_config ||= $ENV{WEBGUI_CONFIG}
-        || $wgd->my_config('webgui_config');
+    my $class = shift;
+    my %params = @_;
+    my $wgd = $params{wgd};
+    my $webgui_root = $params{root} || $ENV{WEBGUI_ROOT} || $wgd->my_config('webgui_root');
+    my $webgui_config = $params{config_file} || $ENV{WEBGUI_CONFIG} || $wgd->my_config('webgui_config');
 
     # first we need to find the webgui root
-
     if ($webgui_root) {
         $wgd->root($webgui_root);
     }
@@ -97,7 +100,9 @@ sub guess_webgui_paths {
     }
 
     if ( !$wgd->root ) {
-        $class->set_root_relative($wgd);
+        eval {
+            $class->set_root_relative($wgd);
+        } || return $wgd;
         if ($webgui_config) {
             $class->set_config_by_input( $wgd, $webgui_config );
             return $wgd;
@@ -106,9 +111,8 @@ sub guess_webgui_paths {
     my @configs = $wgd->list_site_configs;
     if ( @configs == 1 ) {
         $wgd->config_file( $configs[0] );
-        return $wgd;
     }
-    croak "Unable to find WebGUI config file!\n";
+    return $wgd;
 }
 
 sub set_root_relative {
@@ -121,7 +125,7 @@ sub set_root_relative {
         }
         my $parent
             = Cwd::realpath( File::Spec->catdir( $dir, File::Spec->updir ) );
-        croak "Unable to find WebGUI root directory!\n"
+        WGDex::X::NoWebGUIRoot->throw
             if $dir eq $parent;
         $dir = $parent;
     }

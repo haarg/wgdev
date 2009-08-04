@@ -8,7 +8,7 @@ our $VERSION = '0.0.1';
 use constant LINE_LENGTH => 78;
 
 use WGDev;
-use Carp qw(croak);
+use WGDev::X;
 
 sub new {
     my $class   = shift;
@@ -57,7 +57,7 @@ sub find {
     if ( $asset && ref $asset && $asset->isa('WebGUI::Asset') ) {
         return $asset;
     }
-    croak "Not able to find asset $asset_spec";
+    WGDev::X::AssetNotFound->throw(asset => $asset_spec);
 }
 
 sub validate_class {
@@ -69,7 +69,7 @@ sub validate_class {
             return wantarray ? ( $class, $short_class ) : $class;
         }
     }
-    croak "Invalid Asset class: $in_class";
+    WGDev::X::BadAssetClass->throw(class => $in_class);
 }
 
 sub _gen_serialize_header {

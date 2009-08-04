@@ -31,10 +31,55 @@ use Exception::Class (
     'WGDev::X::IO'     => {
         isa         => 'WGDev::X',
         description => 'IO error',
+        fields      => ['errno_string', 'path'],
+    },
+    'WGDev::X::IO::Read' => {
+        isa         => 'WGDev::X',
+        description => 'Read error',
+    },
+    'WGDev::X::IO::Write' => {
+        isa         => 'WGDev::X',
+        description => 'Write error',
+    },
+    'WGDev::X::NoConfigFile' => {
+        isa         => 'WGDev::X',
+        description => 'No WebGUI config file available.',
+    },
+    'WGDev::X::NoWebGUIRoot' => {
+        isa         => 'WGDev::X',
+        description => 'No WebGUI root directory available.',
+    },
+    'WGDev::X::BadParameter' => {
+        isa         => 'WGDev::X',
+        description => 'Bad parameter provided.',
+        fields      => ['parameter', 'value'],
+    },
+    'WGDev::X::AssetNotFound' => {
+        isa         => 'WGDev::X',
+        description => 'Specified asset not found',
+        fields      => ['asset']
+    },
+    'WGDev::X::BadAssetClass' => {
+        isa         => 'WGDev::X',
+        description => 'Bad asset class specified',
+        fields      => ['class']
     },
 );
 
 ##no critic (ProhibitQualifiedSubDeclarations Capitalization)
+
+sub WGDev::X::as_string {
+    my $self = shift;
+    my $str = $self->SUPER::as_string(@_);
+    $str =~ s/\n?\z/\n/msx;
+    return $str;
+}
+
+sub WGDev::X::full_message {
+    my $self = shift;
+    return $self->message || $self->description;
+}
+
 sub WGDev::X::CommandLine::full_message {
     my $self    = shift;
     my $message = $self->message;
@@ -61,6 +106,15 @@ sub WGDev::X::CommandLine::BadCommand::full_message {
     $message
         .= "Try the running 'wgd commands' for a list of available commands.\n\n";
     return $message;
+}
+
+sub WGDev::X::IO::new {
+    my $class = shift;
+    my $errno_string = "$!";
+    my $self = $class->SUPER::new(@_);
+    if (!defined $self->errno_string) {
+        $self->{errno_string} = $errno_string;
+    }
 }
 
 1;

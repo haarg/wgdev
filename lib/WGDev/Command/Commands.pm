@@ -11,6 +11,10 @@ BEGIN { our @ISA = qw(WGDev::Command::Base) }
 use WGDev::Command;
 use WGDev::Help;
 
+sub needs_root {
+    return;
+}
+
 sub process {
     my $self = shift;
     return $self->help;

@@ -104,6 +104,10 @@ sub arguments {
 
 sub run {
     my $self = shift;
+    WGDev::X::NoWebGUIRoot->throw
+        if $self->needs_root && !$self->wgd->root;
+    WGDev::X::NoWebGUIConfig->throw
+        if $self->needs_config && !$self->wgd->config_file;
     my @params = ( @_ == 1 && ref $_[0] eq 'ARRAY' ) ? @{ +shift } : @_;
     local $| = 1;
     if ( !$self->parse_params(@params) ) {
@@ -143,7 +147,8 @@ sub needs_root {
 }
 
 sub needs_config {
-    return 1;
+    my $class = shift;
+    return $class->needs_root;
 }
 
 1;
@@ -238,6 +243,14 @@ C<parse_params>.
 
 Sets an option only if it is not currently defined.  First parameter is the
 option to set, second parameter is the value to set it to.
+
+=head2 C<needs_root>
+
+Should be overridden in subclasses to set whether a command needs a WebGUI root directory to run.  Returns true if not overridden.
+
+=head2 C<needs_config>
+
+Should be overridden in subclasses to set whether a command needs a WebGUI config file directory to run.  Returns the same value as L</needs_root> if not overridden.
 
 =head2 C<usage ( [ $verbosity ] )>
 
