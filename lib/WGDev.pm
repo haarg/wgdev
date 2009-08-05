@@ -32,9 +32,9 @@ sub new {
 sub set_environment {
     my $self = shift;
     require Config;
-    WDGev::X::NoWebGUIRoot->throw
+    WGDev::X::NoWebGUIRoot->throw
         if !$self->root;
-    WDGev::X::NoWebGUIConfig->throw
+    WGDev::X::NoWebGUIConfig->throw
         if !$self->config_file;
     $self->{orig_env}
         ||= { map { $_ => $ENV{$_} } qw(WEBGUI_ROOT WEBGUI_CONFIG PERL5LIB) };
@@ -69,7 +69,10 @@ sub root {
             unshift @INC, $self->lib;
         }
         else {
-            WGDev::X::BadParameter->throw('parameter' => 'WebGUI root directory', 'value' => $path);
+            WGDev::X::BadParameter->throw(
+                'parameter' => 'WebGUI root directory',
+                'value'     => $path
+            );
         }
     }
     return $self->{root};
@@ -90,7 +93,10 @@ sub config_file {
             $path = $fullpath;
         }
         else {
-            WGDev::X::BadParameter->throw('parameter' => 'WebGUI config file', 'value' => $path);
+            WGDev::X::BadParameter->throw(
+                'parameter' => 'WebGUI config file',
+                'value'     => $path
+            );
         }
         if ( !$self->root ) {
             ##no critic (RequireCheckingReturnValueOfEval)
@@ -112,7 +118,7 @@ sub config_file {
 
 sub lib {
     my $self = shift;
-    WDGev::X::NoWebGUIRoot->throw
+    WGDev::X::NoWebGUIRoot->throw
         if !$self->root;
     if ( !wantarray ) {
         return $self->{lib};
@@ -141,7 +147,7 @@ sub lib {
 
 sub config {
     my $self = shift;
-    WDGev::X::NoWebGUIConfig->throw
+    WGDev::X::NoWebGUIConfig->throw
         if !$self->config_file;
     return $self->{config} ||= do {
         require Config::JSON;
@@ -155,7 +161,6 @@ sub close_config {
 
     # if we're closing the config, we probably want new sessions to pick up
     # changes to the file
-    ## no critic (Modules::RequireExplicitInclusion)
     if ( WebGUI::Config->can('clearCache') ) {
         WebGUI::Config->clearCache;
     }
@@ -164,7 +169,7 @@ sub close_config {
 
 sub config_file_relative {
     my $self = shift;
-    WDGev::X::NoWebGUIConfig->throw
+    WGDev::X::NoWebGUIConfig->throw
         if !$self->config_file;
     return $self->{config_file_relative} ||= do {
         my $config_dir
@@ -181,7 +186,7 @@ sub db {
 
 sub session {
     my $self = shift;
-    WDGev::X::NoWebGUIConfig->throw
+    WGDev::X::NoWebGUIConfig->throw
         if !$self->config_file;
     require WebGUI::Session;
     if ( $self->{session} ) {
@@ -217,16 +222,13 @@ sub close_session {
 sub list_site_configs {
     my $self = shift;
     my $root = $self->root;
-    WDGev::X::NoWebGUIRoot->throw
+    WGDev::X::NoWebGUIRoot->throw
         if !$root;
 
     if ( opendir my $dh, File::Spec->catdir( $root, 'etc' ) ) {
         my @configs = readdir $dh;
         closedir $dh
-            or WGDev::X::IO::Read->throw(
-                message => 'Unable to close directory handle',
-                errno_string => "$!",
-            );
+            or WGDev::X::IO::Read->throw('Unable to close directory handle');
         @configs = map { File::Spec->catdir( $root, 'etc', $_ ) }
             grep { /\Q.conf\E$/msx && !/^(?:spectre|log)\Q.conf\E$/msx }
             @configs;
@@ -243,7 +245,7 @@ sub asset {
 
 sub version {
     my $self = shift;
-    WDGev::X::NoWebGUIRoot->throw
+    WGDev::X::NoWebGUIRoot->throw
         if !$self->root;
     require WGDev::Version;
     return $self->{version} ||= WGDev::Version->new( $self->root );
@@ -371,16 +373,14 @@ sub write_wgd_config {
     $encoded =~ s/\n?\z/\n/msx;
     open my $fh, '>', $config_path
         or WGDev::X::IO::Write->throw(
-            message => 'Unable to write config file',
-            errno_string => "$!",
-            path => $config_path,
+        message => 'Unable to write config file',
+        path    => $config_path,
         );
     print {$fh} $encoded;
     close $fh
         or WGDev::X::IO::Write->throw(
-            message => 'Unable to write config file',
-            errno_string => "$!",
-            path => $config_path,
+        message => 'Unable to write config file',
+        path    => $config_path,
         );
     return 1;
 }

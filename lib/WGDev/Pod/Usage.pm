@@ -91,8 +91,8 @@ sub item {
     }
     else {
         my $option_name_length = OPTION_TEXT_INDENT - OPTION_INDENT - 1;
-        $self->output( $indent_string . sprintf "%-*s %s\n", $option_name_length,
-            $tag, $item );
+        $self->output( $indent_string . sprintf "%-*s %s\n",
+            $option_name_length, $tag, $item );
     }
     return;
 }

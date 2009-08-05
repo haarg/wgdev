@@ -5,6 +5,11 @@ use 5.008008;
 our $VERSION = '0.2.0';
 if ( !caller ) {
     require WGDev::Command;
-    exit WGDev::Command->run(@ARGV) ? 0 : 1;
+    my $return = eval { $return = WGDev::Command->run(@ARGV) };
+    if ( my $message = $@ ) {
+        $message =~ s/\n?\z/\n/msx;
+        die $message;
+    }
+    exit $return ? 0 : 1;
 }
 

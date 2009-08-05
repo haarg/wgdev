@@ -19,14 +19,14 @@ my $wgd = WGDev->new;
 
 isa_ok $wgd, 'WGDev', 'WGDev->new returns WGDev object';
 
-throws_ok { $wgd->set_environment } qr/^\QWebGUI root not set/,
+throws_ok { $wgd->set_environment } 'WGDev::X::NoWebGUIRoot',
     'Exception thrown for ->set_environment with no root set';
 
 my $test_data = catdir( TEST_DIR, 'testdata' );
 
 {
     my $root_invalid = File::Temp->newdir;
-    throws_ok { $wgd->root($root_invalid) } qr/^\QInvalid WebGUI path:/,
+    throws_ok { $wgd->root($root_invalid) } 'WGDev::X::BadParameter',
         'Exception thrown for ->root with invalid WebGUI root';
 }
 
@@ -57,10 +57,10 @@ lives_ok { $wgd->root($root) } 'Able to set valid WebGUI root';
 
 is $wgd->root, $root_abs, 'WebGUI root set correctly';
 
-throws_ok { $wgd->config } qr/^\Qno config file available/,
+throws_ok { $wgd->config } 'WGDev::X::NoWebGUIConfig',
     'Exception thrown for ->config with no config file set';
 
-throws_ok { $wgd->set_environment } qr/^\QWebGUI config file not set/,
+throws_ok { $wgd->set_environment } 'WGDev::X::NoWebGUIConfig',
     'Exception thrown for ->set_environment with no config file set';
 
 lives_ok { $wgd->config_file('www.example.com.conf') }
@@ -118,28 +118,25 @@ $wgd = WGDev->new( $config, $root );
 
 is $wgd->root, $root_abs, 'Can initialize root on new call in reverse order';
 
-throws_ok { $wgd->root($lib) } qr/^\QInvalid WebGUI path: $lib/,
+throws_ok { $wgd->root($lib) } 'WGDev::X::BadParameter',
     'Error thrown when trying to set root to directory that isn\'t a WebGUI root';
 
 my $nonexistant_path = catdir( $root, 'nonexistant' );
-throws_ok { $wgd->root($nonexistant_path) }
-qr/^\QInvalid WebGUI path: $nonexistant_path/,
+throws_ok { $wgd->root($nonexistant_path) } 'WGDev::X::BadParameter',
     'Error thrown when trying to set root to directory that doesn\'t exist';
 
 is $wgd->root, $root_abs, 'Root not modified after failed attempts to set';
 
-throws_ok { $wgd->config_file('nonexistant') }
-qr/^\QInvalid WebGUI config file: nonexistant/,
+throws_ok { $wgd->config_file('nonexistant') } 'WGDev::X::BadParameter',
     'Error thrown when trying to set config to nonexistant file with root set';
 
 $wgd = WGDev->new;
 
-throws_ok { $wgd->config_file('nonexistant') }
-qr/^\QInvalid WebGUI config file: nonexistant/,
+throws_ok { $wgd->config_file('nonexistant') } 'WGDev::X::BadParameter',
     'Error thrown when trying to set config to nonexistant file with no root set';
 
 lives_ok { $wgd->config_file($config_abs) }
-'Can set just config file using full path';
+    'Can set just config file using full path';
 
 is realpath( $wgd->root ), realpath($root_abs),
     'Root set correctly based on absolute config file';

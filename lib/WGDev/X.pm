@@ -6,9 +6,7 @@ use 5.008008;
 our $VERSION = '0.0.1';
 
 use Exception::Class (
-    'WGDev::X' => {
-        description => 'A general WGDev error',
-    },
+    'WGDev::X'              => { description => 'A general WGDev error', },
     'WGDev::X::CommandLine' => {
         isa         => 'WGDev::X',
         description => 'An error with the command line.',
@@ -28,10 +26,10 @@ use Exception::Class (
         isa         => 'WGDev::X::CommandLine',
         description => 'Invalid parameters were passed to a command.',
     },
-    'WGDev::X::IO'     => {
+    'WGDev::X::IO' => {
         isa         => 'WGDev::X',
         description => 'IO error',
-        fields      => ['errno_string', 'path'],
+        fields      => [ 'errno_string', 'path' ],
     },
     'WGDev::X::IO::Read' => {
         isa         => 'WGDev::X',
@@ -41,7 +39,7 @@ use Exception::Class (
         isa         => 'WGDev::X',
         description => 'Write error',
     },
-    'WGDev::X::NoConfigFile' => {
+    'WGDev::X::NoWebGUIConfig' => {
         isa         => 'WGDev::X',
         description => 'No WebGUI config file available.',
     },
@@ -52,7 +50,7 @@ use Exception::Class (
     'WGDev::X::BadParameter' => {
         isa         => 'WGDev::X',
         description => 'Bad parameter provided.',
-        fields      => ['parameter', 'value'],
+        fields      => [ 'parameter', 'value' ],
     },
     'WGDev::X::AssetNotFound' => {
         isa         => 'WGDev::X',
@@ -66,14 +64,7 @@ use Exception::Class (
     },
 );
 
-##no critic (ProhibitQualifiedSubDeclarations Capitalization)
-
-sub WGDev::X::as_string {
-    my $self = shift;
-    my $str = $self->SUPER::as_string(@_);
-    $str =~ s/\n?\z/\n/msx;
-    return $str;
-}
+##no critic (ProhibitQualifiedSubDeclarations)
 
 sub WGDev::X::full_message {
     my $self = shift;
@@ -109,12 +100,13 @@ sub WGDev::X::CommandLine::BadCommand::full_message {
 }
 
 sub WGDev::X::IO::new {
-    my $class = shift;
-    my $errno_string = "$!";
-    my $self = $class->SUPER::new(@_);
-    if (!defined $self->errno_string) {
+    my $class        = shift;
+    my $errno_string = qq{$!};
+    my $self         = $class->SUPER::new(@_);
+    if ( !defined $self->errno_string ) {
         $self->{errno_string} = $errno_string;
     }
+    return $self;
 }
 
 1;

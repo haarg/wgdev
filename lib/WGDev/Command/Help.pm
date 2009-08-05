@@ -20,7 +20,7 @@ sub process {
     my $wgd  = $self->wgd;
 
     my ($command) = $self->arguments;
-    if (!defined $command) {
+    if ( !defined $command ) {
         print WGDev::Command->usage(1);
         return 1;
     }

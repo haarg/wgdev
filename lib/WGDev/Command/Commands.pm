@@ -38,7 +38,8 @@ sub command_abstracts {
     my $parser = Pod::PlainText->new( indent => 0, width => 1000 );
     $parser->select('NAME');
     for my $command ( keys %abstracts ) {
-        my $command_module = eval { WGDev::Command::get_command_module($command) };
+        my $command_module
+            = eval { WGDev::Command::get_command_module($command) };
         next
             if !$command_module;
         my $pod           = WGDev::Help::package_pod($command_module);
@@ -50,6 +51,7 @@ sub command_abstracts {
         $parser->parse_from_filehandle( $pod_in, $pod_out );
         close $pod_in  or die "Can't open file handle to scalar : $!";
         close $pod_out or die "Can't open file handle to scalar : $!";
+
         if ( $formatted_pod =~ /^ [:\w]+ \s* - \s* (.+?) \s* $/msx ) {
             $abstracts{$command} = $1;
         }

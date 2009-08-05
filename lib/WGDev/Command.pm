@@ -21,7 +21,7 @@ sub run {
 
         'F|config-file=s' => \( my $opt_config ),
         'R|webgui-root=s' => \( my $opt_root ),
-    ) || WGDev::X::CommandLine->throw(usage => $class->usage(0));
+    ) || WGDev::X::CommandLine->throw( usage => $class->usage(0) );
     my @params = @ARGV;
 
     my $command_name = shift @params;
@@ -40,7 +40,7 @@ sub run {
         else {
             WGDev::X::CommandLine::BadCommand->throw(
                 command_name => $command_name,
-                usage => $class->usage(0),
+                usage        => $class->usage(0),
             );
         }
     }
@@ -60,8 +60,8 @@ sub run {
         require WGDev;
         my $wgd = WGDev->new;
         $class->guess_webgui_paths(
-            wgd => $wgd,
-            root => $opt_root,
+            wgd         => $wgd,
+            root        => $opt_root,
             config_file => $opt_config,
         );
         my $command = $command_module->new($wgd);
@@ -71,11 +71,19 @@ sub run {
 }
 
 sub guess_webgui_paths {
-    my $class = shift;
+    my $class  = shift;
     my %params = @_;
-    my $wgd = $params{wgd};
-    my $webgui_root = $params{root} || $ENV{WEBGUI_ROOT} || $wgd->my_config('webgui_root');
-    my $webgui_config = $params{config_file} || $ENV{WEBGUI_CONFIG} || $wgd->my_config('webgui_config');
+    my $wgd    = $params{wgd};
+##no tidy
+  my $webgui_root
+        = $params{root}
+        || $ENV{WEBGUI_ROOT}
+        || $wgd->my_config('webgui_root');
+    my $webgui_config
+        = $params{config_file}
+        || $ENV{WEBGUI_CONFIG}
+        || $wgd->my_config('webgui_config');
+##tidy
 
     # first we need to find the webgui root
     if ($webgui_root) {
@@ -83,8 +91,10 @@ sub guess_webgui_paths {
     }
 
     if ($webgui_config) {
-        my $can_set_config
-            = eval { $class->set_config_by_input( $wgd, $webgui_config ); 1 };
+        my $can_set_config = eval {
+            $class->set_config_by_input( $wgd, $webgui_config );
+            1;
+        };
 
         # if we were able to set the config file and root is set either by
         # being specified or calculated by the config path, we are done.
@@ -92,17 +102,15 @@ sub guess_webgui_paths {
             return $wgd;
         }
 
-  # if root and the config file were specified and we haven't found the config
-  # yet, die
+        # if root and the config file were specified and we haven't
+        # found the config yet, die
         elsif ( $wgd->root ) {
             die $@;
         }
     }
 
     if ( !$wgd->root ) {
-        eval {
-            $class->set_root_relative($wgd);
-        } || return $wgd;
+        eval { $class->set_root_relative($wgd) } || return;
         if ($webgui_config) {
             $class->set_config_by_input( $wgd, $webgui_config );
             return $wgd;
@@ -111,8 +119,9 @@ sub guess_webgui_paths {
     my @configs = $wgd->list_site_configs;
     if ( @configs == 1 ) {
         $wgd->config_file( $configs[0] );
+        return $wgd;
     }
-    return $wgd;
+    return;
 }
 
 sub set_root_relative {
@@ -135,21 +144,21 @@ sub set_root_relative {
 sub set_config_by_input {
     my ( $class, $wgd, $webgui_config ) = @_;
 
-    # first, try the specified email
-    if ( eval { $wgd->config_file($webgui_config); 1 } ) {
+    # first, try the specified config file
+    if ( eval { $wgd->config_file($webgui_config) } ) {
         return $wgd;
     }
+    my $e = WGDev::X->caught;
 
     # if that didn't work, try it with .conf appended
-    elsif ( $webgui_config !~ /\Q.conf\E$/msx ) {
-        local $@ = undef;
-        if ( eval { $wgd->config_file( $webgui_config . '.conf' ); 1; } ) {
+    if ( $webgui_config !~ /\Q.conf\E$/msx ) {
+        if ( eval { $wgd->config_file( $webgui_config . '.conf' ) } ) {
             return $wgd;
         }
     }
 
     # if neither normal or alternate config files worked, die
-    die $@;
+    $e->rethrow;
 }
 
 sub report_version {
@@ -197,7 +206,7 @@ sub get_command_module {
             return $module;
         }
     }
-    WGDev::X::BadCommand->throw('command_name' => $command_name);
+    WGDev::X::BadCommand->throw( 'command_name' => $command_name );
 }
 
 sub command_to_module {

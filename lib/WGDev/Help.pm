@@ -5,7 +5,7 @@ use 5.008008;
 
 our $VERSION = '0.1.0';
 
-use WGDev::X ();
+use WGDev::X   ();
 use File::Spec ();
 
 sub package_usage {

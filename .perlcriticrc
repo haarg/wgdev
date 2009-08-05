@@ -11,6 +11,11 @@ theme       = core || strictersubs || pulp || more
 [-Subroutines::RequireArgUnpacking]
 [-ValuesAndExpressions::ProhibitConstantPragma]
 
+# disabled until they are configurable enough to handle exceptions
+[-ControlStructures::ProhibitPostfixControls]
+[-Modules::RequireExplicitInclusion]
+[-Subroutines::RequireFinalReturn]
+
 [CodeLayout::RequireTidyCode]
 perltidyrc = .perltidyrc
 
@@ -22,6 +27,9 @@ lib_sections = NAME | SYNOPSIS | DESCRIPTION | AUTHOR | LICENSE
 
 [InputOutput::RequireCheckedSyscalls]
 functions = opendir read readline readdir closedir
+
+[NamingConventions::Capitalization]
+subroutines = (?:.+::)?(?:[[:lower:]_\d]+|[[:upper:]_\d]+)
 
 [RegularExpressions::RequireExtendedFormatting]
 minimum_regex_length_to_complain_about = 5

@@ -57,7 +57,7 @@ sub find {
     if ( $asset && ref $asset && $asset->isa('WebGUI::Asset') ) {
         return $asset;
     }
-    WGDev::X::AssetNotFound->throw(asset => $asset_spec);
+    WGDev::X::AssetNotFound->throw( asset => $asset_spec );
 }
 
 sub validate_class {
@@ -69,7 +69,7 @@ sub validate_class {
             return wantarray ? ( $class, $short_class ) : $class;
         }
     }
-    WGDev::X::BadAssetClass->throw(class => $in_class);
+    WGDev::X::BadAssetClass->throw( class => $in_class );
 }
 
 sub _gen_serialize_header {

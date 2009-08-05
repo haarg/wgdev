@@ -12,8 +12,8 @@ sub process {
     my $self = shift;
     $self->wgd->set_environment;
     my @arguments = $self->arguments;
-    my $command = shift @arguments;
-    my $result = system {$command} $command, @arguments;
+    my $command   = shift @arguments;
+    my $result    = system {$command} $command, @arguments;
     return $result ? 0 : 1;
 }
 

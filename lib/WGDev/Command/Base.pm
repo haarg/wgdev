@@ -112,7 +112,7 @@ sub run {
     local $| = 1;
     if ( !$self->parse_params(@params) ) {
         my $usage = $self->usage(0);
-        WGDev::X::CommandLine::BadParams->throw(usage => $usage);
+        WGDev::X::CommandLine::BadParams->throw( usage => $usage );
     }
     return $self->process;
 }
@@ -134,8 +134,11 @@ sub help {
         $class = ref $class;
     }
     require WGDev::Help;
-    if ( eval { WGDev::Help::package_perldoc( $class, '!AUTHOR|LICENSE|METHODS' ); 1 }
-        )
+    if (
+        eval {
+            WGDev::Help::package_perldoc( $class, '!AUTHOR|LICENSE|METHODS' );
+            1;
+        } )
     {
         return 1;
     }
