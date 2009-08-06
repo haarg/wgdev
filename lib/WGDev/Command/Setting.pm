@@ -46,7 +46,7 @@ or for using as part of other C<wgd> commands.
 
 =item C<< <setting> >>
 
-The name of a setting to report the of.
+Displays the value of this setting.
 
 =back
 
