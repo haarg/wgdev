@@ -348,7 +348,7 @@ sub upgrade {
             push @ARGV, '--quiet';
         }
         do 'upgrade.pl';
-        croak $@ if $@;
+        die $@ if $@;
         exit;
     }
     waitpid $pid, 0;
@@ -391,11 +391,12 @@ sub reset_config {
 
     $wgd->close_config;
     open my $fh, '>', $wgd->config_file
-        or croak "Unable to write config file: $!";
+        or WGDev::X::IO::Write->throw( path => $wgd->config_file );
     File::Copy::copy(
         File::Spec->catfile( $wgd->root, 'etc', 'WebGUI.conf.original' ),
         $fh );
-    close $fh or croak "Unable to write config file: $!";
+    close $fh
+        or WGDev::X::IO::Write->throw( path => $wgd->config_file );
 
     my $config = $wgd->config;
     while ( my ( $key, $value ) = each %set_config ) {

@@ -7,7 +7,8 @@ our $VERSION = '0.2.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
-use Carp qw(croak);
+
+use WGDev::X ();
 
 sub config_options {
     return qw(
@@ -34,9 +35,10 @@ sub process {
             my $filename = $self->export_filename($asset);
             print "Writing $filename...\n";
             open my $fh, '>', $filename
-                or croak "Unable to write to $filename\: $!";
+                or WGDev::X::IO::Write->throw( path => $filename );
             print {$fh} $asset_text;
-            close $fh or croak "Unable to write to $filename\: $!";
+            close $fh
+                or WGDev::X::IO::Write->throw( path => $filename );
         }
     }
     return 1;

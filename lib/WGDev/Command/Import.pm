@@ -7,7 +7,6 @@ our $VERSION = '0.1.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
-use Carp qw(croak);
 
 sub process {
     my $self = shift;

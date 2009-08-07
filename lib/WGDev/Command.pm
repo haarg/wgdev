@@ -371,7 +371,7 @@ to L<WGDev::Help::package_usage|WGDev::Help/package_usage>.
 
 Searches for available sub-commands and returns them as an array.  This list includes available Perl modules that pass the L</get_command_module> check and executable files beginning with F<wgd->.
 
-=head2 C<guess_webgui_paths ( $wgd, [$webgui_root], [$webgui_config] )>
+=head2 C<guess_webgui_paths ( wgd => $wgd, [root => $webgui_root], [config_file => $webgui_config] )>
 
 Attempts to detect the paths to use for the WebGUI root and config
 file.  Initializes the specified $wgd object.  If specified, attempts

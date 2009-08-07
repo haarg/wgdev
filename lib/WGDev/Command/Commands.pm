@@ -24,7 +24,16 @@ sub help {
     my $class = shift;
     print "Sub-commands available:\n";
     my %abstracts = $class->command_abstracts;
-    for my $command ( sort keys %abstracts ) {
+    my @commands  = sort keys %abstracts;
+    @commands = (
+        'intro', 'commands', 'help', undef,
+        grep { $_ ne 'intro' && $_ ne 'commands' && $_ ne 'help' } @commands,
+    );
+    for my $command (@commands) {
+        if ( !defined $command ) {
+            print "\n";
+            next;
+        }
         my $command_abstract = $abstracts{$command} || '(external command)';
         printf "    %-15s - %s\n", $command, $command_abstract;
     }

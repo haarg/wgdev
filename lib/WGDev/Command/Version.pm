@@ -11,6 +11,10 @@ BEGIN { our @ISA = qw(WGDev::Command::Base) }
 use Carp qw(croak);
 use File::Spec ();
 
+sub needs_config {
+    return;
+}
+
 sub config_parse_options { return qw(no_getopt_compat) }
 
 sub config_options {

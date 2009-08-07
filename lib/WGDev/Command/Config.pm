@@ -11,6 +11,10 @@ BEGIN { our @ISA = qw(WGDev::Command::Base) }
 use WGDev          ();
 use WGDev::Command ();
 
+sub needs_root {
+    return;
+}
+
 sub config_options {
     return qw(
         struct|s
@@ -82,7 +86,7 @@ __END__
 
 =head1 NAME
 
-WGDev::Command::Config - Report WGDev configuration parameters
+WGDev::Command::Config - Report or set WGDev configuration parameters
 
 =head1 SYNOPSIS
 
@@ -90,7 +94,7 @@ WGDev::Command::Config - Report WGDev configuration parameters
 
 =head1 DESCRIPTION
 
-Reports WGDev configuration parameters.
+Report or set WGDev configuration parameters.
 
 =head1 OPTIONS
 

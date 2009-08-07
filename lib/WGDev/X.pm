@@ -26,10 +26,15 @@ use Exception::Class (
         isa         => 'WGDev::X::CommandLine',
         description => 'Invalid parameters were passed to a command.',
     },
-    'WGDev::X::IO' => {
+    'WGDev::X::System' => {
         isa         => 'WGDev::X',
+        description => 'System error',
+        fields      => ['errno_string'],
+    },
+    'WGDev::X::IO' => {
+        isa         => 'WGDev::X::System',
         description => 'IO error',
-        fields      => [ 'errno_string', 'path' ],
+        fields      => ['path'],
     },
     'WGDev::X::IO::Read' => {
         isa         => 'WGDev::X',
@@ -99,7 +104,7 @@ sub WGDev::X::CommandLine::BadCommand::full_message {
     return $message;
 }
 
-sub WGDev::X::IO::new {
+sub WGDev::X::System::new {
     my $class        = shift;
     my $errno_string = qq{$!};
     my $self         = $class->SUPER::new(@_);
