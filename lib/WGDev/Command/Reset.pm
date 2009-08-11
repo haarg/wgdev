@@ -317,6 +317,7 @@ sub import_db_script {
     # If we aren't upgrading, we're using the current DB version
     my $db_file
         = $self->option('upgrade') ? 'previousVersion.sql' : 'create.sql';
+    $wgd->db->clear;
     $wgd->db->load( File::Spec->catfile( $wgd->root, 'docs', $db_file ) );
     $self->report("Done\n");
     return 1;

@@ -42,6 +42,7 @@ sub process {
     }
     if ( defined $self->option('load') ) {
         if ( $self->option('load') && $self->option('load') ne q{-} ) {
+            $db->clear;
             $db->load( $self->option('load') );
             return 1;
         }
