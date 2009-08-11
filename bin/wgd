@@ -10,6 +10,6 @@ if ( !caller ) {
         $message =~ s/\n?\z/\n/msx;
         die $message;
     }
-    exit $return ? 0 : 1;
+    exit($return ? 0 : 1);
 }
 
