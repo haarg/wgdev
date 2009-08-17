@@ -6,6 +6,29 @@ Change log for WGDev
  - Fixed processing of config option on Reset or any other command
  - Breaking change: WGDev::Command::Base's option_parse_config method is now config_parse_options
  - Breaking change: WGDev::Command::Base's option_config method is now config_options
+ - Automatic checking for .conf file if extension omitted
+ - Always use UTF-8 character set when running mysql commands
+ - WGDev, WGDev::Command, and WGDev::Command::Base version numbers will now by kept in sync
+ - WGDev::Command::run will now run properly when a WebGUI root and config file aren't available
+ - WGDev::Command::run and WGDev::Command::Base::run will no longer exit, but will return true on success
+ - Single file install now uses a compressed archive rather than reformatted Perl code
+ - All uses of croak and die have been converted to use exceptions instead
+ - More complete test coverage
+ - --help option will now reports improved, more unified usage summary
+ - Help command now produces better user documentation
+ - Intro command added with documentation for new users
+ - Commands command added with command list and brief documentation
+ - Setting command added for listing settings and showing or setting their value
+ - User command added with options to find users by password
+ - Test command learned --cover option to generate coverage reports
+ - Test command learned --coverOptions option to specify coverage options
+ - Db command learned --show option to run mysqlshow
+ - Ls command learned --recursive option for recursive listings
+ - Ls command learned --limit option for limiting number of results
+ - Ls command learned --isa option for limiting results by class
+ - Ls command learned --includeOnlyClass option for limiting results by class
+ - Ls command learned --excludeClass option for limiting results by class
+ - Ls command learned --filter option for arbitrary filtering
 
 0.3.0 - Mar 26 2009
  - WGDev instances can be created without a WebGUI root/config
