@@ -52,6 +52,7 @@ sub command_line {
         $self->database,
         '-u' . $self->username,
         ( $self->password ? '-p' . $self->password : () ),
+        '--default-character-set=utf8',
         @_,
     );
     return wantarray ? @params : join q{ }, map {"'$_'"} @params;
