@@ -8,17 +8,16 @@ our $VERSION = '0.0.1';
 use constant OPTION_INDENT      => 4;
 use constant OPTION_TEXT_INDENT => 24;
 
+use Pod::PlainText;
+use Pod::Select;
+BEGIN {
+    our @ISA = qw(Pod::PlainText Pod::Select);
+}
+
 use WGDev::X ();
 
 sub new {
     my $proto = shift;
-
-    # This is really ugly, but delay loading parent modules until first use.
-    require Pod::PlainText;
-    require Pod::Select;
-    if ( !our @ISA ) {
-        @ISA = qw(Pod::PlainText Pod::Select);
-    }
 
     my $self = $proto->SUPER::new( indent => 0 );
     $self->verbosity(1);
