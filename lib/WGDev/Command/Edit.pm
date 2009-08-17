@@ -8,6 +8,8 @@ our $VERSION = '0.2.0';
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
+use WGDev ();
+
 sub config_options {
     return qw(
         command=s
@@ -23,7 +25,7 @@ sub process {
     my @files = $self->export_asset_data;
 
     if ( !@files ) {
-        die "No assets to edit!\n";
+        WGDev::X->throw('No assets to edit!');
     }
 
     ## no critic (ProhibitParensWithBuiltins)

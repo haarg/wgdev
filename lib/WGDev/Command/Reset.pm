@@ -8,6 +8,7 @@ our $VERSION = '0.3.0';
 use WGDev::Command::Base::Verbosity;
 BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
 
+use WGDev::X   ();
 use File::Spec ();
 use constant STAT_MODE => 2;
 use constant STAT_UID  => 4;
@@ -180,7 +181,7 @@ sub process {
             $util_command->parse_params_string($util);
             $util_command->verbosity( $self->verbosity - 1 );
             if ( !$util_command->process ) {
-                die "Error running util script!\n";
+                WGDev::X->throw('Error running util script!');
             }
             $self->report("Done.\n");
         }
@@ -355,7 +356,7 @@ sub upgrade {
 
     # error status of subprocess
     if ($?) {    ##no critic (ProhibitPunctuationVars)
-        die "Upgrade failed!\n";
+        WGDev::X->throw('Upgrade failed!');
     }
     $self->report("Done\n");
     return 1;

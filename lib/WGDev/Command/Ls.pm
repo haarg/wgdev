@@ -28,11 +28,12 @@ sub option_filter {
     my ( $filter_prop, $filter_match )
         = $filter =~ m{%(\w+)% \s* ~~ \s* (.*)}msx;
     if ( !defined $filter_prop || !defined $filter_match ) {
-        die "Invalid filter specified!\n";
+        WGDev::X->throw("Invalid filter specified: $filter");
     }
     if ( $filter_match =~ m{\A/(.*)/\Z}msx ) {
         eval { $filter_match = qr/$1/msx; }
-            || die "Invalid filter regex specified: $1\n";
+            || WGDev::X->throw(
+            "Specified filter is not a valid regular expression: $1");
     }
     else {
         $filter_match = qr/\A\Q$filter_match\E\z/msx;

@@ -8,6 +8,8 @@ our $VERSION = '0.2.0';
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
+use WGDev::X ();
+
 sub config_options {
     return qw(
         print|p
@@ -29,7 +31,7 @@ sub process {
         + ( defined $self->option('load')  || 0 )
         + ( defined $self->option('clear') || 0 ) > 1 )
     {
-        die "Multiple database operations specified!\n";
+        WGDev::X->throw('Multiple database operations specified!');
     }
 
     if ( $self->option('print') ) {

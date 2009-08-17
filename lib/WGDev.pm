@@ -138,7 +138,7 @@ sub lib {
                     unshift @custom_lib, $line;
                 }
             }
-            close $fh or die "Unable to read $custom\: $!\n";
+            close $fh or WGDev::X::IO::Read->throw( path => $custom );
         }
     }
     unshift @lib, @{ $self->{custom_lib} };
@@ -433,7 +433,7 @@ sub _load_yaml_lib {
     }
     else {
         *yaml_encode = *yaml_decode = sub {
-            die "No YAML library available!\n";
+            WGDev::X->throw('No YAML library available!');
         };
     }
     return;

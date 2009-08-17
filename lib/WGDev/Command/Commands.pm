@@ -10,6 +10,7 @@ BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
 use WGDev::Command;
 use WGDev::Help;
+use WGDev::X ();
 
 sub needs_root {
     return;
@@ -57,12 +58,12 @@ sub command_abstracts {
         my $pod           = WGDev::Help::package_pod($command_module);
         my $formatted_pod = q{};
         open my $pod_in, '<', \$pod
-            or die "Can't open file handle to scalar : $!";
+            or WGDev::X::IO->throw;
         open my $pod_out, '>', \$formatted_pod
-            or die "Can't open file handle to scalar : $!";
+            or WGDev::X::IO->throw;
         $parser->parse_from_filehandle( $pod_in, $pod_out );
-        close $pod_in  or die "Can't open file handle to scalar : $!";
-        close $pod_out or die "Can't open file handle to scalar : $!";
+        close $pod_in  or WGDev::X::IO->throw;
+        close $pod_out or WGDev::X::IO->throw;
 
         if ( $formatted_pod =~ /^ [:\w]+ \s* - \s* (.+?) \s* $/msx ) {
             $abstracts{$command} = $1;

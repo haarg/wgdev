@@ -8,6 +8,8 @@ our $VERSION = '0.0.1';
 use constant OPTION_INDENT      => 4;
 use constant OPTION_TEXT_INDENT => 24;
 
+use WGDev::X ();
+
 sub new {
     my $proto = shift;
 
@@ -106,12 +108,14 @@ sub parse_from_string {
     my $pod    = shift;
     my $output = q{};
     open my $out_fh, '>', \$output
-        or die "Can't open file handle to scalar : $!";
+        or WGDev::X::IO->throw;
     open my $in_fh, '<', \$pod
-        or die "Can't open file handle to scalar : $!";
+        or WGDev::X::IO->throw;
     $self->parse_from_filehandle( $in_fh, $out_fh );
-    close $in_fh  or return q{};
-    close $out_fh or return q{};
+    close $in_fh
+        or WGDev::X::IO->throw;
+    close $out_fh
+        or WGDev::X::IO->throw;
     return $output;
 }
 

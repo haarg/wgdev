@@ -9,6 +9,7 @@ use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
 use WGDev          ();
+use WGDev::X       ();
 use WGDev::Command ();
 
 sub needs_root {
@@ -44,14 +45,16 @@ sub process {
             ##no critic (RequireBriefOpen)
             if ( $file eq q{-} ) {
                 ##no critic (ProhibitTwoArgOpen)
-                open $fh, q{-} or die "Unable to read STDIN: $!\n";
+                open $fh, '<&=', \*STDIN
+                    or WGDev::X::IO::Read->throw;
             }
             else {
                 open $fh, '<', $file
-                    or die "Unable to read from $file\: $!\n";
+                    or WGDev::X::IO::Read->throw( path => $file );
             }
             $value = do { local $/; <$fh> };
-            close $fh or die "Unable to read from $file\: $!\n";
+            close $fh
+                or WGDev::X::IO::Read->throw( path => $file );
         }
         if ( $self->option('struct') ) {
             $value =~ s/\A \s* ( [[{] ) /--- $1/msx;
@@ -59,7 +62,7 @@ sub process {
             eval {
                 $value = WGDev::yaml_decode($value);
                 1;
-            } or die "Invalid or unsupported format.\n";
+            } or WGDev::X->throw('Invalid or unsupported format.');
         }
     }
     my $param

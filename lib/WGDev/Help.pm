@@ -48,7 +48,7 @@ sub package_perldoc {
 
     # error status of subprocess
     if ($?) {    ##no critic (ProhibitPunctuationVars)
-        die "Error displaying help!\n";
+        WGDev::X->throw('Error displaying help!');
     }
     return;
 }
@@ -68,12 +68,14 @@ sub package_pod {
         $parser->select(@sections);
         my $output = q{};
         open my $pod_in, '<', \$pod
-            or die "Can't open file handle to scalar : $!";
+            or WGDev::X::IO->throw;
         open my $pod_out, '>', \$output
-            or die "Can't open file handle to scalar : $!";
+            or WGDev::X::IO->throw;
         $parser->parse_from_filehandle( $pod_in, $pod_out );
-        close $pod_in  or die "Can't open file handle to scalar : $!";
-        close $pod_out or die "Can't open file handle to scalar : $!";
+        close $pod_in
+            or WGDev::X::IO->throw;
+        close $pod_out
+            or WGDev::X::IO->throw;
         $pod = $output;
     }
     return $pod;
