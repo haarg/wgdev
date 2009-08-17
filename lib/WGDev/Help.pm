@@ -85,7 +85,7 @@ sub filter_pod {
     my $file   = shift;
     my $wanted = shift;
     open my $fh, '<', $file or return q{};
-    my $content = do { local $/ = undef; <$fh> };
+    my $content = do { local $/; <$fh> };
     close $fh or return q{};
     if ( $content
         =~ /^(=head1[ ]NAME\s+^\Q$wanted\E\s.*?)(?:^=head1[ ]NAME\E\s|\z)/msx

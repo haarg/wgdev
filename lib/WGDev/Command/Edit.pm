@@ -35,7 +35,7 @@ sub process {
     my $version_tag;
     for my $file (@files) {
         open my $fh, '<:utf8', $file->{filename} or next;
-        my $asset_text = do { local $/ = undef; <$fh> };
+        my $asset_text = do { local $/; <$fh> };
         close $fh or next;
         unlink $file->{filename};
         if ( $asset_text eq $file->{text} ) {

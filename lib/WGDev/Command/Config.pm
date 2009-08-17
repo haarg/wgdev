@@ -50,7 +50,7 @@ sub process {
                 open $fh, '<', $file
                     or die "Unable to read from $file\: $!\n";
             }
-            $value = do { local $/ = undef; <$fh> };
+            $value = do { local $/; <$fh> };
             close $fh or die "Unable to read from $file\: $!\n";
         }
         if ( $self->option('struct') ) {

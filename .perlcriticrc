@@ -10,6 +10,7 @@ theme       = core || strictersubs || pulp || more
 [-Subroutines::ProhibitCallsToUnexportedSubs]
 [-Subroutines::RequireArgUnpacking]
 [-ValuesAndExpressions::ProhibitConstantPragma]
+[-Variables::RequireInitializationForLocalVars]
 
 # disabled until they are configurable enough to handle exceptions
 [-ControlStructures::ProhibitPostfixControls]
@@ -28,6 +29,7 @@ lib_sections = NAME | SYNOPSIS | DESCRIPTION | AUTHOR | LICENSE
 [InputOutput::RequireCheckedSyscalls]
 functions = opendir read readline readdir closedir
 
+# ignore package portion of sub names
 [NamingConventions::Capitalization]
 subroutines = (?:.+::)?(?:[[:lower:]_\d]+|[[:upper:]_\d]+)
 

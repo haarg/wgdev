@@ -329,7 +329,7 @@ sub read_wgd_config {
         if ( -f $config_file ) {
             my $config;
             open my $fh, '<', $config_file or next;
-            my $content = do { local $/ = undef; <$fh> };
+            my $content = do { local $/; <$fh> };
             close $fh or next;
             $self->{wgd_config_path} = Cwd::realpath($config_file);
             if ( $content eq q{} ) {

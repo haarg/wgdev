@@ -26,7 +26,10 @@ sub help {
     my %abstracts = $class->command_abstracts;
     my @commands  = sort keys %abstracts;
     @commands = (
-        'intro', 'commands', 'help', undef,
+        'intro',
+        'commands',
+        'help',
+        undef,
         grep { $_ ne 'intro' && $_ ne 'commands' && $_ ne 'help' } @commands,
     );
     for my $command (@commands) {

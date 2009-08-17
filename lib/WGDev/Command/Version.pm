@@ -97,7 +97,7 @@ sub update_version {
 
     open my $fh, '<', File::Spec->catfile( $root, 'lib', 'WebGUI.pm' )
         or WGDev::X::IO::Read->throw( path => 'WebGUI.pm' );
-    my @pm_content = do { local $/ = undef; <$fh> };
+    my @pm_content = do { local $/; <$fh> };
     close $fh
         or WGDev::X::IO::Read->throw( path => 'WebGUI.pm' );
     open $fh, '>', File::Spec->catfile( $root, 'lib', 'WebGUI.pm' )
@@ -113,7 +113,7 @@ sub update_version {
     open $fh, '<',
         File::Spec->catfile( $root, 'docs', 'changelog', $change_file )
         or WGDev::X::IO::Read->throw( path => $change_file );
-    my $change_content = do { local $/ = undef; <$fh> };
+    my $change_content = do { local $/; <$fh> };
     close $fh
         or WGDev::X::IO::Read->throw( path => $change_file );
 
