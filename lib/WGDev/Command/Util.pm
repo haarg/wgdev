@@ -32,7 +32,7 @@ sub process {
         $command = File::Spec->rel2abs( $command, $sbin_path );
     }
     else {
-        die "Unable to find $command.\n";
+        WGDev::X->throw("Unable to find $command.");
     }
 
     if ( !-x $command ) {

@@ -8,6 +8,8 @@ our $VERSION = '0.2.0';
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
+use WGDev ();
+
 sub config_options {
     return qw(
         command=s
@@ -23,7 +25,7 @@ sub process {
     my @files = $self->export_asset_data;
 
     if ( !@files ) {
-        die "No assets to edit!\n";
+        WGDev::X->throw('No assets to edit!');
     }
 
     ## no critic (ProhibitParensWithBuiltins)
@@ -35,7 +37,7 @@ sub process {
     my $version_tag;
     for my $file (@files) {
         open my $fh, '<:utf8', $file->{filename} or next;
-        my $asset_text = do { local $/ = undef; <$fh> };
+        my $asset_text = do { local $/; <$fh> };
         close $fh or next;
         unlink $file->{filename};
         if ( $asset_text eq $file->{text} ) {
@@ -142,7 +144,7 @@ sub write_temp {
         $asset = eval { $wgd_asset->find($asset) }
             || eval { scalar $wgd_asset->validate_class($asset) };
         if ( !$asset ) {
-            die $@;    ##no critic (RequireCarping)
+            die $@;
         }
     }
 

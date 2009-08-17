@@ -5,7 +5,7 @@ use 5.008008;
 
 our $VERSION = '0.0.1';
 
-use Carp qw(croak);
+use WGDev::X ();
 
 sub username { return shift->{username} }
 sub password { return shift->{password} }
@@ -52,6 +52,7 @@ sub command_line {
         $self->database,
         '-u' . $self->username,
         ( $self->password ? '-p' . $self->password : () ),
+        '--default-character-set=utf8',
         @_,
     );
     return wantarray ? @params : join q{ }, map {"'$_'"} @params;
@@ -103,9 +104,8 @@ sub clear {
 sub load {
     my $self     = shift;
     my $dumpfile = shift;
-    $self->clear;
     system 'mysql', $self->command_line( '-e' . 'source ' . $dumpfile )
-        and croak "Error running mysql: $!";
+        and WGDev::X::System->throw('Error running mysql');
     return 1;
 }
 
@@ -113,7 +113,7 @@ sub dump {    ## no critic (ProhibitBuiltinHomonyms)
     my $self     = shift;
     my $dumpfile = shift;
     system 'mysqldump', $self->command_line( '-r' . $dumpfile )
-        and croak "Error running mysqldump: $!";
+        and WGDev::X::System->throw('Error running mysqldump');
     return 1;
 }
 

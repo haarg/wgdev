@@ -11,7 +11,7 @@ BEGIN { our @ISA = qw(Module::Build) }
 use File::Spec     ();
 use File::Path     ();
 use File::Basename ();
-##no critic (RequireCarping ProhibitMagicNumbers)
+##no critic (ProhibitMagicNumbers Capitalization)
 
 sub new {
     my $class   = shift;
@@ -25,13 +25,13 @@ sub new {
     return $self;
 }
 
-sub ACTION_testauthor {    ##no critic (Capitalization)
+sub ACTION_testauthor {
     return shift->generic_test( type => 'author' );
 }
 
 # we're overriding this to use Pod::Coverage::CountParent instead of the
 # default
-sub ACTION_testpodcoverage {    ##no critic (Capitalization)
+sub ACTION_testpodcoverage {
     my $self = shift;
 
     $self->depends_on('docs');
@@ -52,7 +52,7 @@ sub ACTION_testpodcoverage {    ##no critic (Capitalization)
     return;
 }
 
-sub ACTION_dist {    ##no critic (Capitalization)
+sub ACTION_dist {
     my $self = shift;
     if ( !$self->args('compact') && !$self->notes('compact') ) {
         return $self->SUPER::ACTION_dist(@_);
@@ -179,12 +179,12 @@ sub append_libs {
 sub ACTION_tidy {
     my $self = shift;
 
-    my %found_files = map {%$_} $self->find_pm_files,
+    my %found_files = map {%{$_}} $self->find_pm_files,
         $self->_find_file_by_type( 'pm', 't' ),
         $self->_find_file_by_type( 'pm', 'inc' ),
         $self->_find_file_by_type( 't',  't' ),
         $self->_find_file_by_type( 'at', 't' ),
-        $self->_find_file_by_type( 'PL', '.' );
+        $self->_find_file_by_type( 'PL', q{.} );
 
     my @files = sort keys %found_files;
 
@@ -199,7 +199,7 @@ sub ACTION_tidy {
                 1;
             } )
         {
-            unlink("$file.bak");
+            unlink "$file.bak";
         }
     }
 }

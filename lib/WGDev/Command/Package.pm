@@ -9,7 +9,7 @@ use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
 use File::Spec ();
-use Carp qw(croak);
+use WGDev::X   ();
 
 sub config_options {
     return qw(
@@ -35,7 +35,10 @@ sub process {
             }
         }
         if ( !-d $package_dir ) {
-            croak "$package_dir does not exist!\n";
+            WGDev::X::IO->throw(
+                error => 'Directory does not exist',
+                path  => $package_dir
+            );
         }
         for my $asset_spec ( $self->arguments ) {
             my $asset = eval { $wgd->asset->find($asset_spec) } || do {

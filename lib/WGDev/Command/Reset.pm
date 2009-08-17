@@ -8,8 +8,8 @@ our $VERSION = '0.3.0';
 use WGDev::Command::Base::Verbosity;
 BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
 
+use WGDev::X   ();
 use File::Spec ();
-use Carp qw(croak);
 use constant STAT_MODE => 2;
 use constant STAT_UID  => 4;
 use constant STAT_GID  => 5;
@@ -181,7 +181,7 @@ sub process {
             $util_command->parse_params_string($util);
             $util_command->verbosity( $self->verbosity - 1 );
             if ( !$util_command->process ) {
-                die "Error running util script!\n";
+                WGDev::X->throw('Error running util script!');
             }
             $self->report("Done.\n");
         }
@@ -317,6 +317,7 @@ sub import_db_script {
     # If we aren't upgrading, we're using the current DB version
     my $db_file
         = $self->option('upgrade') ? 'previousVersion.sql' : 'create.sql';
+    $wgd->db->clear;
     $wgd->db->load( File::Spec->catfile( $wgd->root, 'docs', $db_file ) );
     $self->report("Done\n");
     return 1;
@@ -348,14 +349,14 @@ sub upgrade {
             push @ARGV, '--quiet';
         }
         do 'upgrade.pl';
-        croak $@ if $@;
+        die $@ if $@;
         exit;
     }
     waitpid $pid, 0;
 
     # error status of subprocess
     if ($?) {    ##no critic (ProhibitPunctuationVars)
-        die "Upgrade failed!\n";
+        WGDev::X->throw('Upgrade failed!');
     }
     $self->report("Done\n");
     return 1;
@@ -391,11 +392,12 @@ sub reset_config {
 
     $wgd->close_config;
     open my $fh, '>', $wgd->config_file
-        or croak "Unable to write config file: $!";
+        or WGDev::X::IO::Write->throw( path => $wgd->config_file );
     File::Copy::copy(
         File::Spec->catfile( $wgd->root, 'etc', 'WebGUI.conf.original' ),
         $fh );
-    close $fh or croak "Unable to write config file: $!";
+    close $fh
+        or WGDev::X::IO::Write->throw( path => $wgd->config_file );
 
     my $config = $wgd->config;
     while ( my ( $key, $value ) = each %set_config ) {

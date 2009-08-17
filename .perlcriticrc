@@ -4,11 +4,18 @@ theme       = core || strictersubs || pulp || more
 [-BuiltinFunctions::ProhibitReverseSortBlock]
 [-ClassHierarchies::ProhibitExplicitISA]
 [-Editor::RequireEmacsFileVariables]
+[-ErrorHandling::RequireCarping]
 [-ErrorHandling::RequireUseOfExceptions]
 [-Miscellanea::RequireRcsKeywords]
 [-Subroutines::ProhibitCallsToUnexportedSubs]
 [-Subroutines::RequireArgUnpacking]
 [-ValuesAndExpressions::ProhibitConstantPragma]
+[-Variables::RequireInitializationForLocalVars]
+
+# disabled until they are configurable enough to handle exceptions
+[-ControlStructures::ProhibitPostfixControls]
+[-Modules::RequireExplicitInclusion]
+[-Subroutines::RequireFinalReturn]
 
 [CodeLayout::RequireTidyCode]
 perltidyrc = .perltidyrc
@@ -21,6 +28,10 @@ lib_sections = NAME | SYNOPSIS | DESCRIPTION | AUTHOR | LICENSE
 
 [InputOutput::RequireCheckedSyscalls]
 functions = opendir read readline readdir closedir
+
+# ignore package portion of sub names
+[NamingConventions::Capitalization]
+subroutines = (?:.+::)?(?:[[:lower:]_\d]+|[[:upper:]_\d]+)
 
 [RegularExpressions::RequireExtendedFormatting]
 minimum_regex_length_to_complain_about = 5

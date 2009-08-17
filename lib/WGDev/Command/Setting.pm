@@ -13,11 +13,33 @@ sub config_options {
 }
 
 sub process {
-    my $self    = shift;
-    my $wgd     = $self->wgd;
-    my $session = $wgd->session;
-    foreach my $setting ( $self->arguments ) {
-        print sprintf "%s:%s\n", $setting, $session->setting->get($setting);
+    my $self = shift;
+    my $wgd  = $self->wgd;
+    my $dbh  = $wgd->db->connect;
+    my $sth
+        = $dbh->prepare('SELECT name, value FROM settings WHERE name LIKE ?');
+    my $sth_set;
+    foreach my $argument ( $self->arguments ) {
+        my $new_value;
+        if ( $argument =~ s/=(.*)//msx ) {
+            $new_value = $1;
+        }
+        $sth->execute($argument);
+        while ( my ( $setting, $value ) = $sth->fetchrow_array ) {
+            if ( !defined $value ) {
+                $value = '(NULL)';
+            }
+            if ( defined $new_value ) {
+                $sth_set ||= $dbh->prepare(
+                    'UPDATE settings SET value = ? WHERE name = ?');
+                $sth_set->execute( $new_value, $setting );
+                $sth_set->finish;
+                printf "%-39s %s => %s\n", $setting, $value, $new_value;
+            }
+            else {
+                printf "%-39s %s\n", $setting, $value;
+            }
+        }
     }
 
     return 1;
@@ -33,12 +55,12 @@ WGDev::Command::Setting - Returns WebGUI settings from the database.
 
 =head1 SYNOPSIS
 
-    wgd setting <setting> [<setting> ...]
+    wgd setting <setting>[=<value>] [<setting> ...]
 
 =head1 DESCRIPTION
 
 Prints settings from the WebGUI settings table.  This is handy for doing quick lookups,
-or for using as part of other C<wgd> commands.
+or for using as part of other C<wgd> commands.  Can also the the value of settings.
 
 =head1 OPTIONS
 
@@ -46,7 +68,14 @@ or for using as part of other C<wgd> commands.
 
 =item C<< <setting> >>
 
-The name of a setting to report the of.
+The name of the setting to display.  Can also contain SQL wildcards
+to show multiple settings.  Using a setting of C<%> will display
+all settings.
+
+=item C<< <value> >>
+
+The value to set the setting to.  If specified, the old value and
+new value will be included in the output.
 
 =back
 

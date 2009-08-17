@@ -7,7 +7,6 @@ our $VERSION = '0.1.0';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
-use Carp qw(croak);
 
 sub process {
     my $self = shift;
@@ -16,7 +15,7 @@ sub process {
     my $version_tag;
     for my $asset_file ( $self->arguments ) {
         open my $fh, '<:utf8', $asset_file or next;
-        my $asset_text = do { local $/ = undef; <$fh> };
+        my $asset_text = do { local $/; <$fh> };
         close $fh or next;
         $version_tag ||= do {
             require WebGUI::VersionTag;

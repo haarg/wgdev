@@ -3,13 +3,12 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.2.1';
+our $VERSION = '0.3.0';
 
 use Getopt::Long ();
 use File::Spec   ();
 use Cwd          ();
-use Carp qw(croak);
-##no critic (RequireCarping)
+use WGDev::X     ();
 
 sub run {
     my $class = shift;
@@ -22,29 +21,27 @@ sub run {
 
         'F|config-file=s' => \( my $opt_config ),
         'R|webgui-root=s' => \( my $opt_root ),
-    ) || warn $class->usage(0) && exit 1;
+    ) || WGDev::X::CommandLine->throw( usage => $class->usage(0) );
     my @params = @ARGV;
 
     my $command_name = shift @params;
 
-    my $command_module = get_command_module($command_name);
+    my $command_module = eval { get_command_module($command_name) };
     if ( $command_name && !$command_module ) {
         my $command_exec = _find_cmd_exec($command_name);
         if ($command_exec) {
-            require WGDev;
-            my $wgd = $class->guess_webgui_paths( WGDev->new, $opt_root,
-                $opt_config );
-            $wgd->set_environment;
-            exec {$command_exec} $command_exec, $opt_help ? '--help' : (),
-                $opt_version ? '--version' : (), @_;
+            require WGDev::Command::Run;
+            $command_module = 'WGDev::Command::Run';
+            unshift @params, $command_exec, $opt_help ? '--help' : (),
+                $opt_version ? '--version' : ();
+            undef $opt_help;
+            undef $opt_version;
         }
         else {
-            warn $class->usage(
-                message          => "Can't find command $command_name!\n",
-                include_cmd_list => 1,
-                verbosity        => 0,
+            WGDev::X::CommandLine::BadCommand->throw(
+                command_name => $command_name,
+                usage        => $class->usage(0),
             );
-            exit 2;
         }
     }
 
@@ -55,46 +52,49 @@ sub run {
         $class->report_help( $command_name, $command_module );
     }
     elsif ( !$command_name ) {
-        warn $class->usage(
-            message          => "No command specified!\n",
-            include_cmd_list => 1,
-            verbosity        => 1,
-        );
-        exit 1;
+        print $class->usage(0);
+        require WGDev::Command::Commands;
+        return WGDev::Command::Commands->help;
     }
     else {
         require WGDev;
-        my $wgd = $class->guess_webgui_paths( WGDev->new, $opt_root,
-            $opt_config );
-        if (
-            !eval {
-                my $command = $command_module->new($wgd);
-                $command->run(@params);
-                1;
-            } )
-        {
-            warn $@;
-            exit 1;
-        }
+        my $wgd = WGDev->new;
+        $class->guess_webgui_paths(
+            wgd         => $wgd,
+            root        => $opt_root,
+            config_file => $opt_config,
+        );
+        my $command = $command_module->new($wgd);
+        return $command->run(@params);
     }
-    exit;
+    return 1;
 }
 
 sub guess_webgui_paths {
-    my ( $class, $wgd, $webgui_root, $webgui_config ) = @_;
-    $webgui_root ||= $ENV{WEBGUI_ROOT} || $wgd->my_config('webgui_root');
-    $webgui_config ||= $ENV{WEBGUI_CONFIG}
+    my $class  = shift;
+    my %params = @_;
+    my $wgd    = $params{wgd};
+##no tidy
+  my $webgui_root
+        = $params{root}
+        || $ENV{WEBGUI_ROOT}
+        || $wgd->my_config('webgui_root');
+    my $webgui_config
+        = $params{config_file}
+        || $ENV{WEBGUI_CONFIG}
         || $wgd->my_config('webgui_config');
+##tidy
 
     # first we need to find the webgui root
-
     if ($webgui_root) {
         $wgd->root($webgui_root);
     }
 
     if ($webgui_config) {
-        my $can_set_config
-            = eval { $class->set_config_by_input( $wgd, $webgui_config ); 1 };
+        my $can_set_config = eval {
+            $class->set_config_by_input( $wgd, $webgui_config );
+            1;
+        };
 
         # if we were able to set the config file and root is set either by
         # being specified or calculated by the config path, we are done.
@@ -102,15 +102,15 @@ sub guess_webgui_paths {
             return $wgd;
         }
 
-  # if root and the config file were specified and we haven't found the config
-  # yet, die
+        # if root and the config file were specified and we haven't
+        # found the config yet, die
         elsif ( $wgd->root ) {
             die $@;
         }
     }
 
     if ( !$wgd->root ) {
-        $class->set_root_relative($wgd);
+        eval { $class->set_root_relative($wgd) } || return;
         if ($webgui_config) {
             $class->set_config_by_input( $wgd, $webgui_config );
             return $wgd;
@@ -121,7 +121,7 @@ sub guess_webgui_paths {
         $wgd->config_file( $configs[0] );
         return $wgd;
     }
-    croak "Unable to find WebGUI config file!\n";
+    return;
 }
 
 sub set_root_relative {
@@ -134,7 +134,7 @@ sub set_root_relative {
         }
         my $parent
             = Cwd::realpath( File::Spec->catdir( $dir, File::Spec->updir ) );
-        croak "Unable to find WebGUI root directory!\n"
+        WGDex::X::NoWebGUIRoot->throw
             if $dir eq $parent;
         $dir = $parent;
     }
@@ -144,21 +144,21 @@ sub set_root_relative {
 sub set_config_by_input {
     my ( $class, $wgd, $webgui_config ) = @_;
 
-    # first, try the specified email
-    if ( eval { $wgd->config_file($webgui_config); 1 } ) {
+    # first, try the specified config file
+    if ( eval { $wgd->config_file($webgui_config) } ) {
         return $wgd;
     }
+    my $e = WGDev::X->caught;
 
     # if that didn't work, try it with .conf appended
-    elsif ( $webgui_config !~ /\Q.conf\E$/msx ) {
-        local $@ = undef;
-        if ( eval { $wgd->config_file( $webgui_config . '.conf' ); 1; } ) {
+    if ( $webgui_config !~ /\Q.conf\E$/msx ) {
+        if ( eval { $wgd->config_file( $webgui_config . '.conf' ) } ) {
             return $wgd;
         }
     }
 
     # if neither normal or alternate config files worked, die
-    die $@;
+    $e->rethrow;
 }
 
 sub report_version {
@@ -181,17 +181,14 @@ sub report_help {
     }
     if ($module) {
         if ( $module->can('usage') ) {
-            print $module->usage;
+            print $module->usage(1);
         }
         else {
             warn "No documentation for $name command.\n";
         }
     }
     else {
-        print $class->usage(
-            verbosity        => 2,
-            include_cmd_list => 1,
-        );
+        print $class->usage(1);
     }
     return 1;
 }
@@ -209,7 +206,7 @@ sub get_command_module {
             return $module;
         }
     }
-    return;
+    WGDev::X::BadCommand->throw( 'command_name' => $command_name );
 }
 
 sub command_to_module {
@@ -234,23 +231,8 @@ sub _find_cmd_exec {
 
 sub usage {
     my $class = shift;
-    my %options = ( @_ % 2 == 0 ) ? @_ : ( verbosity => shift );
-
     require WGDev::Help;
-    my $message = q{};
-    if ( $options{message} ) {
-        $message .= $options{message};
-    }
-    $message .= WGDev::Help::package_usage( $class, $options{verbosity} );
-
-    if ( $options{include_cmd_list} ) {
-        $message .= "SUBCOMMANDS\n";
-        for my $command ( $class->command_list ) {
-            $message .= "    $command\n";
-        }
-        $message .= "\n";
-    }
-    return $message;
+    return WGDev::Help::package_usage( $class, @_ );
 }
 
 sub command_list {
@@ -380,28 +362,16 @@ the module.  If not, returns C<undef>.
 
 Runs C<wgd>, processing the arguments specified and running a sub-command if possible.
 
-=head2 C<usage ( %options )>
+=head2 C<usage ( [$verbosity] )>
 
-Returns usage information for C<wgd>.  The options hash specifies additional options:
-
-=head3 C<verbosity>
-
-The verbosity level of the usage information.  This is passed on
+Returns usage information for C<wgd>.  The verbosity level is passed on
 to L<WGDev::Help::package_usage|WGDev::Help/package_usage>.
-
-=head3 C<message>
-
-An additional message to include before the usage information.
-
-=head3 C<include_cmd_list>
-
-Include the list of available sub-commands with the usage information.
 
 =head2 C<command_list>
 
 Searches for available sub-commands and returns them as an array.  This list includes available Perl modules that pass the L</get_command_module> check and executable files beginning with F<wgd->.
 
-=head2 C<guess_webgui_paths ( $wgd, [$webgui_root], [$webgui_config] )>
+=head2 C<guess_webgui_paths ( wgd => $wgd, [root => $webgui_root], [config_file => $webgui_config] )>
 
 Attempts to detect the paths to use for the WebGUI root and config
 file.  Initializes the specified $wgd object.  If specified, attempts

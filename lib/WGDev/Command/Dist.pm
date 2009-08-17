@@ -10,6 +10,10 @@ BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
 use File::Spec ();
 
+sub needs_config {
+    return;
+}
+
 sub process {
     my $self = shift;
     my $wgd  = $self->wgd;

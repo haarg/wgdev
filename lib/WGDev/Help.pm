@@ -5,38 +5,20 @@ use 5.008008;
 
 our $VERSION = '0.1.0';
 
-use Carp qw(croak);
-use constant USE_SECTIONS => 99;
+use WGDev::X   ();
 use File::Spec ();
 
 sub package_usage {
     my $package   = shift;
     my $verbosity = shift;
-    require Pod::Usage;
+    require WGDev::Pod::Usage;
     if ( !defined $verbosity ) {
         $verbosity = 1;
     }
-    if ( $verbosity == 1 ) {
-        $verbosity = USE_SECTIONS;
-    }
-    my $pod    = package_pod($package);
-    my $output = q{};
-    ##no critic (RequireCarping RequireBriefOpen)
-    open my $out, '>', \$output
-        or die "Can't open file handle to scalar : $!";
-    open my $in, '<', \$pod or croak "Unable to read documentation file : $!";
-    my $params = {
-        -input    => $in,
-        -output   => $out,
-        -verbose  => $verbosity,
-        -exitval  => 'NOEXIT',
-        -sections => 'SYNOPSIS|OPTIONS|CONFIGURATION',
-
-    };
-    Pod::Usage::pod2usage($params);
-    close $in  or return q{};
-    close $out or return q{};
-    return $output;
+    my $parser = WGDev::Pod::Usage->new;
+    $parser->verbosity($verbosity);
+    my $pod = package_pod($package);
+    return $parser->parse_from_string($pod);
 }
 
 sub package_perldoc {
@@ -53,7 +35,7 @@ sub package_perldoc {
     File::Path::mkpath($path);
     my $out_file = File::Spec->catfile( $path, $filename );
     open my $out, '>', $out_file
-        or croak "Unable to create temp file: $!";
+        or WGDev::X::IO->throw("Unable to create temp file: $!");
     print {$out} $pod;
     close $out or return q{};
 
@@ -66,7 +48,7 @@ sub package_perldoc {
 
     # error status of subprocess
     if ($?) {    ##no critic (ProhibitPunctuationVars)
-        die "Error displaying help!\n";
+        WGDev::X->throw('Error displaying help!');
     }
     return;
 }
@@ -84,15 +66,16 @@ sub package_pod {
         require Pod::Select;
         my $parser = Pod::Select->new;
         $parser->select(@sections);
-        ##no critic (RequireCarping)
         my $output = q{};
         open my $pod_in, '<', \$pod
-            or die "Can't open file handle to scalar : $!";
+            or WGDev::X::IO->throw;
         open my $pod_out, '>', \$output
-            or die "Can't open file handle to scalar : $!";
+            or WGDev::X::IO->throw;
         $parser->parse_from_filehandle( $pod_in, $pod_out );
-        close $pod_in  or die "Can't open file handle to scalar : $!";
-        close $pod_out or die "Can't open file handle to scalar : $!";
+        close $pod_in
+            or WGDev::X::IO->throw;
+        close $pod_out
+            or WGDev::X::IO->throw;
         $pod = $output;
     }
     return $pod;
@@ -104,7 +87,7 @@ sub filter_pod {
     my $file   = shift;
     my $wanted = shift;
     open my $fh, '<', $file or return q{};
-    my $content = do { local $/ = undef; <$fh> };
+    my $content = do { local $/; <$fh> };
     close $fh or return q{};
     if ( $content
         =~ /^(=head1[ ]NAME\s+^\Q$wanted\E\s.*?)(?:^=head1[ ]NAME\E\s|\z)/msx

@@ -54,12 +54,12 @@ sub process {
         if ( -e $cover_dir ) {
             system 'cover', '-silent', '-delete', $cover_dir;
         }
-        my $cover_options = $self->option('coverOptions') || '-select,WebGUI,+ignore,^t';
+        my $cover_options = $self->option('coverOptions')
+            || '-select,WebGUI,+ignore,^t';
         ##no critic (RequireLocalizedPunctuationVars)
         $ENV{HARNESS_PERL_SWITCHES}
             = '-MDevel::Cover=-silent,1'
-            . ",$cover_options,"
-            . '-db,'
+            . ",$cover_options," . '-db,'
             . $cover_dir;
     }
     my $prove = App::Prove->new;

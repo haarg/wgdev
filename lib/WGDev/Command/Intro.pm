@@ -8,6 +8,10 @@ our $VERSION = '0.0.1';
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
+sub needs_root {
+    return;
+}
+
 sub process {
     my $self = shift;
     return $self->help;
@@ -32,6 +36,11 @@ WGDev::Command::Intro - Introduction to WGDev
 =head1 DESCRIPTION
 
 WGDev provides a variety of commands useful for WebGUI developers.
+
+=head1 GETTING STARTED
+
+The first step in using WGDev is getting it to find your WebGUI
+root directory and site config file.
 
 =head1 AUTHOR
 

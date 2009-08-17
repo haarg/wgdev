@@ -3,7 +3,9 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.2.0';
+our $VERSION = '0.3.0';
+
+use WGDev::X ();
 
 sub is_runnable {
     my $class = shift;
@@ -102,15 +104,17 @@ sub arguments {
 
 sub run {
     my $self = shift;
+    WGDev::X::NoWebGUIRoot->throw
+        if $self->needs_root && !$self->wgd->root;
+    WGDev::X::NoWebGUIConfig->throw
+        if $self->needs_config && !$self->wgd->config_file;
     my @params = ( @_ == 1 && ref $_[0] eq 'ARRAY' ) ? @{ +shift } : @_;
     local $| = 1;
     if ( !$self->parse_params(@params) ) {
         my $usage = $self->usage(0);
-        warn $usage;    ##no critic (RequireCarping)
-        exit 1;
+        WGDev::X::CommandLine::BadParams->throw( usage => $usage );
     }
-    my $result = $self->process ? 0 : 1;
-    exit $result;
+    return $self->process;
 }
 
 sub usage {
@@ -130,12 +134,24 @@ sub help {
         $class = ref $class;
     }
     require WGDev::Help;
-    if ( eval { WGDev::Help::package_perldoc( $class, '!AUTHOR|LICENSE' ); 1 }
-        )
+    if (
+        eval {
+            WGDev::Help::package_perldoc( $class, '!AUTHOR|LICENSE|METHODS' );
+            1;
+        } )
     {
         return 1;
     }
     return;
+}
+
+sub needs_root {
+    return 1;
+}
+
+sub needs_config {
+    my $class = shift;
+    return $class->needs_root;
 }
 
 1;
@@ -231,6 +247,14 @@ C<parse_params>.
 Sets an option only if it is not currently defined.  First parameter is the
 option to set, second parameter is the value to set it to.
 
+=head2 C<needs_root>
+
+Should be overridden in subclasses to set whether a command needs a WebGUI root directory to run.  Returns true if not overridden.
+
+=head2 C<needs_config>
+
+Should be overridden in subclasses to set whether a command needs a WebGUI config file directory to run.  Returns the same value as L</needs_root> if not overridden.
+
 =head2 C<usage ( [ $verbosity ] )>
 
 Returns the usage information for the command.  The optional first parameter
@@ -243,12 +267,13 @@ and LICENSE sections.
 
 =head2 C<run ( @arguments )>
 
-Runs the command.  Parameters should be the command line parameters to use for
-running the command.  This sub should exit, not return.  The default method
-will first call C<process_params> with the given parameters, call C<usage> if
-there was a problem with parsing the parameters, or call C<process> if there
-was not.  If C<process> returns a true value, it will exit with an error
-value of zero.
+Runs the command.  Parameters should be the command line parameters
+to use for running the command.  This sub should return a true value
+on success and either die or return a false value on failure.  The
+default method will first call C<process_params> with the given
+parameters, call C<usage> if there was a problem with parsing the
+parameters, or call C<process> if there was not.  It will return
+C<process>'s return value to the caller.
 
 =head2 C<process>
 

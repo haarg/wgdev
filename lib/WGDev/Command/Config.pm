@@ -9,7 +9,12 @@ use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
 use WGDev          ();
+use WGDev::X       ();
 use WGDev::Command ();
+
+sub needs_root {
+    return;
+}
 
 sub config_options {
     return qw(
@@ -26,7 +31,7 @@ sub process {
 
     if ( !@args ) {
         my $usage = $self->usage(0);
-        warn $usage;    ##no critic (RequireCarping)
+        warn $usage;
         return;
     }
 
@@ -40,14 +45,16 @@ sub process {
             ##no critic (RequireBriefOpen)
             if ( $file eq q{-} ) {
                 ##no critic (ProhibitTwoArgOpen)
-                open $fh, q{-} or die "Unable to read STDIN: $!\n";
+                open $fh, '<&=', \*STDIN
+                    or WGDev::X::IO::Read->throw;
             }
             else {
                 open $fh, '<', $file
-                    or die "Unable to read from $file\: $!\n";
+                    or WGDev::X::IO::Read->throw( path => $file );
             }
-            $value = do { local $/ = undef; <$fh> };
-            close $fh or die "Unable to read from $file\: $!\n";
+            $value = do { local $/; <$fh> };
+            close $fh
+                or WGDev::X::IO::Read->throw( path => $file );
         }
         if ( $self->option('struct') ) {
             $value =~ s/\A \s* ( [[{] ) /--- $1/msx;
@@ -55,7 +62,7 @@ sub process {
             eval {
                 $value = WGDev::yaml_decode($value);
                 1;
-            } or die "Invalid or unsupported format.\n";
+            } or WGDev::X->throw('Invalid or unsupported format.');
         }
     }
     my $param
@@ -82,7 +89,7 @@ __END__
 
 =head1 NAME
 
-WGDev::Command::Config - Report WGDev configuration parameters
+WGDev::Command::Config - Report or set WGDev configuration parameters
 
 =head1 SYNOPSIS
 
@@ -90,7 +97,7 @@ WGDev::Command::Config - Report WGDev configuration parameters
 
 =head1 DESCRIPTION
 
-Reports WGDev configuration parameters.
+Report or set WGDev configuration parameters.
 
 =head1 OPTIONS
 

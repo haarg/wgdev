@@ -11,7 +11,6 @@ my $build = WGDev::Builder->new(
     requires           => {
         'perl'             => '5.8.8',
         'App::Prove'       => 0,
-        'Carp'             => 0,
         'Config::JSON'     => 0,
         'Cwd'              => 0,
         'DBI'              => 0,
@@ -27,6 +26,10 @@ my $build = WGDev::Builder->new(
         'Pod::Usage'       => 0,
         'Text::ParseWords' => 0,
         'version'          => 0,
+        'Exception::Class' => 0,
+    },
+    recommends          => {
+        'Term::ANSIColor'  => 0,
     },
 );
 $build->create_build_script;

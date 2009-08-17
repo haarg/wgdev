@@ -8,6 +8,8 @@ our $VERSION = '0.2.0';
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
+use WGDev::X ();
+
 sub config_options {
     return qw(
         print|p
@@ -29,7 +31,7 @@ sub process {
         + ( defined $self->option('load')  || 0 )
         + ( defined $self->option('clear') || 0 ) > 1 )
     {
-        die "Multiple database operations specified!\n";
+        WGDev::X->throw('Multiple database operations specified!');
     }
 
     if ( $self->option('print') ) {
@@ -42,26 +44,27 @@ sub process {
     }
     if ( defined $self->option('load') ) {
         if ( $self->option('load') && $self->option('load') ne q{-} ) {
+            $db->clear;
             $db->load( $self->option('load') );
+            return 1;
         }
-        else {
-            exec {'mysql'} 'mysql', @command_line;
-        }
-        return 1;
     }
     if ( defined $self->option('dump') ) {
         if ( $self->option('dump') && $self->option('dump') ne q{-} ) {
             $db->dump( $self->option('dump') );
+            return 1;
         }
         else {
-            exec {'mysqldump'} 'mysqldump', @command_line;
+            my $return = system {'mysqldump'} 'mysqldump', @command_line;
+            return $return ? 0 : 1;
         }
-        return 1;
     }
     if ( defined $self->option('show') ) {
-        exec {'mysqlshow'} 'mysqlshow', @command_line;
+        my $return = system {'mysqlshow'} 'mysqlshow', @command_line;
+        return $return ? 0 : 1;
     }
-    exec {'mysql'} 'mysql', @command_line;
+    my $return = system {'mysql'} 'mysql', @command_line;
+    return $return ? 0 : 1;
 }
 
 1;

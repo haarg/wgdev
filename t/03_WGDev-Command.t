@@ -1,15 +1,8 @@
 use strict;
 use warnings;
 
-# set this right now so we can override it later
-BEGIN {
-    *CORE::GLOBAL::exit = sub (;$) {
-        goto &CORE::exit;
-    };
-}
-
 use Test::More 'no_plan';
-use Test::NoWarnings;
+#use Test::NoWarnings;
 use Test::Exception;
 use Test::Warn;
 
@@ -46,23 +39,6 @@ sub capture_output (&) {
     select $orig_out;
     close $out_fh;
     return $output;
-}
-
-sub capture_exit (&) {
-    my $sub = shift;
-    my $exit_code;
-
-    EXIT: {
-        no warnings 'redefine';
-        local *CORE::GLOBAL::exit = sub (;$) {
-            $exit_code = @_ ? 0 + shift : 0;
-            no warnings 'exiting';
-            last EXIT;
-        };
-        $sub->();
-        return;
-    }
-    return $exit_code;
 }
 
 # we don't want the user's configuration interfering with the test
@@ -124,11 +100,11 @@ is +WGDev::Command::get_command_module('_test-subclass'),
     'WGDev::Command::_test::Subclass',
     'get_command_module finds subclass command modules';
 
-is +WGDev::Command::get_command_module('base'), undef,
-    'get_command_module returns undef for existing command modules that aren\'t runnable';
+throws_ok { WGDev::Command::get_command_module('base') } 'WGDev::X::BadCommand',
+    q{get_command_module throws exception for existing command modules that aren't runnable};
 
-is +WGDev::Command::get_command_module('_nonexistant'), undef,
-    'get_command_module returns undef for nonexisting command modules';
+throws_ok { WGDev::Command::get_command_module('_nonexistant') } 'WGDev::X::BadCommand',
+    'get_command_module throws exception for nonexisting command modules';
 
 is +WGDev::Command::command_to_module('command'), 'WGDev::Command::Command',
     'command_to_module converts command name to module name properly';
@@ -147,39 +123,29 @@ my $usage_base = WGDev::Help::package_usage('WGDev::Command');
 is +WGDev::Command->usage, $usage_base,
     'usage with no parameters gives base usage';
 
-my $usage_verbosity_2 = WGDev::Help::package_usage( 'WGDev::Command', 2 );
-is +WGDev::Command->usage(2), $usage_verbosity_2,
+my $usage_verbosity_0 = WGDev::Help::package_usage( 'WGDev::Command', 0 );
+is +WGDev::Command->usage(0), $usage_verbosity_0,
     'usage with one parameter treats it as verbosity';
 
-is +WGDev::Command->usage( verbosity => 2 ), $usage_verbosity_2,
-    'usage with hash uses verbosity option';
-
-is +WGDev::Command->usage( message => 'prefixed message' ),
-    'prefixed message' . $usage_base,
-    'usage with message option prefixes it to output';
-
 my @commands = WGDev::Command->command_list;
-is +WGDev::Command->usage( include_cmd_list => 1 ),
-    $usage_base . "SUBCOMMANDS\n    " . join( "\n    ", @commands ) . "\n\n",
-    'usage with include_cmd_list option includes command list';
 
-is + ( grep { $_ eq 'util' } @commands ), 1,
+is +( grep { $_ eq 'util' } @commands ), 1,
     'command_list includes unloaded commands';
 
-is + ( grep { $_ eq '_test' } @commands ), 1,
+is +( grep { $_ eq '_test' } @commands ), 1,
     'command_list includes loaded commands';
 
-is + ( grep { $_ eq '_tester' } @commands ), 1,
+is +( grep { $_ eq '_tester' } @commands ), 1,
     'command_list includes commands with mismatched filename and package';
 
-is + ( grep { $_ eq 'tester-executable' } @commands ), 1,
+is +( grep { $_ eq 'tester-executable' } @commands ), 1,
     'command_list includes standalone executables in path';
 
-is + ( grep { $_ eq 'tester-non-executable' } @commands ), 0,
-    'command_list doesn\'t include standalone non-executables in path';
+is +( grep { $_ eq 'tester-non-executable' } @commands ), 0,
+    q{command_list doesn't include standalone non-executables in path};
 
-is + ( grep { $_ eq 'base' } @commands ), 0,
-    'command_list doesn\'t include command modules that are not runnable';
+is +( grep { $_ eq 'base' } @commands ), 0,
+    q{command_list doesn't include command modules that are not runnable};
 
 my $emptydir = File::Temp->newdir;
 my $root     = File::Temp->newdir;
@@ -224,55 +190,51 @@ my $cwd = cwd;
 
 chdir $emptydir;
 my $wgd = WGDev->new;
-throws_ok { WGDev::Command->guess_webgui_paths($wgd) }
-qr{^\QUnable to find WebGUI root directory!},
-    'guess_webgui_paths throws correct error for invalid dir';
+lives_and { is +WGDev::Command->guess_webgui_paths(wgd => $wgd), undef }
+    q{guess_webgui_paths returns undef when unable to locate WebGUI paths};
 
 chdir $root;
 $wgd = WGDev->new;
-lives_and { is +WGDev::Command->guess_webgui_paths($wgd), $wgd }
-'guess_webgui_paths returns passed in WGDev instance when finding path based on current';
+lives_and { is +WGDev::Command->guess_webgui_paths(wgd => $wgd), $wgd }
+    'guess_webgui_paths returns passed in WGDev instance when finding path based on current';
 
-is realpath( $wgd->root ), realpath($root_abs), 'root path set correctly';
+is realpath( $wgd->root ), realpath($root_abs),
+    'root path set correctly';
 
 is realpath( $wgd->config_file ), realpath($config_abs),
     'config file path set correctly';
 
 $wgd = WGDev->new;
-throws_ok { WGDev::Command->guess_webgui_paths( $wgd, $emptydir ) }
-qr{^\QInvalid WebGUI path: },
+throws_ok { WGDev::Command->guess_webgui_paths( wgd => $wgd, root => $emptydir ) }
+    'WGDev::X::BadParameter',
     'guess_webgui_paths throws correct error for invalid dir when in valid dir';
 
 chdir $sbin;
 $wgd = WGDev->new;
 lives_and {
-    is realpath( WGDev::Command->guess_webgui_paths($wgd)->root ),
-        realpath($root_abs);
+    is realpath( WGDev::Command->guess_webgui_paths(wgd => $wgd)->root ), realpath($root_abs);
 }
-'guess_webgui_paths finds root searching updward from current dir';
+    'guess_webgui_paths finds root searching updward from current dir';
 
 chdir $cwd;
 $wgd = WGDev->new;
 lives_and {
     is realpath(
-        WGDev::Command->guess_webgui_paths( $wgd, undef, $config_abs )
-            ->root ), realpath($root_abs);
+        WGDev::Command->guess_webgui_paths( wgd => $wgd, config_file => $config_abs )->root
+    ), realpath($root_abs);
 }
 'guess_webgui_paths finds root when given config file';
 
 $wgd = WGDev->new;
-throws_ok {
-    WGDev::Command->guess_webgui_paths( $wgd, undef,
-        catfile( $test_data, 'www.example.com.conf' ) );
+lives_and {
+    is +WGDev::Command->guess_webgui_paths( wgd => $wgd, config_file => catfile( $test_data, 'www.example.com.conf' ) ), undef;
 }
-qr{^\QUnable to find WebGUI root directory!},
-    'guess_webgui_paths throws correct error when given a config file without a valid root';
+    'guess_webgui_paths returns undef when given a config file without a valid root';
 
 chdir $root;
 $ENV{WEBGUI_ROOT} = $emptydir;
 $wgd = WGDev->new;
-throws_ok { WGDev::Command->guess_webgui_paths($wgd) }
-qr{^\QInvalid WebGUI path: },
+throws_ok { WGDev::Command->guess_webgui_paths(wgd => $wgd) } 'WGDev::X::BadParameter',
     'guess_webgui_paths throws correct error for invalid dir set via ENV when in valid dir';
 
 chdir $cwd;
@@ -280,7 +242,7 @@ chdir $cwd;
 $ENV{WEBGUI_ROOT} = $root_abs;
 $wgd = WGDev->new;
 lives_and {
-    is realpath( WGDev::Command->guess_webgui_paths($wgd)->root ),
+    is realpath( WGDev::Command->guess_webgui_paths(wgd => $wgd)->root ),
         realpath($root_abs);
 }
 'guess_webgui_paths finds root given by environment';
@@ -289,7 +251,7 @@ $ENV{WEBGUI_ROOT} = undef;
 $command_config->{webgui_root} = $root_abs;
 $wgd = WGDev->new;
 lives_and {
-    is realpath( WGDev::Command->guess_webgui_paths($wgd)->root ),
+    is realpath( WGDev::Command->guess_webgui_paths(wgd => $wgd)->root ),
         realpath($root_abs);
 }
 'guess_webgui_paths finds root given by wgdevcfg file';
@@ -297,25 +259,23 @@ lives_and {
 $command_config->{webgui_root} = undef;
 copy catfile( $test_data, 'www.example.com.conf' ),
     catfile( $etc, 'www.example2.com.conf' );
-throws_ok { WGDev::Command->guess_webgui_paths( $wgd, $root ) }
-qr{^\QUnable to find WebGUI config file!},
-    'guess_webgui_paths throws correct error for root with two config files';
+lives_and { is +WGDev::Command->guess_webgui_paths( wgd => $wgd, root => $root ), undef }
+    'guess_webgui_paths returns undef for root with two config files';
 
 $ENV{WEBGUI_ROOT} = $root_abs;
 $wgd = WGDev->new;
 my $truncated_config = catfile( $etc, 'www.example.com' );
 lives_and {
     is realpath(
-        WGDev::Command->guess_webgui_paths( $wgd, undef, $truncated_config )
+        WGDev::Command->guess_webgui_paths( wgd => $wgd, config_file => $truncated_config )
             ->config_file ), realpath($config);
 }
 'guess_webgui_paths intelligently adds .conf to config file';
 
 my $nonexistant_config = catfile( $etc, 'duff' );
 throws_ok {
-    WGDev::Command->guess_webgui_paths( $wgd, undef, $nonexistant_config );
-}
-qr{^\QInvalid WebGUI config file: $nonexistant_config\E$}m,
+    WGDev::Command->guess_webgui_paths( wgd=>$wgd, config_file=> $nonexistant_config );
+} 'WGDev::X::BadParameter',
     'guess_webgui_paths throws with the config file requested, not with an unspecified .conf appended to the end';
 $ENV{WEBGUI_ROOT} = undef;
 
@@ -323,26 +283,18 @@ chdir $root;
 $wgd = WGDev->new;
 lives_and {
     is realpath(
-        WGDev::Command->guess_webgui_paths( $wgd, undef, 'www.example.com' )
+        WGDev::Command->guess_webgui_paths( wgd=>$wgd, config_file=> 'www.example.com' )
             ->config_file ),
         realpath($config);
 }
 'guess_webgui_paths with guessed root intelligently adds .conf to config file';
 
-throws_ok {
-    WGDev::Command->guess_webgui_paths( $wgd, undef, 'duff' );
-}
-qr{^\QInvalid WebGUI config file: duff\E$}m,
-    'guess_webgui_paths with guessed root throws with the config file requested, not with an unspecified .conf appended to the end';
 chdir $cwd;
 
-my $exit;
-warning_like {
-    $exit = capture_exit {
-        WGDev::Command->run();
-    };
-}
-qr/^\QNo command specified!/, 'run with no params warns correctly';
-
-is $exit, 1, '... and exits with an error code of 1';
+my $return;
+$output = capture_output {
+    $return = WGDev::Command->run;
+};
+like $output, qr/^\QRun WGDev commands/, 'run with no params outputs correct message';
+is $return, 1, '... and exits with an error code of 0';
 
