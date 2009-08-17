@@ -37,11 +37,11 @@ use Exception::Class (
         fields      => ['path'],
     },
     'WGDev::X::IO::Read' => {
-        isa         => 'WGDev::X',
+        isa         => 'WGDev::X::IO',
         description => 'Read error',
     },
     'WGDev::X::IO::Write' => {
-        isa         => 'WGDev::X',
+        isa         => 'WGDev::X::IO',
         description => 'Write error',
     },
     'WGDev::X::NoWebGUIConfig' => {
@@ -93,7 +93,7 @@ sub WGDev::X::CommandLine::BadCommand::full_message {
     my $self = shift;
     my $message
         = defined $self->command_name
-        ? q{Can't find command } . $self->command_name . "!\n"
+        ? "Can't find command @{[ $self->command_name ]}!\n"
         : "No command specified!\n";
     if ( defined $self->usage ) {
         $message .= "\n" . $self->usage;
@@ -112,6 +112,23 @@ sub WGDev::X::System::new {
         $self->{errno_string} = $errno_string;
     }
     return $self;
+}
+
+sub WGDev::X::System::full_message {
+    my $self = shift;
+    my $message = $self->SUPER::full_message;
+    $message .= ' - ' . $self->errno_string;
+    return $message;
+}
+
+sub WGDev::X::IO::full_message {
+    my $self = shift;
+    my $message = $self->SUPER::message || $self->description;
+    if ($self->path) {
+        $message .= ' Path: ' . $self->path;
+    }
+    $message .= ' - ' . $self->errno_string;
+    return $message;
 }
 
 1;
