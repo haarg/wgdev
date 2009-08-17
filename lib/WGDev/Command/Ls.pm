@@ -128,7 +128,7 @@ sub format_output {
             if ($1) {
                 $replace = $asset->get($1);
                 if ($2) {
-                    $replace = sprintf("%$2s", $replace);
+                    $replace = sprintf('%*2$s', $replace, $2);
                 }
             }
             else {
@@ -198,6 +198,20 @@ the field to filter against, and C<smartmatch> is either a Perl regular expressi
 a string such as C<my_exact_match>.
 
 =back
+
+=head1 METHODS
+
+=head2 C<format_output ( $format, $asset )>
+
+Returns the formatted information about an asset.  C<$format> is the format to output as specifed in the L<format option|/-f>.
+
+=head2 C<option_filter ( $filter )>
+
+Takes a filter specification, verifies that it is specified properly, and saves it.
+
+=head2 C<pass_filter ( $asset )>
+
+Checks if a given asset passes the saved filter.  Returns true or false.
 
 =head1 AUTHOR
 
