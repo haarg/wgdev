@@ -9,7 +9,6 @@ use WGDev::Command::Base::Verbosity;
 BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
 
 use File::Spec ();
-use Carp qw(croak);
 use constant STAT_MODE => 2;
 use constant STAT_UID  => 4;
 use constant STAT_GID  => 5;
