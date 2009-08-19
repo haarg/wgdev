@@ -35,7 +35,7 @@ sub package_perldoc {
     File::Path::mkpath($path);
     my $out_file = File::Spec->catfile( $path, $filename );
     open my $out, '>', $out_file
-        or WGDev::X::IO->throw("Unable to create temp file: $!");
+        or WGDev::X::IO->throw('Unable to create temp file');
     print {$out} $pod;
     close $out or return q{};
 
@@ -59,43 +59,27 @@ sub package_pod {
     ( my $file = $package . '.pm' ) =~ s{::}{/}msxg;
     require $file;
     my $actual_file = $INC{$file};
-    my $pod = filter_pod( $actual_file, $package );
-
+    my $pod;
+    open my $pod_in, '<', $actual_file
+        or WGDev::X::IO::Read->throw(path => $actual_file);
     if ($sections) {
         my @sections = ref $sections ? @{$sections} : $sections;
         require Pod::Select;
         my $parser = Pod::Select->new;
         $parser->select(@sections);
-        my $output = q{};
-        open my $pod_in, '<', \$pod
-            or WGDev::X::IO->throw;
-        open my $pod_out, '>', \$output
+        $pod = '';
+        open my $pod_out, '>', \$pod
             or WGDev::X::IO->throw;
         $parser->parse_from_filehandle( $pod_in, $pod_out );
-        close $pod_in
-            or WGDev::X::IO->throw;
         close $pod_out
             or WGDev::X::IO->throw;
-        $pod = $output;
     }
+    else {
+        $pod = do { local $/; <$pod_in> };
+    }
+    close $pod_in
+        or WGDev::X::IO->throw;
     return $pod;
-}
-
-# naive pod filter.  looks for =head1 NAME section that has the correct
-# package listed, and returns the text from there to the next =head1 NAME
-sub filter_pod {
-    my $file   = shift;
-    my $wanted = shift;
-    open my $fh, '<', $file or return q{};
-    my $content = do { local $/; <$fh> };
-    close $fh or return q{};
-    if ( $content
-        =~ /^(=head1[ ]NAME\s+^\Q$wanted\E\s.*?)(?:^=head1[ ]NAME\E\s|\z)/msx
-        )
-    {
-        return $1;
-    }
-    return q{};
 }
 
 1;
@@ -141,10 +125,6 @@ Filters out the POD for a specific package from the module file for the package.
 
 Limits sections to include based on L<Pod::Select/SECTION SPECIFICATIONS|Pod::Select's rules>.
 Can be either a scalar value or an array reference.
-
-=head2 C<filter_pod ( $file, $package )>
-
-Filters out the POD for a specific package from a file based on the NAME sections.
 
 =head1 AUTHOR
 
