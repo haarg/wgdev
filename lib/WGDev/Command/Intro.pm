@@ -41,21 +41,23 @@ WGDev provides a variety of commands useful for WebGUI developers.
 
 The first step in using WGDev is getting it to find your WebGUI
 root directory and site config file.  For this, you can either use
-the WEBGUI_ROOT and WEBGUI_CONFIG environment variables, setting
-the command.webgui_root and command.webgui_config options, using
-command line paramters, or relying on auto-detection.
+the C<WEBGUI_ROOT> and C<WEBGUI_CONFIG> environment variables,
+setting the C<command.webgui_root> and C<command.webgui_config>
+options, using command line paramters, or relying on auto-detection.
 
 Auto-detection works by searching upward from the current directory
 for a valid WebGUI directory, and if there is only one site config
 file, using it.
 
-With the root and config set or otherwise specified, you can use
-any of the WGDev commands.
+Once you have the root and config file set or otherwise specified,
+you can use any of the WGDev commands.
 
 =head1 GETTING HELP
 
-A summary of a command's options is available by using the --help
-option.  Full documentation is available using the help command.
+A summary of a command's options is available by running the command
+with the C<--help> option.  Full documentation is available using
+the C<wgd help> command.  A full list of available commands is
+available by running C<wgd commands>.
 
 =head1 COMMON COMMANDS
 
@@ -97,8 +99,8 @@ Graham Knop <graham@plainblack.com>
 
 Copyright (c) Graham Knop.
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
 
 =cut
 
