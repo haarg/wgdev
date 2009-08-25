@@ -69,6 +69,12 @@ use Exception::Class (
     },
 );
 
+BEGIN {
+    if ( $ENV{WGDEV_DEBUG} ) {
+        WGDev::X->Trace(1);
+    }
+}
+
 ##no critic (ProhibitQualifiedSubDeclarations)
 
 sub WGDev::X::full_message {
