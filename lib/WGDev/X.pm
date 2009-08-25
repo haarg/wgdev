@@ -73,6 +73,19 @@ BEGIN {
     if ( $ENV{WGDEV_DEBUG} ) {
         WGDev::X->Trace(1);
     }
+    if (! eval { Exception::Class->VERSION(1.27) } ) {
+        # work around bad behavior of Exception::Class < 1.27
+        # where it defaults the message to $!
+        *WGDev::X::new = sub {
+            my $errno = qq{$!};
+            my $class = shift;
+            my $self = $class->SUPER::new(@_);
+            if ($self->{message} eq $errno) {
+                $self->{message} = '';
+            }
+            return $self;
+        }
+    }
 }
 
 ##no critic (ProhibitQualifiedSubDeclarations)
