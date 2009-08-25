@@ -73,20 +73,20 @@ The package command will generate a package for asset specified.
 Additionally, the --import option allows you to import package
 files.
 
-=head2 C< wgd reset --dev >
+=head2 C<wgd reset --dev>
 
 Resets a site to its defaults and sets it up for development.  The
 site started is disabled, leaving the admin login with the default
 password of 123qwe.  Additionally, all of the default example content
 is cleared from the site giving you a blank slate to work from.
 
-=head2 C< wgd reset --build >
+=head2 C<wgd reset --build>
 
 Resets a site it its defaults and prepares it to generate a site
 creation script.  The site starter is enabled, and old version tags
 and revisions of content are cleaned up.
 
-=head2 C< wgd db >
+=head2 C<wgd db>
 
 Starts the C<mysql> client in the site's database, using the login
 information from the site config file.
