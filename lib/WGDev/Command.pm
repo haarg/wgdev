@@ -75,7 +75,7 @@ sub guess_webgui_paths {
     my %params = @_;
     my $wgd    = $params{wgd};
 ##no tidy
-  my $webgui_root
+    my $webgui_root
         = $params{root}
         || $ENV{WEBGUI_ROOT}
         || $wgd->my_config('webgui_root');
@@ -90,38 +90,39 @@ sub guess_webgui_paths {
         $wgd->root($webgui_root);
     }
 
+    my $e;
     if ($webgui_config) {
-        my $can_set_config = eval {
+        eval {
             $class->set_config_by_input( $wgd, $webgui_config );
-            1;
         };
+        $e = WGDev::X->caught;
 
         # if we were able to set the config file and root is set either by
         # being specified or calculated by the config path, we are done.
-        if ( $can_set_config && $wgd->root ) {
+        if ( !$e && $wgd->root ) {
             return $wgd;
         }
 
         # if root and the config file were specified and we haven't
         # found the config yet, die
         elsif ( $wgd->root ) {
-            die $@;
+            $e->rethrow;
         }
     }
 
     if ( !$wgd->root ) {
-        eval { $class->set_root_relative($wgd) } || return;
-        if ($webgui_config) {
-            $class->set_config_by_input( $wgd, $webgui_config );
+        if ( ! eval { $class->set_root_relative($wgd); 1 } ) {
+            # throw error from previous try to set the config
+            $e->rethrow
+                if $e;
             return $wgd;
         }
     }
-    my @configs = $wgd->list_site_configs;
-    if ( @configs == 1 ) {
-        $wgd->config_file( $configs[0] );
-        return $wgd;
+
+    if ($webgui_config) {
+        $class->set_config_by_input( $wgd, $webgui_config );
     }
-    return;
+    return $wgd;
 }
 
 sub set_root_relative {
@@ -324,17 +325,19 @@ Display version information
 
 =item C<-F> C<--config-file>
 
-Specify WebGUI config file to use.  Can be absolute, relative to the current
-directory, or relative to WebGUI's config directory.  If not specified, it
-will try to use the C<WEBGUI_CONFIG> environment variable.  If that is not
-set and there is only one config file in WebGUI's config directory, that file
-will be used.
+Specify WebGUI config file to use.  Can be absolute, relative to
+the current directory, or relative to WebGUI's config directory.
+If not specified, it will try to use the C<WEBGUI_CONFIG> environment
+variable or the C<command.webgui_config> option from the configuration
+file.
 
 =item C<-R> C<--webgui-root>
 
-Specify WebGUI's root directory.  Can be absolute or relative.  If not
-specified, first the C<WEBGUI_ROOT> environment variable will be checked,
-then will search upward from the current path for a WebGUI installation.
+Specify WebGUI's root directory.  Can be absolute or relative.  If
+not specified, first the C<WEBGUI_ROOT> environment variable and
+C<command.webgui_root> option from the configuration file will be
+checked, then will search upward from the current path for a WebGUI
+installation.
 
 =item C<< <subcommand> >>
 

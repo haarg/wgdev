@@ -27,7 +27,9 @@ my $build = WGDev::Builder->new(
         'Text::ParseWords' => 0,
         'version'          => 0,
         'Exception::Class' => 0,
+        # 'Scope::Guard'     => 0, # for tests only
     },
+
     recommends          => {
         'Term::ANSIColor'  => 0,
     },
