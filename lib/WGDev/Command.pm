@@ -21,6 +21,7 @@ sub run {
 
         'F|config-file=s' => \( my $opt_config ),
         'R|webgui-root=s' => \( my $opt_root ),
+        'S|sitename=s'    => \( my $opt_sitename ),
     ) || WGDev::X::CommandLine->throw( usage => $class->usage(0) );
     my @params = @ARGV;
 
@@ -63,6 +64,7 @@ sub run {
             wgd         => $wgd,
             root        => $opt_root,
             config_file => $opt_config,
+            sitename    => $opt_sitename,
         );
         my $command = $command_module->new($wgd);
         return $command->run(@params);
@@ -74,20 +76,41 @@ sub guess_webgui_paths {
     my $class  = shift;
     my %params = @_;
     my $wgd    = $params{wgd};
+
+    if ( $params{config_file} && $params{sitename} ) {
+        WGDev::X::BadParameter->throw(q{Can't specify both a config file and a sitename});
+    }
+
 ##no tidy
     my $webgui_root
         = $params{root}
         || $ENV{WEBGUI_ROOT}
         || $wgd->my_config('webgui_root');
-    my $webgui_config
-        = $params{config_file}
-        || $ENV{WEBGUI_CONFIG}
-        || $wgd->my_config('webgui_config');
+
+    my $webgui_config;
+    my $webgui_sitename;
+    FIND_CONFIG: {
+        ($webgui_config   = $params{config_file})
+            && last FIND_CONFIG;
+        ($webgui_sitename = $params{sitename})
+            && last FIND_CONFIG;
+        ($webgui_config   = $ENV{WEBGUI_CONFIG})
+            && last FIND_CONFIG;
+        ($webgui_sitename = $ENV{WEBGUI_SITENAME})
+            && last FIND_CONFIG;
+        ($webgui_config   = $wgd->my_config('webgui_config'))
+            && last FIND_CONFIG;
+        ($webgui_sitename = $wgd->my_config('webgui_sitename'))
+            && last FIND_CONFIG;
+    }
 ##tidy
 
     # first we need to find the webgui root
     if ($webgui_root) {
         $wgd->root($webgui_root);
+    }
+    if ( $webgui_sitename && $wgd->root ) {
+        return $class->set_config_by_sitename( $wgd, $webgui_sitename );
     }
 
     my $e;
@@ -118,8 +141,10 @@ sub guess_webgui_paths {
             return $wgd;
         }
     }
-
-    if ($webgui_config) {
+    if ( $webgui_sitename ) {
+        $class->set_config_by_sitename( $wgd, $webgui_sitename );
+    }
+    elsif ( $webgui_config ) {
         $class->set_config_by_input( $wgd, $webgui_config );
     }
     return $wgd;
@@ -160,6 +185,31 @@ sub set_config_by_input {
 
     # if neither normal or alternate config files worked, die
     $e->rethrow;
+}
+
+sub set_config_by_sitename {
+    my ( $class, $wgd, $sitename ) = @_;
+    require Config::JSON;
+    my @configs = $wgd->list_site_configs;
+    my $found_config;
+    for my $config_file ( @configs ) {
+        my $config = eval { Config::JSON->new($config_file) };
+        next
+            if !$config;
+        for my $config_sitename ( @{ $config->get('sitename') } ) {
+            if ($config_sitename eq $sitename) {
+                if ($found_config) {
+                    WGDev::X->throw("Ambigious site name: $sitename");
+                }
+                $found_config = $config_file;
+            }
+        }
+    }
+    if ($found_config) {
+        $wgd->config_file($found_config);
+        return $wgd;
+    }
+    WGDev::X->throw("Unable to find config file for site: $sitename");
 }
 
 sub report_version {
@@ -331,6 +381,14 @@ If not specified, it will try to use the C<WEBGUI_CONFIG> environment
 variable or the C<command.webgui_config> option from the configuration
 file.
 
+=item C<-S> C<--sitename>
+
+Specify the name of a WebGUI site to operate on.  This will check
+all of the config files in WebGUI's config directory for a single
+site using the specified sitename.  If not specified, the
+C<WEBGUI_SITENAME> environment variable and C<command.webgui_sitename>
+option will be used if available.
+
 =item C<-R> C<--webgui-root>
 
 Specify WebGUI's root directory.  Can be absolute or relative.  If
@@ -399,6 +457,13 @@ WebGUI config file.  If the specified file isn't found, but a file
 with the same name with the C<.conf> extension added to it does
 exist, that file will be used.  If a config file can't be found,
 throws an error.
+
+=head2 C<set_config_by_sitename ( $wgd, $sitename )>
+
+Sets the config file in the C<$wgd> object based on the specified
+site name.  All of the available config files will be checked and
+if one of the sites lists the site name, its config file will be
+used.
 
 =head2 C<report_help ( [$command, $module] )>
 

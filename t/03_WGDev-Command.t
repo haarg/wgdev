@@ -2,7 +2,7 @@ use strict;
 use warnings;
 
 use Test::More 'no_plan';
-#use Test::NoWarnings;
+use Test::NoWarnings;
 use Test::Exception;
 use Test::Warn;
 
@@ -11,6 +11,7 @@ use Cwd qw(realpath cwd);
 use File::Temp ();
 use File::Copy qw(copy);
 use Config ();
+use JSON ();
 
 use constant TEST_DIR => catpath( ( splitpath(realpath(__FILE__)) )[ 0, 1 ], '' );
 
@@ -356,6 +357,84 @@ lives_and {
             )->config_file
         ), $config_abs;
     } 'guess_webgui_paths intelligently adds .conf to config file with guessed root';
+}
+
+my $config2_abs = realpath(catfile($etc, 'www.example2.com.conf'));
+{
+    my $json = JSON->new->relaxed->pretty;
+    open my $fh, '<', catfile($test_data, 'www.example.com.conf');
+    my $config_data = $json->decode(scalar do { local $/; <$fh> });
+    close $fh;
+    $config_data->{sitename} = ['www.example2.com', 'www.example.com'];
+    open $fh, '>', $config2_abs;
+    print {$fh} $json->encode($config_data);
+    close $fh;
+}
+
+{
+    my $saved = guard_chdir $root;
+    lives_and {
+        is
+            realpath( WGDev::Command->guess_webgui_paths(
+                wgd => WGDev->new,
+                root => $root,
+                sitename => 'www.example2.com',
+            )->config_file),
+            $config2_abs;
+    }
+    'guess_webgui_paths finds config file when given sitename';
+
+    throws_ok {
+        WGDev::Command->guess_webgui_paths( wgd => WGDev->new, root => $root, sitename => 'www.example.com' )
+    } 'WGDev::X',
+        'guess_webgui_paths throws error for ambiguous sitenames';
+
+    throws_ok {
+        WGDev::Command->guess_webgui_paths( wgd => WGDev->new, root => $root, sitename => 'www.newexample.com' )
+    } 'WGDev::X',
+        'guess_webgui_paths throws error for invalid sitenames';
+
+    {
+        local $ENV{WEBGUI_SITENAME} = 'www.example2.com';
+        lives_and {
+            is
+                realpath( WGDev::Command->guess_webgui_paths(
+                    wgd => WGDev->new,
+                    root => $root,
+                )->config_file),
+                $config2_abs;
+        }
+        'guess_webgui_paths finds config file when given sitename through ENV';
+    }
+
+    {
+        local $command_config->{webgui_sitename} = 'www.example2.com';
+        lives_and {
+            is
+                realpath( WGDev::Command->guess_webgui_paths(
+                    wgd => WGDev->new,
+                    root => $root,
+                )->config_file),
+                $config2_abs;
+        }
+        'guess_webgui_paths finds config file when given sitename through config file';
+    }
+
+    {
+        local $ENV{WEBGUI_CONFIG} = $config_abs;
+        lives_and {
+            is
+                realpath( WGDev::Command->guess_webgui_paths(
+                    wgd => WGDev->new,
+                    root => $root,
+                    sitename => 'www.example2.com',
+                )->config_file),
+                $config2_abs;
+        }
+        'guess_webgui_paths finds config file when given sitename and config is set through ENV';
+    }
+
+    # TODO: Add more tests for sitename/config conflicts
 }
 
 my $return;
