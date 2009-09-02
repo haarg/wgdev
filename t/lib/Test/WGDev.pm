@@ -5,12 +5,26 @@ use 5.008008;
 
 our $VERSION = '0.0.1';
 
-use Exporter ();
-BEGIN { our @ISA = qw(Exporter) }
+use Test::Builder::Module ();
+BEGIN { our @ISA = qw(Test::Builder::Module) }
 use Scope::Guard ();
-use Cwd qw(cwd);
+use Cwd ();
 
-our @EXPORT = qw(capture_output guard_chdir);
+our @EXPORT = qw(capture_output guard_chdir is_path);
+
+use base 'Test::Builder::Module';
+
+sub is_path ($$;$) {
+    my ($got, $expected, $name) = @_;
+    my $tb = __PACKAGE__->builder;
+    if (defined $got) {
+        $got = Cwd::realpath($got);
+    }
+    if (defined $expected) {
+        $expected = Cwd::realpath($expected);
+    }
+    $tb->is_eq($got, $expected, $name);
+}
 
 sub capture_output (&) {
     my $sub    = shift;
@@ -29,7 +43,7 @@ sub capture_output (&) {
 }
 
 sub guard_chdir {
-    my $cwd = cwd;
+    my $cwd = Cwd::cwd;
     my $guard = Scope::Guard->new(sub {
         chdir $cwd;
     });

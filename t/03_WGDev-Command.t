@@ -195,7 +195,7 @@ my $command_config = {
         is +WGDev::Command->guess_webgui_paths(wgd => $wgd), $wgd;
     } 'guess_webgui_paths returns WGDev object when finding path based on current';
 
-    is realpath( $wgd->root ), $root_abs,
+    is_path $wgd->root, $root_abs,
         '... and sets root path correctly';
 
     is $wgd->config_file, undef,
@@ -205,14 +205,14 @@ my $command_config = {
 {
     my $saved = guard_chdir $sbin;
     lives_and {
-        is realpath( WGDev::Command->guess_webgui_paths(wgd => WGDev->new)->root ), realpath($root_abs);
+        is_path +WGDev::Command->guess_webgui_paths(wgd => WGDev->new)->root, $root_abs;
     } 'guess_webgui_paths finds root searching updward from current dir';
 }
 
 {
     local $ENV{WEBGUI_ROOT} = $root_abs;
     lives_and {
-        is realpath( WGDev::Command->guess_webgui_paths(wgd => WGDev->new)->root ),
+        is_path +WGDev::Command->guess_webgui_paths(wgd => WGDev->new)->root,
             $root_abs;
     } 'guess_webgui_paths finds root given by environment';
 }
@@ -220,7 +220,7 @@ my $command_config = {
 {
     local $command_config->{webgui_root} = $root_abs;
     lives_and {
-        is realpath( WGDev::Command->guess_webgui_paths(wgd => WGDev->new)->root ),
+        is_path +WGDev::Command->guess_webgui_paths(wgd => WGDev->new)->root,
             $root_abs;
     } 'guess_webgui_paths finds root given by wgdevcfg file';
 }
@@ -253,55 +253,55 @@ my $command_config = {
     lives_ok { WGDev::Command->guess_webgui_paths( wgd => $wgd, config_file => $config_abs ) }
         'guess_webgui_paths lives when given absolute config file';
 
-    is realpath($wgd->root), $root_abs, '... and finds correct WebGUI root';
-    is realpath($wgd->config_file), $config_abs, '... and sets correct config file';
+    is_path $wgd->root, $root_abs, '... and finds correct WebGUI root';
+    is_path $wgd->config_file, $config_abs, '... and sets correct config file';
 }
 
 lives_and {
-    is realpath ( WGDev::Command->guess_webgui_paths(
+    is_path +WGDev::Command->guess_webgui_paths(
         wgd => WGDev->new,
         root => $root_abs,
         config_file => 'www.example.com.conf',
-    )->config_file ), $config_abs;
+    )->config_file, $config_abs;
 } 'guess_webgui_paths finds config file when given bare filename';
 
 {
     local $ENV{WEBGUI_CONFIG} = 'www.example.com.conf';
     lives_and {
-        is realpath ( WGDev::Command->guess_webgui_paths(
+        is_path +WGDev::Command->guess_webgui_paths(
             wgd => WGDev->new,
             root => $root_abs,
-        )->config_file ), $config_abs;
+        )->config_file, $config_abs;
     } 'guess_webgui_paths finds config file from ENV';
 }
 
 {
     local $command_config->{webgui_config} = 'www.example.com.conf';
     lives_and {
-        is realpath ( WGDev::Command->guess_webgui_paths(
+        is_path +WGDev::Command->guess_webgui_paths(
             wgd => WGDev->new,
             root => $root_abs,
-        )->config_file ), $config_abs;
+        )->config_file, $config_abs;
     } 'guess_webgui_paths finds config file from wgdevcfg file';
 }
 
 {
     my $saved = guard_chdir $root;
     lives_and {
-        is realpath ( WGDev::Command->guess_webgui_paths(
+        is_path +WGDev::Command->guess_webgui_paths(
             wgd => WGDev->new,
             config_file => 'www.example.com.conf',
-        )->config_file ), $config_abs;
+        )->config_file, $config_abs;
     } 'guess_webgui_paths finds config file with root based on current directory';
 }
 
 {
     my $saved = guard_chdir $sbin;
     lives_and {
-        is realpath ( WGDev::Command->guess_webgui_paths(
+        is_path +WGDev::Command->guess_webgui_paths(
             wgd => WGDev->new,
             config_file => 'www.example.com.conf',
-        )->config_file ), $config_abs;
+        )->config_file, $config_abs;
     } 'guess_webgui_paths finds config file with root from upward search';
 }
 
@@ -311,12 +311,16 @@ lives_and {
         'WGDev::X::BadParameter',
         'guess_webgui_paths throws correct exception for invalid config file';
 
-    is $@->value, $invalid_config, '... and exception lists the correct filename';
+    SKIP: {
+        my $e = WGDev::X::BadParameter->caught;
+        skip 'no exception to test', 1 if !$e;
+        is $e->value, $invalid_config, '... and exception lists the correct filename';
+    }
 }
 
 {
     my $wgd = WGDev->new;
-    my $test_config = realpath( catfile( $test_data, 'www.example.com.conf' ) );
+    my $test_config = catfile( $test_data, 'www.example.com.conf' );
     lives_ok {
         WGDev::Command->guess_webgui_paths(
             wgd => $wgd,
@@ -324,42 +328,36 @@ lives_and {
         );
     } 'guess_webgui_paths lives when given a config file without a valid root';
     is $wgd->root, undef, '... and leaves root set to undef';
-    is realpath($wgd->config_file), $test_config, '... and sets the correct config_file';
+    is_path $wgd->config_file, $test_config, '... and sets the correct config_file';
 }
 
 lives_and {
-    is realpath(
-        WGDev::Command->guess_webgui_paths(
-            wgd         => WGDev->new,
-            config_file => catfile($etc, 'www.example.com'),
-            root        => $root_abs,
-        )->config_file
-    ), $config_abs;
+    is_path +WGDev::Command->guess_webgui_paths(
+        wgd         => WGDev->new,
+        config_file => catfile($etc, 'www.example.com'),
+        root        => $root_abs,
+    )->config_file, $config_abs;
 } 'guess_webgui_paths intelligently adds .conf to config file';
 
 lives_and {
-    is realpath(
-        WGDev::Command->guess_webgui_paths(
-            wgd         => WGDev->new,
-            config_file => 'www.example.com',
-            root        => $root_abs,
-        )->config_file
-    ), $config_abs;
+    is_path +WGDev::Command->guess_webgui_paths(
+        wgd         => WGDev->new,
+        config_file => 'www.example.com',
+        root        => $root_abs,
+    )->config_file, $config_abs;
 } 'guess_webgui_paths intelligently adds .conf to bare config file';
 
 {
     my $saved = guard_chdir $root;
     lives_and {
-        is realpath(
-            WGDev::Command->guess_webgui_paths(
-                wgd         => WGDev->new,
-                config_file => 'www.example.com',
-            )->config_file
-        ), $config_abs;
+        is_path +WGDev::Command->guess_webgui_paths(
+            wgd         => WGDev->new,
+            config_file => 'www.example.com',
+        )->config_file, $config_abs;
     } 'guess_webgui_paths intelligently adds .conf to config file with guessed root';
 }
 
-my $config2_abs = realpath(catfile($etc, 'www.example2.com.conf'));
+my $config2_abs = catfile($etc, 'www.example2.com.conf');
 {
     my $json = JSON->new->relaxed->pretty;
     open my $fh, '<', catfile($test_data, 'www.example.com.conf');
@@ -374,13 +372,11 @@ my $config2_abs = realpath(catfile($etc, 'www.example2.com.conf'));
 {
     my $saved = guard_chdir $root;
     lives_and {
-        is
-            realpath( WGDev::Command->guess_webgui_paths(
-                wgd => WGDev->new,
-                root => $root,
-                sitename => 'www.example2.com',
-            )->config_file),
-            $config2_abs;
+        is_path +WGDev::Command->guess_webgui_paths(
+            wgd => WGDev->new,
+            root => $root,
+            sitename => 'www.example2.com',
+        )->config_file, $config2_abs;
     }
     'guess_webgui_paths finds config file when given sitename';
 
@@ -397,25 +393,20 @@ my $config2_abs = realpath(catfile($etc, 'www.example2.com.conf'));
     {
         local $ENV{WEBGUI_SITENAME} = 'www.example2.com';
         lives_and {
-            is
-                realpath( WGDev::Command->guess_webgui_paths(
-                    wgd => WGDev->new,
-                    root => $root,
-                )->config_file),
-                $config2_abs;
-        }
-        'guess_webgui_paths finds config file when given sitename through ENV';
+            is_path +WGDev::Command->guess_webgui_paths(
+                wgd => WGDev->new,
+                root => $root,
+            )->config_file, $config2_abs;
+        } 'guess_webgui_paths finds config file when given sitename through ENV';
     }
 
     {
         local $command_config->{webgui_sitename} = 'www.example2.com';
         lives_and {
-            is
-                realpath( WGDev::Command->guess_webgui_paths(
-                    wgd => WGDev->new,
-                    root => $root,
-                )->config_file),
-                $config2_abs;
+            is_path +WGDev::Command->guess_webgui_paths(
+                wgd => WGDev->new,
+                root => $root,
+            )->config_file, $config2_abs;
         }
         'guess_webgui_paths finds config file when given sitename through config file';
     }
@@ -423,13 +414,11 @@ my $config2_abs = realpath(catfile($etc, 'www.example2.com.conf'));
     {
         local $ENV{WEBGUI_CONFIG} = $config_abs;
         lives_and {
-            is
-                realpath( WGDev::Command->guess_webgui_paths(
-                    wgd => WGDev->new,
-                    root => $root,
-                    sitename => 'www.example2.com',
-                )->config_file),
-                $config2_abs;
+            is_path +WGDev::Command->guess_webgui_paths(
+                wgd => WGDev->new,
+                root => $root,
+                sitename => 'www.example2.com',
+            )->config_file, $config2_abs;
         }
         'guess_webgui_paths finds config file when given sitename and config is set through ENV';
     }
