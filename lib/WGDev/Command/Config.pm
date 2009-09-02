@@ -44,7 +44,6 @@ sub process {
             my $fh;
             ##no critic (RequireBriefOpen)
             if ( $file eq q{-} ) {
-                ##no critic (ProhibitTwoArgOpen)
                 open $fh, '<&=', \*STDIN
                     or WGDev::X::IO::Read->throw;
             }

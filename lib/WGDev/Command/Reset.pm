@@ -264,7 +264,6 @@ sub reset_uploads {
     my ( $uploads_mode, $uploads_uid, $uploads_gid )
         = ( stat $site_uploads )[ STAT_MODE, STAT_UID, STAT_GID ];
 
-    ##no critic (ProhibitPunctuationVars ProhibitParensWithBuiltins)
     # make umask as permissive as required to match existing uploads folder
     # including sticky bits
     umask( oct(7777) & ~$uploads_mode );
@@ -355,7 +354,7 @@ sub upgrade {
     waitpid $pid, 0;
 
     # error status of subprocess
-    if ($?) {    ##no critic (ProhibitPunctuationVars)
+    if ($?) {
         WGDev::X->throw('Upgrade failed!');
     }
     $self->report("Done\n");
@@ -606,7 +605,7 @@ sub rebuild_lineage {
         $self->report("\n\n");
         chdir File::Spec->catdir( $wgd->root, 'sbin' );
         local @ARGV = ( '--configFile=' . $wgd->config_file_relative );
-        ##no critic (ProhibitPunctuationVars)
+
         # $0 should have the filename of the script being run
         local $0 = './rebuildLineage.pl';
         do $0;
@@ -635,7 +634,7 @@ sub rebuild_index {
         chdir File::Spec->catdir( $wgd->root, 'sbin' );
         local @ARGV
             = ( '--configFile=' . $wgd->config_file_relative, '--indexsite' );
-        ##no critic (ProhibitPunctuationVars)
+
         # $0 should have the filename of the script being run
         local $0 = './search.pl';
         do $0;

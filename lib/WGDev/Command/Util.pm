@@ -39,7 +39,7 @@ sub process {
         unshift @args, $command;
 
         # $^X is the name of the current perl executable
-        $command = $^X;    ##no critic (ProhibitPunctuationVars)
+        $command = $^X;
     }
 
     my $pid = fork;
@@ -56,7 +56,7 @@ sub process {
     waitpid $pid, 0;
 
     # $? is the child's exit value
-    return $? ? 0 : 1;    ##no critic (ProhibitPunctuationVars)
+    return $? ? 0 : 1;
 }
 
 1;

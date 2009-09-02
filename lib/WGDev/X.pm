@@ -73,18 +73,20 @@ BEGIN {
     if ( $ENV{WGDEV_DEBUG} ) {
         WGDev::X->Trace(1);
     }
-    if (! eval { Exception::Class->VERSION(1.27) } ) {
+    ##no critic (ProhibitMagicNumbers)
+    if ( !eval { Exception::Class->VERSION(1.27) } ) {
+
         # work around bad behavior of Exception::Class < 1.27
         # where it defaults the message to $!
         *WGDev::X::new = sub {
             my $errno = qq{$!};
             my $class = shift;
-            my $self = $class->SUPER::new(@_);
-            if ($self->{message} eq $errno) {
-                $self->{message} = '';
+            my $self  = $class->SUPER::new(@_);
+            if ( $self->{message} eq $errno ) {
+                $self->{message} = q{};
             }
             return $self;
-        }
+            }
     }
 }
 
@@ -134,7 +136,7 @@ sub WGDev::X::System::new {
 }
 
 sub WGDev::X::System::full_message {
-    my $self = shift;
+    my $self    = shift;
     my $message = $self->SUPER::full_message;
     $message .= ' - ' . $self->errno_string;
     return $message;
@@ -143,7 +145,7 @@ sub WGDev::X::System::full_message {
 sub WGDev::X::IO::full_message {
     my $self = shift;
     my $message = $self->SUPER::message || $self->description;
-    if ($self->path) {
+    if ( $self->path ) {
         $message .= ' Path: ' . $self->path;
     }
     $message .= ' - ' . $self->errno_string;

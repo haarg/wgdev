@@ -72,13 +72,14 @@ sub run {
     return 1;
 }
 
-sub guess_webgui_paths {
+sub get_params_or_defaults {
     my $class  = shift;
     my %params = @_;
     my $wgd    = $params{wgd};
 
     if ( $params{config_file} && $params{sitename} ) {
-        WGDev::X::BadParameter->throw(q{Can't specify both a config file and a sitename});
+        WGDev::X::BadParameter->throw(
+            q{Can't specify both a config file and a sitename});
     }
 
 ##no tidy
@@ -86,24 +87,41 @@ sub guess_webgui_paths {
         = $params{root}
         || $ENV{WEBGUI_ROOT}
         || $wgd->my_config('webgui_root');
-
+##tidy
     my $webgui_config;
     my $webgui_sitename;
+
+    # avoid buggy critic module
+    ##no critic (ProhibitCallsToUndeclaredSubs)
     FIND_CONFIG: {
-        ($webgui_config   = $params{config_file})
+        ( $webgui_config = $params{config_file} )
             && last FIND_CONFIG;
-        ($webgui_sitename = $params{sitename})
+        ( $webgui_sitename = $params{sitename} )
             && last FIND_CONFIG;
-        ($webgui_config   = $ENV{WEBGUI_CONFIG})
+        ( $webgui_config = $ENV{WEBGUI_CONFIG} )
             && last FIND_CONFIG;
-        ($webgui_sitename = $ENV{WEBGUI_SITENAME})
+        ( $webgui_sitename = $ENV{WEBGUI_SITENAME} )
             && last FIND_CONFIG;
-        ($webgui_config   = $wgd->my_config('webgui_config'))
+        ( $webgui_config = $wgd->my_config('webgui_config') )
             && last FIND_CONFIG;
-        ($webgui_sitename = $wgd->my_config('webgui_sitename'))
+        ( $webgui_sitename = $wgd->my_config('webgui_sitename') )
             && last FIND_CONFIG;
     }
-##tidy
+
+    $params{root}        = $webgui_root;
+    $params{config_file} = $webgui_config;
+    $params{sitename}    = $webgui_sitename;
+    return %params;
+}
+
+sub guess_webgui_paths {
+    my $class  = shift;
+    my %params = $class->get_params_or_defaults(@_);
+    my $wgd    = $params{wgd};
+
+    my $webgui_root     = $params{root};
+    my $webgui_config   = $params{config_file};
+    my $webgui_sitename = $params{sitename};
 
     # first we need to find the webgui root
     if ($webgui_root) {
@@ -115,9 +133,7 @@ sub guess_webgui_paths {
 
     my $e;
     if ($webgui_config) {
-        eval {
-            $class->set_config_by_input( $wgd, $webgui_config );
-        };
+        eval { $class->set_config_by_input( $wgd, $webgui_config ); };
         $e = WGDev::X->caught;
 
         # if we were able to set the config file and root is set either by
@@ -134,17 +150,18 @@ sub guess_webgui_paths {
     }
 
     if ( !$wgd->root ) {
-        if ( ! eval { $class->set_root_relative($wgd); 1 } ) {
+        if ( !eval { $class->set_root_relative($wgd); 1 } ) {
+
             # throw error from previous try to set the config
             $e->rethrow
                 if $e;
             return $wgd;
         }
     }
-    if ( $webgui_sitename ) {
+    if ($webgui_sitename) {
         $class->set_config_by_sitename( $wgd, $webgui_sitename );
     }
-    elsif ( $webgui_config ) {
+    elsif ($webgui_config) {
         $class->set_config_by_input( $wgd, $webgui_config );
     }
     return $wgd;
@@ -192,12 +209,12 @@ sub set_config_by_sitename {
     require Config::JSON;
     my @configs = $wgd->list_site_configs;
     my $found_config;
-    for my $config_file ( @configs ) {
+    for my $config_file (@configs) {
         my $config = eval { Config::JSON->new($config_file) };
         next
             if !$config;
         for my $config_sitename ( @{ $config->get('sitename') } ) {
-            if ($config_sitename eq $sitename) {
+            if ( $config_sitename eq $sitename ) {
                 if ($found_config) {
                     WGDev::X->throw("Ambigious site name: $sitename");
                 }
@@ -367,7 +384,7 @@ Runs sub-commands from the C<WGDev::Command> namespace, or standalone scripts st
 
 =item C<-h> C<-?> C<--help>
 
-Display help for any command.
+Display usage summary for any command.
 
 =item C<-V> C<--version>
 
@@ -385,7 +402,7 @@ file.
 
 Specify the name of a WebGUI site to operate on.  This will check
 all of the config files in WebGUI's config directory for a single
-site using the specified sitename.  If not specified, the
+site using the specified C<sitename>.  If not specified, the
 C<WEBGUI_SITENAME> environment variable and C<command.webgui_sitename>
 option will be used if available.
 
@@ -399,7 +416,7 @@ installation.
 
 =item C<< <subcommand> >>
 
-Sub-command to run or get help for.
+The sub-command to run or get help for.
 
 =back
 
@@ -430,12 +447,22 @@ to L<WGDev::Help::package_usage|WGDev::Help/package_usage>.
 
 =head2 C<command_list>
 
-Searches for available sub-commands and returns them as an array.  This list includes available Perl modules that pass the L</get_command_module> check and executable files beginning with F<wgd->.
+Searches for available sub-commands and returns them as an array.
+This list includes available Perl modules that pass the
+L</get_command_module> check and executable files beginning with
+F<wgd->.
 
-=head2 C<guess_webgui_paths ( wgd => $wgd, [root => $webgui_root], [config_file => $webgui_config] )>
+=head2 C<< get_params_or_defaults ( wgd => $wgd, %params ) >>
+
+Finds the specified WebGUI root, config file, and C<sitename>.  Uses
+environment variables and configuration file if not specified
+directly.  Returns C<%params> with C<root>, C<config_file>, and
+C<sitename> options updated.
+
+=head2 C<< guess_webgui_paths ( wgd => $wgd, [root => $webgui_root], [config_file => $webgui_config] ) >>
 
 Attempts to detect the paths to use for the WebGUI root and config
-file.  Initializes the specified $wgd object.  If specified, attempts
+file.  Initializes the specified C<$wgd> object.  If specified, attempts
 to use the specified paths first.  If not specified, first checks
 the environment variables C<WEBGUI_ROOT> and C<WEBGUI_CONFIG>.
 Next, attempts to search upward from the current path to find the

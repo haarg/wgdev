@@ -6,8 +6,9 @@ use 5.008008;
 our $VERSION = '0.2.0';
 
 use WGDev::Command::Base;
-use Carp;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
+
+use WGDev::X ();
 
 sub config_options {
     return qw(
@@ -35,47 +36,49 @@ sub process {
     my $session = $wgd->session();
     my $verbose = $self->option('verbose');
 
-    if (!$self->arguments) {
-        my $count = $session->db->quickScalar('select count(*) from mailQueue');
+    if ( !$self->arguments ) {
+        my $count
+            = $session->db->quickScalar('select count(*) from mailQueue');
         print "Mail queue has @{[ $count || 'no' ]} messages\n";
         return 1;
     }
-    
+
     my $to = join q{,}, $self->arguments;
     my $body;
-    while (my $line = <STDIN>) {
+    while ( my $line = <STDIN> ) {
         last if $line eq ".\n";
         $body .= $line;
     }
-    
-    # We are going to pass pretty much all options into WebGUI::Mail::Send::create
+
+# We are going to pass pretty much all options into WebGUI::Mail::Send::create
     my $options = $self->{options};
     $options->{to} = $to;
-    
+
     # Pull out the non-api options (or short-hands)
-    if (my $s = delete $options->{s}) {
+    if ( my $s = delete $options->{s} ) {
         $options->{subject} = $s;
     }
     my $queue = delete $options->{q} || delete $options->{queue};
-    
+
     if ($verbose) {
-        print $queue ? "Queueing" : "Sending", " message:\n";
+        print $queue ? 'Queueing' : 'Sending', " message:\n";
         print $body;
         print "Using the following options:\n";
-        print Data::Dumper::Dumper($self->{options});
-        print "SMTP Server: " . $session->setting->get("smtpServer") . "\n";
+        print Data::Dumper::Dumper( $self->{options} );
+        print 'SMTP Server: ' . $session->setting->get('smtpServer') . "\n";
         print "emailToLog: 1\n" if $session->config->get('emailToLog');
     }
     require WebGUI::Mail::Send;
-    my $msg = WebGUI::Mail::Send->create($session, $options );
-    croak "Unable to instantiate message" unless $msg;
-    
+    my $msg = WebGUI::Mail::Send->create( $session, $options );
+    WGDev::X->throw('Unable to instantiate message') unless $msg;
+
     $msg->addText($body);
-    
+
     my $status;
     if ($queue) {
         $status = $msg->queue;
-    } else {
+    }
+    else {
         $status = $msg->send;
     }
     print "Status: $status\n" if $verbose;
@@ -99,9 +102,11 @@ WGDev::Command::Mail - Sends emails via the L<WebGUI::Mail::Send> API
 
 Sends emails via the L<WebGUI::Mail::Send> API
 
-If run with no arguments, displays the number of messages currently in the mail queue.
+If run with no arguments, displays the number of messages currently
+in the mail queue.
 
-Accepts all options supported by L<WebGUI::Mail::Send::create>, plus the following additional items:
+Accepts all options supported by L<WebGUI::Mail::Send::create>,
+plus the following additional items:
 
 =head1 OPTIONS
 
