@@ -16,6 +16,7 @@ sub config_options {
     return qw(
         all|A
         slow|S
+        live|L
         reset:s
         cover|C:s
         coverOptions:s
@@ -46,6 +47,11 @@ sub process {
         $ENV{CODE_COP}    = 1;
         $ENV{TEST_SYNTAX} = 1;
         $ENV{TEST_POD}    = 1;
+    }
+    local $ENV{WEBGUI_LIVE} = $ENV{WEBGUI_LIVE};
+    if ( $self->option('live') ) {
+        ##no critic (RequireLocalizedPunctuationVars)
+        $ENV{WEBGUI_LIVE} = 1;
     }
     local $ENV{HARNESS_PERL_SWITCHES} = $ENV{HARNESS_PERL_SWITCHES};
     my $cover_dir;
@@ -91,7 +97,7 @@ WGDev::Command::Test - Run WebGUI tests
 
 =head1 SYNOPSIS
 
-    wgd test [-ASC] [<prove options>]
+    wgd test [-ASCL] [<prove options>]
 
 =head1 DESCRIPTION
 
@@ -111,6 +117,10 @@ Run all tests recursively.  Otherwise, tests will need to be specified.
 =item C<-S> C<--slow>
 
 Includes slow tests by defining CODE_COP, TEST_SYNTAX, and TEST_POD.
+
+=item C<-L> C<--live>
+
+Includes live tests by defining WEBGUI_LIVE.
 
 =item C<--reset=>
 
