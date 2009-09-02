@@ -6,7 +6,6 @@ my $build = WGDev::Builder->new(
     dynamic_config     => 0,
     create_license     => 1,
     create_makefile_pl => 'traditional',
-    create_readme      => 1,
     sign               => 1,
     requires           => {
         'perl'             => '5.8.8',
