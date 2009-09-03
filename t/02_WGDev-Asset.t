@@ -8,8 +8,8 @@ use Test::MockObject;
 use File::Spec::Functions qw(catdir catfile catpath rel2abs splitpath);
 use Cwd qw(realpath cwd);
 
-use constant TEST_DIR => catpath( (splitpath(__FILE__))[0,1], '' );
-use lib catdir(TEST_DIR, 'lib');
+use constant TEST_DIR => catpath( ( splitpath(__FILE__) )[ 0, 1 ], '' );
+use lib catdir( TEST_DIR, 'lib' );
 
 BEGIN {
     Test::MockObject->fake_module('WebGUI::Session');
@@ -23,5 +23,5 @@ my $session = Test::MockObject->new;
 $session->set_isa('WebGUI::Session');
 
 my $wgda = WGDev::Asset->new($session);
-isa_ok($wgda, 'WGDev::Asset');
+isa_ok( $wgda, 'WGDev::Asset' );
 

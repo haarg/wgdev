@@ -5,38 +5,20 @@ use 5.008008;
 
 our $VERSION = '0.1.0';
 
-use Carp qw(croak);
-use constant USE_SECTIONS => 99;
+use WGDev::X   ();
 use File::Spec ();
 
 sub package_usage {
     my $package   = shift;
     my $verbosity = shift;
-    require Pod::Usage;
+    require WGDev::Pod::Usage;
     if ( !defined $verbosity ) {
         $verbosity = 1;
     }
-    if ( $verbosity == 1 ) {
-        $verbosity = USE_SECTIONS;
-    }
-    my $pod    = package_pod($package);
-    my $output = q{};
-    ##no critic (RequireCarping RequireBriefOpen)
-    open my $out, '>', \$output
-        or die "Can't open file handle to scalar : $!";
-    open my $in, '<', \$pod or croak "Unable to read documentation file : $!";
-    my $params = {
-        -input    => $in,
-        -output   => $out,
-        -verbose  => $verbosity,
-        -exitval  => 'NOEXIT',
-        -sections => 'SYNOPSIS|OPTIONS|CONFIGURATION',
-
-    };
-    Pod::Usage::pod2usage($params);
-    close $in  or return q{};
-    close $out or return q{};
-    return $output;
+    my $parser = WGDev::Pod::Usage->new;
+    $parser->verbosity($verbosity);
+    my $pod = package_pod($package);
+    return $parser->parse_from_string($pod);
 }
 
 sub package_perldoc {
@@ -53,7 +35,7 @@ sub package_perldoc {
     File::Path::mkpath($path);
     my $out_file = File::Spec->catfile( $path, $filename );
     open my $out, '>', $out_file
-        or croak "Unable to create temp file: $!";
+        or WGDev::X::IO->throw('Unable to create temp file');
     print {$out} $pod;
     close $out or return q{};
 
@@ -65,8 +47,8 @@ sub package_perldoc {
     waitpid $pid, 0;
 
     # error status of subprocess
-    if ($?) {    ##no critic (ProhibitPunctuationVars)
-        die "Error displaying help!\n";
+    if ($?) {
+        WGDev::X->throw('Error displaying help!');
     }
     return;
 }
@@ -77,42 +59,28 @@ sub package_pod {
     ( my $file = $package . '.pm' ) =~ s{::}{/}msxg;
     require $file;
     my $actual_file = $INC{$file};
-    my $pod = filter_pod( $actual_file, $package );
-
+    my $pod;
+    ##no critic (RequireBriefOpen)
+    open my $pod_in, '<', $actual_file
+        or WGDev::X::IO::Read->throw( path => $actual_file );
     if ($sections) {
         my @sections = ref $sections ? @{$sections} : $sections;
         require Pod::Select;
         my $parser = Pod::Select->new;
         $parser->select(@sections);
-        ##no critic (RequireCarping)
-        my $output = q{};
-        open my $pod_in, '<', \$pod
-            or die "Can't open file handle to scalar : $!";
-        open my $pod_out, '>', \$output
-            or die "Can't open file handle to scalar : $!";
+        $pod = q{};
+        open my $pod_out, '>', \$pod
+            or WGDev::X::IO->throw;
         $parser->parse_from_filehandle( $pod_in, $pod_out );
-        close $pod_in  or die "Can't open file handle to scalar : $!";
-        close $pod_out or die "Can't open file handle to scalar : $!";
-        $pod = $output;
+        close $pod_out
+            or WGDev::X::IO->throw;
     }
+    else {
+        $pod = do { local $/; <$pod_in> };
+    }
+    close $pod_in
+        or WGDev::X::IO->throw;
     return $pod;
-}
-
-# naive pod filter.  looks for =head1 NAME section that has the correct
-# package listed, and returns the text from there to the next =head1 NAME
-sub filter_pod {
-    my $file   = shift;
-    my $wanted = shift;
-    open my $fh, '<', $file or return q{};
-    my $content = do { local $/ = undef; <$fh> };
-    close $fh or return q{};
-    if ( $content
-        =~ /^(=head1[ ]NAME\s+^\Q$wanted\E\s.*?)(?:^=head1[ ]NAME\E\s|\z)/msx
-        )
-    {
-        return $1;
-    }
-    return q{};
 }
 
 1;
@@ -159,19 +127,16 @@ Filters out the POD for a specific package from the module file for the package.
 Limits sections to include based on L<Pod::Select/SECTION SPECIFICATIONS|Pod::Select's rules>.
 Can be either a scalar value or an array reference.
 
-=head2 C<filter_pod ( $file, $package )>
-
-Filters out the POD for a specific package from a file based on the NAME sections.
-
 =head1 AUTHOR
 
-Graham Knop <graham@plainblack.com>
+Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) 2009, Graham Knop
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut

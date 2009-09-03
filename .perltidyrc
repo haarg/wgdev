@@ -15,4 +15,6 @@
 --stack-opening-tokens
 --stack-closing-tokens
 --want-break-before="% + - * / x != == >= <= =~ !~ < > | & = **= += *= &= <<= &&= -= /= |= >>= ||= //= .= %= ^= x="
+--format-skipping-begin="#+\s*no tidy"
+--format-skipping-end="#+\s*tidy"
 

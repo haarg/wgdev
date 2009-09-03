@@ -10,6 +10,11 @@ BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
 use WGDev::Command;
 use WGDev::Help;
+use WGDev::X ();
+
+sub needs_root {
+    return;
+}
 
 sub process {
     my $self = shift;
@@ -20,7 +25,19 @@ sub help {
     my $class = shift;
     print "Sub-commands available:\n";
     my %abstracts = $class->command_abstracts;
-    for my $command ( sort keys %abstracts ) {
+    my @commands  = sort keys %abstracts;
+    @commands = (
+        'intro',
+        'commands',
+        'help',
+        undef,
+        grep { $_ ne 'intro' && $_ ne 'commands' && $_ ne 'help' } @commands,
+    );
+    for my $command (@commands) {
+        if ( !defined $command ) {
+            print "\n";
+            next;
+        }
         my $command_abstract = $abstracts{$command} || '(external command)';
         printf "    %-15s - %s\n", $command, $command_abstract;
     }
@@ -34,19 +51,20 @@ sub command_abstracts {
     my $parser = Pod::PlainText->new( indent => 0, width => 1000 );
     $parser->select('NAME');
     for my $command ( keys %abstracts ) {
-        my $command_module = WGDev::Command::get_command_module($command);
+        my $command_module
+            = eval { WGDev::Command::get_command_module($command) };
         next
             if !$command_module;
         my $pod           = WGDev::Help::package_pod($command_module);
         my $formatted_pod = q{};
-        ##no critic (RequireCarping)
         open my $pod_in, '<', \$pod
-            or die "Can't open file handle to scalar : $!";
+            or WGDev::X::IO->throw;
         open my $pod_out, '>', \$formatted_pod
-            or die "Can't open file handle to scalar : $!";
+            or WGDev::X::IO->throw;
         $parser->parse_from_filehandle( $pod_in, $pod_out );
-        close $pod_in  or die "Can't open file handle to scalar : $!";
-        close $pod_out or die "Can't open file handle to scalar : $!";
+        close $pod_in  or WGDev::X::IO->throw;
+        close $pod_out or WGDev::X::IO->throw;
+
         if ( $formatted_pod =~ /^ [:\w]+ \s* - \s* (.+?) \s* $/msx ) {
             $abstracts{$command} = $1;
         }
@@ -83,14 +101,15 @@ commands and values of the module abstract extracted from POD.
 
 =head1 AUTHOR
 
-Graham Knop <graham@plainblack.com>
+Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.
+Copyright (c) 2009, Graham Knop
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut
 

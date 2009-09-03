@@ -8,6 +8,8 @@ our $VERSION = '0.2.0';
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
+use WGDev ();
+
 sub config_options {
     return qw(
         command=s
@@ -23,7 +25,7 @@ sub process {
     my @files = $self->export_asset_data;
 
     if ( !@files ) {
-        die "No assets to edit!\n";
+        WGDev::X->throw('No assets to edit!');
     }
 
     ## no critic (ProhibitParensWithBuiltins)
@@ -35,7 +37,7 @@ sub process {
     my $version_tag;
     for my $file (@files) {
         open my $fh, '<:utf8', $file->{filename} or next;
-        my $asset_text = do { local $/ = undef; <$fh> };
+        my $asset_text = do { local $/; <$fh> };
         close $fh or next;
         unlink $file->{filename};
         if ( $asset_text eq $file->{text} ) {
@@ -142,7 +144,7 @@ sub write_temp {
         $asset = eval { $wgd_asset->find($asset) }
             || eval { scalar $wgd_asset->validate_class($asset) };
         if ( !$asset ) {
-            die $@;    ##no critic (RequireCarping)
+            die $@;
         }
     }
 
@@ -191,10 +193,10 @@ If modifications are made, the assets are updated.
 
 =over 8
 
-=item C<--command>
+=item C<--comman=>
 
 Command to be executed.  If not specified, uses the EDITOR environment
-variable.  If that is not specified, uses C<vi>.
+variable.  If that is not specified, uses C<$EDITOR> or C<vi>.
 
 =item C<< <asset> >>
 
@@ -202,12 +204,12 @@ Either an asset URL, ID, or class name.  As many can be specified as desired.
 Prepending with a slash will force it to be interpreted as a URL.  Class names
 specified will be opened with a skeleton for the asset type.
 
-=item C<--tree>
+=item C<--tree=>
 
 Will open specified asset and all descendants in editor.  Can be specified
 multiple times.
 
-=item C<--class>
+=item C<--class=>
 
 Only used with --tree option.  Limits exported assets to specified classes.
 Can be specified as a full (C<WebGUI::Asset::Template>) or abbreviated
@@ -230,14 +232,15 @@ Returns a hash reference of information about the file ans asset.
 
 =head1 AUTHOR
 
-Graham Knop <graham@plainblack.com>
+Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) 2009, Graham Knop
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut
 

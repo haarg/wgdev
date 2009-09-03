@@ -3,8 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION
-    = '0.0.1';
+our $VERSION = '0.0.1';
 
 use WGDev::Command::_test;
 BEGIN { our @ISA = qw(WGDev::Command::_test) }
@@ -38,14 +37,15 @@ None.
 
 =head1 AUTHOR
 
-Graham Knop <graham@plainblack.com>
+Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) 2009, Graham Knop
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut
 

@@ -11,7 +11,10 @@ BEGIN { our @ISA = qw(WGDev::Command::Base) }
 sub process {
     my $self = shift;
     $self->wgd->set_environment;
-    exec $self->arguments;
+    my @arguments = $self->arguments;
+    my $command   = shift @arguments;
+    my $result    = system {$command} $command, @arguments;
+    return $result ? 0 : 1;
 }
 
 sub parse_params {
@@ -43,14 +46,15 @@ Has no options of its own.  All options are passed on to specified command.
 
 =head1 AUTHOR
 
-Graham Knop <graham@plainblack.com>
+Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) 2009, Graham Knop
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut
 

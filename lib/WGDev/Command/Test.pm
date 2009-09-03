@@ -16,8 +16,10 @@ sub config_options {
     return qw(
         all|A
         slow|S
+        live|L
         reset:s
         cover|C:s
+        coverOptions:s
     );
 }
 
@@ -46,6 +48,11 @@ sub process {
         $ENV{TEST_SYNTAX} = 1;
         $ENV{TEST_POD}    = 1;
     }
+    local $ENV{WEBGUI_LIVE} = $ENV{WEBGUI_LIVE};
+    if ( $self->option('live') ) {
+        ##no critic (RequireLocalizedPunctuationVars)
+        $ENV{WEBGUI_LIVE} = 1;
+    }
     local $ENV{HARNESS_PERL_SWITCHES} = $ENV{HARNESS_PERL_SWITCHES};
     my $cover_dir;
     if ( defined $self->option('cover') ) {
@@ -53,9 +60,12 @@ sub process {
         if ( -e $cover_dir ) {
             system 'cover', '-silent', '-delete', $cover_dir;
         }
+        my $cover_options = $self->option('coverOptions')
+            || '-select,WebGUI,+ignore,^t';
         ##no critic (RequireLocalizedPunctuationVars)
         $ENV{HARNESS_PERL_SWITCHES}
-            = '-MDevel::Cover=-silent,1,-select,WebGUI,+ignore,^t,' . '-db,'
+            = '-MDevel::Cover=-silent,1'
+            . ",$cover_options," . '-db,'
             . $cover_dir;
     }
     my $prove = App::Prove->new;
@@ -87,7 +97,7 @@ WGDev::Command::Test - Run WebGUI tests
 
 =head1 SYNOPSIS
 
-    wgd test [-AS] [<prove options>]
+    wgd test [-ASCL] [<prove options>]
 
 =head1 DESCRIPTION
 
@@ -108,6 +118,10 @@ Run all tests recursively.  Otherwise, tests will need to be specified.
 
 Includes slow tests by defining CODE_COP, TEST_SYNTAX, and TEST_POD.
 
+=item C<-L> C<--live>
+
+Includes live tests by defining WEBGUI_LIVE.
+
 =item C<--reset=>
 
 Perform a site reset before running the tests.  The value specified is used
@@ -120,18 +134,23 @@ fast site reset.
 Run coverage using Devel::Cover. The value specified is used as the directory to 
 put the coverage data and defaults to C<cover_db>.
 
+=item C<--coverOptions=>
+
+Options to pass to L<Devel::Cover>. Defaults to C<-select,WebGUI,+ignore,^t>.
+
 =back
 
 =head1 AUTHOR
 
-Graham Knop <graham@plainblack.com>
+Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) 2009, Graham Knop
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut
 

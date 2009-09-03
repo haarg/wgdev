@@ -8,8 +8,8 @@ our $VERSION = '0.3.0';
 use WGDev::Command::Base::Verbosity;
 BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
 
+use WGDev::X   ();
 use File::Spec ();
-use Carp qw(croak);
 use constant STAT_MODE => 2;
 use constant STAT_UID  => 4;
 use constant STAT_GID  => 5;
@@ -181,7 +181,7 @@ sub process {
             $util_command->parse_params_string($util);
             $util_command->verbosity( $self->verbosity - 1 );
             if ( !$util_command->process ) {
-                die "Error running util script!\n";
+                WGDev::X->throw('Error running util script!');
             }
             $self->report("Done.\n");
         }
@@ -264,7 +264,6 @@ sub reset_uploads {
     my ( $uploads_mode, $uploads_uid, $uploads_gid )
         = ( stat $site_uploads )[ STAT_MODE, STAT_UID, STAT_GID ];
 
-    ##no critic (ProhibitPunctuationVars ProhibitParensWithBuiltins)
     # make umask as permissive as required to match existing uploads folder
     # including sticky bits
     umask( oct(7777) & ~$uploads_mode );
@@ -317,6 +316,7 @@ sub import_db_script {
     # If we aren't upgrading, we're using the current DB version
     my $db_file
         = $self->option('upgrade') ? 'previousVersion.sql' : 'create.sql';
+    $wgd->db->clear;
     $wgd->db->load( File::Spec->catfile( $wgd->root, 'docs', $db_file ) );
     $self->report("Done\n");
     return 1;
@@ -348,14 +348,14 @@ sub upgrade {
             push @ARGV, '--quiet';
         }
         do 'upgrade.pl';
-        croak $@ if $@;
+        die $@ if $@;
         exit;
     }
     waitpid $pid, 0;
 
     # error status of subprocess
-    if ($?) {    ##no critic (ProhibitPunctuationVars)
-        die "Upgrade failed!\n";
+    if ($?) {
+        WGDev::X->throw('Upgrade failed!');
     }
     $self->report("Done\n");
     return 1;
@@ -391,11 +391,12 @@ sub reset_config {
 
     $wgd->close_config;
     open my $fh, '>', $wgd->config_file
-        or croak "Unable to write config file: $!";
+        or WGDev::X::IO::Write->throw( path => $wgd->config_file );
     File::Copy::copy(
         File::Spec->catfile( $wgd->root, 'etc', 'WebGUI.conf.original' ),
         $fh );
-    close $fh or croak "Unable to write config file: $!";
+    close $fh
+        or WGDev::X::IO::Write->throw( path => $wgd->config_file );
 
     my $config = $wgd->config;
     while ( my ( $key, $value ) = each %set_config ) {
@@ -604,7 +605,7 @@ sub rebuild_lineage {
         $self->report("\n\n");
         chdir File::Spec->catdir( $wgd->root, 'sbin' );
         local @ARGV = ( '--configFile=' . $wgd->config_file_relative );
-        ##no critic (ProhibitPunctuationVars)
+
         # $0 should have the filename of the script being run
         local $0 = './rebuildLineage.pl';
         do $0;
@@ -633,7 +634,7 @@ sub rebuild_index {
         chdir File::Spec->catdir( $wgd->root, 'sbin' );
         local @ARGV
             = ( '--configFile=' . $wgd->config_file_relative, '--indexsite' );
-        ##no critic (ProhibitPunctuationVars)
+
         # $0 should have the filename of the script being run
         local $0 = './search.pl';
         do $0;
@@ -694,61 +695,61 @@ C<--backup --import --no-starter --debug --clear --upgrade --uploads>
 Build mode - equivalent to:
 C<--verbose --backup --import --starter --no-debug --upgrade --purge --cleantags --index --runwf>
 
-=item C<--backup> C<--no-backup>
+=item C<--[no-]backup>
 
 Backup database before doing any other operations.
 
-=item C<--delcache> C<--no-delcache>
+=item C<--[no-]delcache>
 
 Delete the site's cache.  Defaults to on.
 
-=item C<--import> C<--no-import>
+=item C<--[no-]import>
 
 Import a database script
 
-=item C<--uploads> C<--no-uploads>
+=item C<--[no-]uploads>
 
 Recreate uploads directory
 
-=item C<--upgrade> C<--no-upgrade>
+=item C<--[no-]upgrade>
 
 Perform an upgrade - also controls which database script to import
 
-=item C<--debug> C<--no-debug>
+=item C<--[no-]debug>
 
 Enable debug mode and increase session timeout
 
-=item C<--starter> C<--no-starter>
+=item C<--[no-]starter>
 
 Enable the site starter
 
-=item C<--clear> C<--no-clear>
+=item C<--[no-]clear>
 
 Clear the content off the home page and its children
 
-=item C<--config> C<--no-config>
+=item C<--[no-]config>
 
 Resets the site's config file.  Some values like database information will be
 preserved.  Additional options can be set in the WGDev config file.
 
-=item C<--emptytrash> C<--no-emptytrash>
+=item C<--[no-]emptytrash>
 
 Purges all items from the trash
 
-=item C<--purge> C<--no-purge>
+=item C<--[no-]purge>
 
 Purge all old revisions
 
-=item C<--cleantags> C<--no-cleantags>
+=item C<--[no-]cleantags>
 
 Removes all version tags and sets all asset revisions to be
 under a new version tag marked with the current version number
 
-=item C<--index> C<--no-index>
+=item C<--[no-]index>
 
 Rebuild the site lineage and reindex all of the content
 
-=item C<--runwf> C<--no-runwf>
+=item C<--[no-]runwf>
 
 Attempt to finish any running workflows
 
@@ -758,11 +759,31 @@ Run a utility script.  Script will be run last, being passed to the
 L<C<util> command|WGDev::Command::Util>.  Parameter can be specified multiple
 times to run additional scripts.
 
-=item C<--profile=> C<--pro=> C<-p>
+=item C<-p> C<--pro[file]=>
 
 Specify a profile of options to use for resetting.  Profiles are specified in
 the WGDev config file under the C<command.reset.profiles> section.  A profile
 is defined as a string to be used as additional command line options.
+
+=back
+
+=head1 CONFIGURATION
+
+=over 8
+
+=item C<< profiles.<profile name> >>
+
+Creates a profile to use with the C<--profile> option.  The value of the config
+parameter is a string with the command line parameters to apply when this
+profile is used.
+
+=item C<config.overide>
+
+Overrides to apply when resetting config file.
+
+=item C<config.copy>
+
+Parameters to copy from existing config file when resetting it.
 
 =back
 
@@ -788,26 +809,6 @@ configured list, a set of parameters is always copied:
     cacheType   fileCacheRoot
     sitename
     spectreIp   spectrePort     spectreSubnets
-
-=head1 CONFIGURATION
-
-=over 8
-
-=item C<< profiles.<profile name> >>
-
-Creates a profile to use with the C<--profile> option.  The value of the config
-parameter is a string with the command line parameters to apply when this
-profile is used.
-
-=item C<config.overide>
-
-Overrides to apply when resetting config file.
-
-=item C<config.copy>
-
-Parameters to copy from existing config file when resetting it.
-
-=back
 
 =head1 METHODS
 
@@ -929,14 +930,15 @@ will be run up to 10 times to complete them.
 
 =head1 AUTHOR
 
-Graham Knop <graham@plainblack.com>
+Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) 2009, Graham Knop
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut
 

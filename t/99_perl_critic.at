@@ -4,7 +4,7 @@ use warnings;
 use Test::More;
 use File::Spec;
 
-if ( ! eval { require Test::Perl::Critic } ) {
+if ( !eval { require Test::Perl::Critic } ) {
     plan skip_all => 'Test::Perl::Critic required to criticise code';
 }
 

@@ -8,7 +8,7 @@ our $VERSION = '0.0.1';
 use constant LINE_LENGTH => 78;
 
 use WGDev;
-use Carp qw(croak);
+use WGDev::X;
 
 sub new {
     my $class   = shift;
@@ -57,7 +57,7 @@ sub find {
     if ( $asset && ref $asset && $asset->isa('WebGUI::Asset') ) {
         return $asset;
     }
-    croak "Not able to find asset $asset_spec";
+    WGDev::X::AssetNotFound->throw( asset => $asset_spec );
 }
 
 sub validate_class {
@@ -69,7 +69,7 @@ sub validate_class {
             return wantarray ? ( $class, $short_class ) : $class;
         }
     }
-    croak "Invalid Asset class: $in_class";
+    WGDev::X::BadAssetClass->throw( class => $in_class );
 }
 
 sub _gen_serialize_header {
@@ -301,14 +301,15 @@ throw an error if the provided class is not valid.
 
 =head1 AUTHOR
 
-Graham Knop <graham@plainblack.com>
+Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.
+Copyright (c) 2009, Graham Knop
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut
 

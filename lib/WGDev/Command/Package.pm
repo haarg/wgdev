@@ -9,7 +9,7 @@ use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
 use File::Spec ();
-use Carp qw(croak);
+use WGDev::X   ();
 
 sub config_options {
     return qw(
@@ -17,7 +17,7 @@ sub config_options {
         parent=s
 
         upgrade|u
-        output-dir|out-dir=s
+        to=s
     );
 }
 
@@ -26,7 +26,7 @@ sub process {
     my $wgd  = $self->wgd;
     require File::Copy;
     if ( $self->arguments ) {
-        my $package_dir = $self->option('output-dir') || q{.};
+        my $package_dir = $self->option('to') || q{.};
         if ( $self->option('upgrade') ) {
             $package_dir = File::Spec->catdir( $wgd->root, 'docs', 'upgrades',
                 'packages-' . $wgd->version->module );
@@ -35,7 +35,10 @@ sub process {
             }
         }
         if ( !-d $package_dir ) {
-            croak "$package_dir does not exist!\n";
+            WGDev::X::IO->throw(
+                error => 'Directory does not exist',
+                path  => $package_dir
+            );
         }
         for my $asset_spec ( $self->arguments ) {
             my $asset = eval { $wgd->asset->find($asset_spec) } || do {
@@ -87,7 +90,7 @@ WGDev::Command::Package - Export assets for upgrade
 
 =head1 SYNOPSIS
 
-    wgd package [--output-dir=<dir>] [--upgrade] [<asset> ...]
+    wgd package [--to=<dir>] [--upgrade] [<asset> ...]
     wgd package [--parent=<asset>] [--import=<package file>]
 
 =head1 DESCRIPTION
@@ -101,25 +104,24 @@ Assets specified as standalone arguments are exported as packages.
 
 =over 8
 
-=item C<--import> C<-i>
+=item C<-i> C<--import=>
 
 Package file (or files) to import.  Will be imported to the import node if no
 other parent is specified.
 
-=item C<--parent>
+=item C<--parent=>
 
 Specify the parent asset to import packages into.
 
-=item C<--upgrade> C<-u>
+=item C<-u> C<--upgrade>
 
 If specified, packages will be exported to the directory for the upgrade to
 the current local version.
 
-=item C<--output-dir> C<--out-dir>
+=item C<--to=>
 
 Specify a directory to output the package files to.  If neither C<--upgrade>
-or C<--output-dir> is specified, packages will be output to the current
-directory.
+or C<--to> is specified, packages will be output to the current directory.
 
 =item C<< <asset> >>
 
@@ -129,14 +131,15 @@ Either an asset ID or an asset URL to specify an asset.
 
 =head1 AUTHOR
 
-Graham Knop <graham@plainblack.com>
+Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) 2009, Graham Knop
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut
 

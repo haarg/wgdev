@@ -6,11 +6,11 @@ use 5.008008;
 our $VERSION = '0.1.0';
 
 use File::Spec;
-use Carp qw(croak);
+use WGDev::X ();
 
 sub new {
     my $class = shift;
-    my $dir   = shift || croak 'Must specify WebGUI base directory!';
+    my $dir   = shift || WGDev::X::NoWebGUIRoot->throw;
     my $self  = bless \$dir, $class;
     return $self;
 }
@@ -23,7 +23,7 @@ sub module {
     my $status;
     ##no critic (RequireBriefOpen)
     open my $fh, '<', File::Spec->catfile( $dir, 'lib', 'WebGUI.pm' )
-        or croak "Unable to read WebGUI.pm module: $!";
+        or WGDev::X::IO::Read->throw( path => 'WebGUI.pm' );
     while ( my $line = <$fh> ) {
         ##no critic (ProhibitStringyEval)
         if ( $line =~ /\$VERSION\s*=(.*)$/msx ) {
@@ -35,7 +35,8 @@ sub module {
         last
             if $version && $status;
     }
-    close $fh or croak "Unable to close filehandle: $!";
+    close $fh
+        or WGDev::X::IO::Read->throw( path => 'WebGUI.pm' );
     return wantarray ? ( $version, $status ) : $version;
 }
 
@@ -46,7 +47,7 @@ sub database_script {
     my $version;
     ##no critic (RequireBriefOpen)
     open my $fh, '<', File::Spec->catfile( $dir, 'docs', 'create.sql' )
-        or croak "Unable to read create.sql script: $!";
+        or WGDev::X::IO::Write->throw( path => 'create.sql' );
     while ( my $line = <$fh> ) {
         if (
             $line =~ m{
@@ -62,7 +63,8 @@ sub database_script {
             last;
         }
     }
-    close $fh or croak "Unable to close filehandle: $!";
+    close $fh
+        or WGDev::X::IO::Write->throw( path => 'create.sql' );
     return $version;
 }
 
@@ -88,7 +90,7 @@ sub changelog {
     require version;
     my @changelogs;
     opendir my $dh, File::Spec->catdir( $dir, 'docs', 'changelog' )
-        or croak "Unable to list changelogs: $!";
+        or WGDev::X::IO::Read->throw( path => 'docs/changelog' );
     while ( my $file = readdir $dh ) {
         if ( $file =~ /^( [x\d]+ [.] [x\d]+ [.] [x\d]+ ) \Q.txt\E $/msx ) {
             ( my $v = $1 ) =~ tr/x/0/;
@@ -96,19 +98,20 @@ sub changelog {
         }
     }
     closedir $dh
-        or croak "Unable to close directory handle: $!";
+        or WGDev::X::IO::Read->throw( path => 'docs/changelog' );
     @changelogs = sort { $a->[1] <=> $b->[1] } @changelogs;
     my $latest = pop @changelogs;
     open my $fh, '<',
         File::Spec->catfile( $dir, 'docs', 'changelog', $latest->[0] )
-        or croak "Unable to read changelog: $!";
+        or WGDev::X::IO::Read->throw( path => "docs/changelog/$latest->[0]" );
     while ( my $line = <$fh> ) {
         if ( $line =~ /^(\d+\.\d+\.\d+)$/msx ) {
             $latest->[1] = $1;
             last;
         }
     }
-    close $fh or croak "Unable to close filehandle: $!";
+    close $fh
+        or WGDev::X::IO::Read->throw( path => "docs/changelog/$latest->[0]" );
     return @{$latest};
 }
 
@@ -118,19 +121,20 @@ sub upgrade {
     require version;
     my @upgrades;
     opendir my $dh, File::Spec->catdir( $dir, 'docs', 'upgrades' )
-        or croak "Unable to list upgrades: $!";
+        or WGDev::X::IO::Read->throw( path => 'docs/upgrades' );
     while ( my $file = readdir $dh ) {
         if ( $file =~ /^upgrade_ ([.\d]+) - ([.\d]+) \Q.pl\E$/msx ) {
             push @upgrades, [ $file, version->new($1), version->new($2) ];
         }
     }
     closedir $dh
-        or croak "Unable to close directory handle: $!";
+        or WGDev::X::IO::Read->throw( path => 'docs/upgrades' );
     @upgrades = sort { $a->[2] <=> $b->[2] } @upgrades;
     my $latest = pop @upgrades;
     open my $fh, '<',    ##no critic (RequireBriefOpen)
         File::Spec->catfile( $dir, 'docs', 'upgrades', $latest->[0] )
-        or croak "Unable to read upgrade script: $!";
+        or
+        WGDev::X::IO::Read->throw( path => 'docs/upgrades/' . $latest->[0] );
     while ( my $line = <$fh> ) {
         if ( $line =~ /\$toVersion\s*=(.*)$/msx ) {
             ##no critic (ProhibitStringyEval RequireCheckingReturnValueOfEval)
@@ -138,7 +142,9 @@ sub upgrade {
             last;
         }
     }
-    close $fh or croak "Unable to close filehandle: $!";
+    close $fh
+        or
+        WGDev::X::IO::Read->throw( path => 'docs/upgrades/' . $latest->[0] );
     return @{$latest};
 }
 
@@ -213,14 +219,15 @@ An alias for the L</database> method.
 
 =head1 AUTHOR
 
-Graham Knop <graham@plainblack.com>
+Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) 2009, Graham Knop
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut
 

@@ -3,24 +3,41 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.2.0';
 
 use WGDev::Command::Base ();
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
 use WGDev::Command ();
+use WGDev::X       ();
+
+sub needs_root {
+    return;
+}
 
 sub process {
     my $self = shift;
     my $wgd  = $self->wgd;
 
-    my ($command) = $self->arguments or $self->error_with_list;
+    my ($command) = $self->arguments;
+    if ( !defined $command ) {
+        print WGDev::Command->usage(1);
+        return 1;
+    }
 
-    my $command_module = WGDev::Command::get_command_module($command);
+    my $command_module;
+    if ( $command eq 'wgd' ) {
+        $command_module = 'WGDev::Command';
+    }
+    else {
+        $command_module = WGDev::Command::get_command_module($command);
+    }
 
     if ( !$command_module ) {
-        warn "Unknown command: $command\n";
-        $self->error_with_list;
+        WGDev::X::CommandLine::BadCommand->throw(
+            usage        => $self->usage,
+            command_name => $command,
+        );
     }
 
     if ( $command_module->can('help') ) {
@@ -28,23 +45,16 @@ sub process {
     }
 
     require WGDev::Help;
-    if ( eval { WGDev::Help::package_perldoc($command_module); 1 } ) {
+    if (
+        eval {
+            WGDev::Help::package_perldoc( $command_module,
+                '!AUTHOR|LICENSE|METHODS|SUBROUTINES' );
+            1;
+        } )
+    {
         return 1;
     }
     return;
-}
-
-sub error_with_list {
-    my $self    = shift;
-    my $message = $self->usage;
-
-    $message .= "Try any of the following:\n";
-    for my $command ( WGDev::Command->command_list ) {
-        $message .= "\twgd help $command\n";
-    }
-    $message .= "\n";
-    ##no critic (RequireCarping)
-    die $message;
 }
 
 1;
@@ -81,10 +91,7 @@ The sub-command to display help information about.
 
 =head1 METHODS
 
-=head2 C<error_with_list>
-
-Throws an error that includes the modules usage message, followed by a list
-of available WGDev commands.
+None.
 
 =head1 AUTHOR
 

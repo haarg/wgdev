@@ -5,7 +5,7 @@ use 5.008008;
 
 our $VERSION = '0.0.1';
 
-use Carp qw(croak);
+use WGDev::X ();
 
 sub username { return shift->{username} }
 sub password { return shift->{password} }
@@ -52,6 +52,7 @@ sub command_line {
         $self->database,
         '-u' . $self->username,
         ( $self->password ? '-p' . $self->password : () ),
+        '--default-character-set=utf8',
         @_,
     );
     return wantarray ? @params : join q{ }, map {"'$_'"} @params;
@@ -103,9 +104,8 @@ sub clear {
 sub load {
     my $self     = shift;
     my $dumpfile = shift;
-    $self->clear;
     system 'mysql', $self->command_line( '-e' . 'source ' . $dumpfile )
-        and croak "Error running mysql: $!";
+        and WGDev::X::System->throw('Error running mysql');
     return 1;
 }
 
@@ -113,7 +113,7 @@ sub dump {    ## no critic (ProhibitBuiltinHomonyms)
     my $self     = shift;
     my $dumpfile = shift;
     system 'mysqldump', $self->command_line( '-r' . $dumpfile )
-        and croak "Error running mysqldump: $!";
+        and WGDev::X::System->throw('Error running mysqldump');
     return 1;
 }
 
@@ -228,14 +228,15 @@ Loads the specified database script into the database.
 
 =head1 AUTHOR
 
-Graham Knop <graham@plainblack.com>
+Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) 2009, Graham Knop
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut
 

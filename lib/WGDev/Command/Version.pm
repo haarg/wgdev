@@ -8,8 +8,12 @@ our $VERSION = '0.2.0';
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
-use Carp qw(croak);
+use WGDev::X   ();
 use File::Spec ();
+
+sub needs_config {
+    return;
+}
 
 sub config_parse_options { return qw(no_getopt_compat) }
 
@@ -92,46 +96,52 @@ sub update_version {
     };
 
     open my $fh, '<', File::Spec->catfile( $root, 'lib', 'WebGUI.pm' )
-        or croak "Unable to read WebGUI.pm file: $!\n";
-    my @pm_content = do { local $/ = undef; <$fh> };
-    close $fh or croak "Unable to read WebGUI.pm file: $!";
+        or WGDev::X::IO::Read->throw( path => 'WebGUI.pm' );
+    my @pm_content = do { local $/; <$fh> };
+    close $fh
+        or WGDev::X::IO::Read->throw( path => 'WebGUI.pm' );
     open $fh, '>', File::Spec->catfile( $root, 'lib', 'WebGUI.pm' )
-        or croak "Unable to write to WebGUI.pm file: $!\n";
+        or WGDev::X::IO::Write->throw( path => 'WebGUI.pm' );
     for my $line (@pm_content) {
         $line =~ s/(\$VERSION\s*=)[^\n]*;/$1 '$new_version';/msx;
         print {$fh} $line;
     }
-    close $fh or croak "Unable to write to WebGUI.pm file: $!\n";
+    close $fh
+        or WGDev::X::IO::Write->throw( path => 'WebGUI.pm' );
 
     my ($change_file) = $wgv->changelog;
     open $fh, '<',
         File::Spec->catfile( $root, 'docs', 'changelog', $change_file )
-        or croak "Unable to read changelog $change_file\: $!\n";
-    my $change_content = do { local $/ = undef; <$fh> };
-    close $fh or croak "Unable to read changelog $change_file\: $!\n";
+        or WGDev::X::IO::Read->throw( path => $change_file );
+    my $change_content = do { local $/; <$fh> };
+    close $fh
+        or WGDev::X::IO::Read->throw( path => $change_file );
 
     open $fh, '>',
         File::Spec->catfile( $root, 'docs', 'changelog', $change_file )
-        or croak "Unable to write to changelog $change_file\: $!\n";
+        or WGDev::X::IO::Write->throw( path => $change_file );
     print {$fh} $new_version . "\n\n" . $change_content;
-    close $fh or croak "Unable to write to changelog $change_file\: $!\n";
+    close $fh
+        or WGDev::X::IO::Write->throw( path => $change_file );
 
     ##no critic (RequireBriefOpen)
     open my $in, '<',
         File::Spec->catfile( $root, 'docs', 'upgrades', '_upgrade.skeleton' )
-        or croak "Unable to read upgrade skeleton: $!\n";
+        or WGDev::X::IO::Read->throw( path => '_upgrade.skeleton' );
     open my $out, '>',
         File::Spec->catfile( $root, 'docs', 'upgrades',
         "upgrade_$old_version-$new_version.pl" )
-        or croak "Unable to write to new upgrade script: $!\n";
+        or WGDev::X::IO::Write->throw(
+        path => "upgrade_$old_version-$new_version.pl" );
     while ( my $line = <$in> ) {
         $line =~ s/(\$toVersion\s*=)[^\n]*$/$1 '$new_version';/xms;
         print {$out} $line;
     }
     close $out
-        or croak "Unable to read upgrade skeleton: $!\n";
+        or WGDev::X::IO::Write->throw(
+        path => "upgrade_$old_version-$new_version.pl" );
     close $in
-        or croak "Unable to write to new upgrade script: $!\n";
+        or WGDev::X::IO::Read->throw( path => '_upgrade.skeleton' );
     return $new_version;
 }
 
@@ -169,14 +179,14 @@ in red if possible.
 
 =over 8
 
-=item C<--create>
+=item C<-c> C<--create>
 
 Adds a new section to the change log for the new version, updates the version
 number in F<WebGUI.pm>, and creates a new upgrade script.  The version number
 to update to can be specified on the command line.  If not specified, defaults
 to incrementing the patch level by one.
 
-=item C<--bare>
+=item C<-b> C<--bare>
 
 Outputs the version number taken from F<WebGUI.pm> only
 
@@ -197,14 +207,15 @@ added to the change log.
 
 =head1 AUTHOR
 
-Graham Knop <graham@plainblack.com>
+Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) 2009, Graham Knop
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut
 

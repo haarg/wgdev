@@ -9,7 +9,7 @@ use WGDev::Command::Base::Verbosity;
 BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
 
 use File::Spec ();
-use Carp qw(croak);
+use WGDev::X   ();
 
 sub config_options {
     return (
@@ -32,11 +32,6 @@ sub parse_params {
 
 sub process {
     my $self = shift;
-    my $wgd  = $self->wgd;
-    require File::Copy;
-    if ( !$wgd->config_file ) {
-        die "Can't find WebGUI root!\n";
-    }
 
     if ( $self->option('sql') ) {
         $self->create_db_script;
@@ -61,12 +56,13 @@ sub create_db_script {
     my $db_file = File::Spec->catfile( $wgd->root, 'docs', 'create.sql' );
     ##no critic (RequireBriefOpen)
     open my $out, q{>}, $db_file
-        or croak "Unable to output database script: $!";
+        or WGDev::X::IO::Write->throw( path => 'docs/create.sql' );
     open my $in, q{-|}, 'mysqldump',
         $wgd->db->command_line( '--compact', '--no-data' )
-        or croak "Unable to run mysqldump: $!";
+        or WGDev::X::System->throw('Unable to run mysqldump');
     File::Copy::copy( $in, $out );
-    close $in or croak "Unable to close filehandle: $!";
+    close $in
+        or WGDev::X::System->throw('Unable to run mysqldump');
 
     my @skip_data_tables = qw(
         userSession     userSessionScratch
@@ -78,15 +74,18 @@ sub create_db_script {
         '--no-create-info',
         map { '--ignore-table=' . $wgd->db->database . q{.} . $_ }
             @skip_data_tables
-    ) or croak "Unable to run mysqldunp command: $!";
-    File::Copy::copy( $in, $out );
-    close $in or croak "Unable to close filehandle: $!";
+    ) or WGDev::X::System->throw('Unable to run mysqldump');
+    File::Copy::copy( $in, $out )
+        or WGDev::X::IO::Write->throw( path => 'docs/create.sql' );
+    close $in
+        or WGDev::X::System->throw('Unable to run mysqldump');
 
     print {$out} 'INSERT INTO webguiVersion '
         . '(webguiVersion,versionType,dateApplied) '
         . "VALUES ('$version','Initial Install',UNIX_TIMESTAMP());\n";
 
-    close $out or croak "Unable to close filehandle: $!";
+    close $out
+        or WGDev::X::IO::Write->throw( path => 'docs/create.sql' );
     $self->report("Done.\n");
     return 1;
 }
@@ -197,14 +196,15 @@ deleted or created so the two match.
 
 =head1 AUTHOR
 
-Graham Knop <graham@plainblack.com>
+Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) 2009, Graham Knop
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut
 

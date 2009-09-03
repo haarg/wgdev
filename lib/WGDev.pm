@@ -7,7 +7,7 @@ our $VERSION = '0.4.0';
 
 use File::Spec ();
 use Cwd        ();
-use Carp qw(croak);
+use WGDev::X   ();
 
 sub new {
     my $class = shift;
@@ -32,9 +32,9 @@ sub new {
 sub set_environment {
     my $self = shift;
     require Config;
-    croak 'WebGUI root not set'
+    WGDev::X::NoWebGUIRoot->throw
         if !$self->root;
-    croak 'WebGUI config file not set'
+    WGDev::X::NoWebGUIConfig->throw
         if !$self->config_file;
     $self->{orig_env}
         ||= { map { $_ => $ENV{$_} } qw(WEBGUI_ROOT WEBGUI_CONFIG PERL5LIB) };
@@ -69,7 +69,10 @@ sub root {
             unshift @INC, $self->lib;
         }
         else {
-            croak "Invalid WebGUI path: $path\n";
+            WGDev::X::BadParameter->throw(
+                'parameter' => 'WebGUI root directory',
+                'value'     => $path
+            );
         }
     }
     return $self->{root};
@@ -90,7 +93,10 @@ sub config_file {
             $path = $fullpath;
         }
         else {
-            croak "Invalid WebGUI config file: $path\n";
+            WGDev::X::BadParameter->throw(
+                'parameter' => 'WebGUI config file',
+                'value'     => $path
+            );
         }
         if ( !$self->root ) {
             ##no critic (RequireCheckingReturnValueOfEval)
@@ -112,6 +118,8 @@ sub config_file {
 
 sub lib {
     my $self = shift;
+    WGDev::X::NoWebGUIRoot->throw
+        if !$self->root;
     if ( !wantarray ) {
         return $self->{lib};
     }
@@ -130,7 +138,7 @@ sub lib {
                     unshift @custom_lib, $line;
                 }
             }
-            close $fh or die "Unable to read $custom\: $!\n";
+            close $fh or WGDev::X::IO::Read->throw( path => $custom );
         }
     }
     unshift @lib, @{ $self->{custom_lib} };
@@ -139,8 +147,8 @@ sub lib {
 
 sub config {
     my $self = shift;
-    croak 'no config file available'
-        if !$self->{config_file};
+    WGDev::X::NoWebGUIConfig->throw
+        if !$self->config_file;
     return $self->{config} ||= do {
         require Config::JSON;
         Config::JSON->new( $self->config_file );
@@ -153,7 +161,6 @@ sub close_config {
 
     # if we're closing the config, we probably want new sessions to pick up
     # changes to the file
-    ## no critic (Modules::RequireExplicitInclusion)
     if ( WebGUI::Config->can('clearCache') ) {
         WebGUI::Config->clearCache;
     }
@@ -162,6 +169,8 @@ sub close_config {
 
 sub config_file_relative {
     my $self = shift;
+    WGDev::X::NoWebGUIConfig->throw
+        if !$self->config_file;
     return $self->{config_file_relative} ||= do {
         my $config_dir
             = Cwd::realpath( File::Spec->catdir( $self->root, 'etc' ) );
@@ -177,6 +186,8 @@ sub db {
 
 sub session {
     my $self = shift;
+    WGDev::X::NoWebGUIConfig->throw
+        if !$self->config_file;
     require WebGUI::Session;
     if ( $self->{session} ) {
         my $dbh = $self->{session}->db->dbh;
@@ -211,13 +222,13 @@ sub close_session {
 sub list_site_configs {
     my $self = shift;
     my $root = $self->root;
-    croak 'WebGUI root not set!'
+    WGDev::X::NoWebGUIRoot->throw
         if !$root;
 
     if ( opendir my $dh, File::Spec->catdir( $root, 'etc' ) ) {
         my @configs = readdir $dh;
         closedir $dh
-            or croak "Unable to close directory handle: $!";
+            or WGDev::X::IO::Read->throw('Unable to close directory handle');
         @configs = map { File::Spec->catdir( $root, 'etc', $_ ) }
             grep { /\Q.conf\E$/msx && !/^(?:spectre|log)\Q.conf\E$/msx }
             @configs;
@@ -234,6 +245,8 @@ sub asset {
 
 sub version {
     my $self = shift;
+    WGDev::X::NoWebGUIRoot->throw
+        if !$self->root;
     require WGDev::Version;
     return $self->{version} ||= WGDev::Version->new( $self->root );
 }
@@ -316,7 +329,7 @@ sub read_wgd_config {
         if ( -f $config_file ) {
             my $config;
             open my $fh, '<', $config_file or next;
-            my $content = do { local $/ = undef; <$fh> };
+            my $content = do { local $/; <$fh> };
             close $fh or next;
             $self->{wgd_config_path} = Cwd::realpath($config_file);
             if ( $content eq q{} ) {
@@ -359,9 +372,16 @@ sub write_wgd_config {
     my $encoded = $json->encode($config);
     $encoded =~ s/\n?\z/\n/msx;
     open my $fh, '>', $config_path
-        or croak "Unable to write to $config_path: $!";
+        or WGDev::X::IO::Write->throw(
+        message => 'Unable to write config file',
+        path    => $config_path,
+        );
     print {$fh} $encoded;
-    close $fh or croak "Unable to write to $config_path: $!";
+    close $fh
+        or WGDev::X::IO::Write->throw(
+        message => 'Unable to write config file',
+        path    => $config_path,
+        );
     return 1;
 }
 
@@ -413,7 +433,7 @@ sub _load_yaml_lib {
     }
     else {
         *yaml_encode = *yaml_decode = sub {
-            die "No YAML library available!\n";
+            WGDev::X->throw('No YAML library available!');
         };
     }
     return;
@@ -562,14 +582,15 @@ Saves the current configuration back to the WGDev config file.
 
 =head1 AUTHOR
 
-Graham Knop <graham@plainblack.com>
+Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.
+Copyright (c) 2009, Graham Knop
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut
 

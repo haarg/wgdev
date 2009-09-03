@@ -8,6 +8,8 @@ our $VERSION = '0.2.0';
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
+use WGDev::X ();
+
 sub config_options {
     return qw(
         print|p
@@ -29,7 +31,7 @@ sub process {
         + ( defined $self->option('load')  || 0 )
         + ( defined $self->option('clear') || 0 ) > 1 )
     {
-        die "Multiple database operations specified!\n";
+        WGDev::X->throw('Multiple database operations specified!');
     }
 
     if ( $self->option('print') ) {
@@ -42,26 +44,27 @@ sub process {
     }
     if ( defined $self->option('load') ) {
         if ( $self->option('load') && $self->option('load') ne q{-} ) {
+            $db->clear;
             $db->load( $self->option('load') );
+            return 1;
         }
-        else {
-            exec {'mysql'} 'mysql', @command_line;
-        }
-        return 1;
     }
     if ( defined $self->option('dump') ) {
         if ( $self->option('dump') && $self->option('dump') ne q{-} ) {
             $db->dump( $self->option('dump') );
+            return 1;
         }
         else {
-            exec {'mysqldump'} 'mysqldump', @command_line;
+            my $return = system {'mysqldump'} 'mysqldump', @command_line;
+            return $return ? 0 : 1;
         }
-        return 1;
     }
     if ( defined $self->option('show') ) {
-        exec {'mysqlshow'} 'mysqlshow', @command_line;
+        my $return = system {'mysqlshow'} 'mysqlshow', @command_line;
+        return $return ? 0 : 1;
     }
-    exec {'mysql'} 'mysql', @command_line;
+    my $return = system {'mysql'} 'mysql', @command_line;
+    return $return ? 0 : 1;
 }
 
 1;
@@ -84,7 +87,7 @@ script, or displays database information, or clears a database's contents.
 =head1 OPTIONS
 
 Any arguments not recognized will be passed through to the C<mysql> or
-C<mysqldump> commands in applicable.
+C<mysqldump> commands as applicable.
 
 =over 8
 
@@ -92,12 +95,12 @@ C<mysqldump> commands in applicable.
 
 Prints out the command options that would be passed to C<mysql>
 
-=item C<-d> C<--dump>
+=item C<-d> C<--dump=>
 
 Dumps the database as an SQL script.  If a file is specified, dumps to that
 file.  Otherwise, dumps to standard out.
 
-=item C<-l> C<--load>
+=item C<-l> C<--load=>
 
 Loads a database script into the database.  Database script must be specified.
 
@@ -118,14 +121,15 @@ use C<mysqlshow>'s C<--count> option:
 
 =head1 AUTHOR
 
-Graham Knop <graham@plainblack.com>
+Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.  All rights reserved.
+Copyright (c) 2009, Graham Knop
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut
 
