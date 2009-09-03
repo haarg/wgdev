@@ -147,10 +147,12 @@ mkdir $etc;
 mkdir $lib;
 mkdir $sbin;
 
-my $config = catfile( $etc, 'www.example.com.conf' );
-copy catfile( $test_data, 'www.example.com.conf' ), $config;
 copy catfile( $test_data, 'www.example.com.conf' ),
     catfile( $etc, 'WebGUI.conf.original' );
+my $config = catfile( $etc, 'www.example.com.conf' );
+copy catfile( $test_data, 'www.example.com.conf' ), $config;
+my $config_in_empty = catfile( $emptydir, 'www.example.com.conf' );
+copy catfile( $test_data, 'www.example.com.conf' ), $config_in_empty;
 
 my $module = catfile( $lib, 'WebGUI.pm' );
 copy catfile( $test_data, 'WebGUI.pm' ), $module;
@@ -255,6 +257,16 @@ my $command_config = {
 
     is_path $wgd->root, $root_abs, '... and finds correct WebGUI root';
     is_path $wgd->config_file, $config_abs, '... and sets correct config file';
+}
+
+{
+    my $saved = guard_chdir $root;
+    my $wgd = WGDev->new;
+    lives_ok { WGDev::Command->guess_webgui_paths( wgd => $wgd, config_file => $config_in_empty ) }
+        'guess_webgui_paths lives when given absolute config file';
+
+    is_path $wgd->root, $root_abs, '... and finds correct WebGUI root';
+    is_path $wgd->config_file, $config_in_empty, '... and sets correct config file';
 }
 
 lives_and {
@@ -425,6 +437,8 @@ my $config2_abs = catfile($etc, 'www.example2.com.conf');
 
     # TODO: Add more tests for sitename/config conflicts
 }
+
+# TODO: test cwd in valid WebGUI root and specified config in different valid WebGUI root
 
 my $return;
 $output = capture_output {

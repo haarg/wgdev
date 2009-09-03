@@ -123,29 +123,22 @@ sub guess_webgui_paths {
     my $webgui_config   = $params{config_file};
     my $webgui_sitename = $params{sitename};
 
+    my $e;
+
     # first we need to find the webgui root
     if ($webgui_root) {
         $wgd->root($webgui_root);
     }
-    if ( $webgui_sitename && $wgd->root ) {
-        return $class->set_config_by_sitename( $wgd, $webgui_sitename );
-    }
 
-    my $e;
-    if ($webgui_config) {
-        eval { $class->set_config_by_input( $wgd, $webgui_config ); };
-        $e = WGDev::X->caught;
-
-        # if we were able to set the config file and root is set either by
-        # being specified or calculated by the config path, we are done.
-        if ( !$e && $wgd->root ) {
-            return $wgd;
+    # if that didn't set the root and we have a config, try to set it.
+    # if it is absolute, it will give us a root as well
+    if ( !$wgd->root && $webgui_config ) {
+        if ( eval { $class->set_config_by_input( $wgd, $webgui_config ); } ) {
+            return $wgd
+                if $wgd->root;
         }
-
-        # if root and the config file were specified and we haven't
-        # found the config yet, die
-        elsif ( $wgd->root ) {
-            $e->rethrow;
+        else {
+            $e = WGDev::X->caught || WGDev::X->new($@);
         }
     }
 
@@ -158,11 +151,15 @@ sub guess_webgui_paths {
             return $wgd;
         }
     }
+
     if ($webgui_sitename) {
         $class->set_config_by_sitename( $wgd, $webgui_sitename );
     }
     elsif ($webgui_config) {
         $class->set_config_by_input( $wgd, $webgui_config );
+    }
+    elsif ($e) {
+        $e->rethrow;
     }
     return $wgd;
 }
