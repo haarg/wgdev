@@ -34,16 +34,18 @@ sub ACTION_testpodcoverage {
     eval {
         require Test::Pod::Coverage;
         Test::Pod::Coverage->VERSION(1.0);
+        require Pod::Coverage::TrustPod;
+        Pod::Coverage::TrustPod->VERSION(0.092400);
     }
         or die q{The 'testpodcoverage' action requires },
-        q{Test::Pod::Coverage version 1.00};
+        q{Test::Pod::Coverage version 1.00 and Pod::Coverage::TrustPod version 0.092400};
 
     local @INC = @INC;
     my $p = $self->{properties};
     unshift @INC, File::Spec->catdir( $p->{base_dir}, $self->blib, 'lib' );
 
     Test::Pod::Coverage::all_pod_coverage_ok(
-        { coverage_class => 'Pod::Coverage::CountParents' } );
+        { coverage_class => 'Pod::Coverage::TrustPod' } );
     return;
 }
 

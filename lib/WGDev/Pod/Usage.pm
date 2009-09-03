@@ -150,5 +150,13 @@ This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl 5.10.0. For more details, see the
 full text of the licenses in the directory LICENSES.
 
+=for Pod::Coverage
+    cmd_head1
+    new
+    parse_from_string
+    seq_c
+    textblock
+    verbosity
+
 =cut
 
