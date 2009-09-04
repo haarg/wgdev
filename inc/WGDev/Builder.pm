@@ -81,28 +81,31 @@ sub ACTION_tidy {
 
 sub ACTION_distexec {
     my $self = shift;
+    require Digest::SHA1;
     $self->depends_on('build');
 
-    my $temp;
-    {
-        local $^W = 0;
-        (undef, $temp) = File::Temp::tempfile(OPEN => 0);
-    }
+    my $temp = File::Temp::tmpnam();
     system 'tar', 'czf', $temp, '-C', $self->blib, 'lib', 'script';
     my $archive_size = (stat $temp)[7];
+
+    my $short_sha1 = do {
+        open my $archive, '<', $temp;
+        my $sha1 = Digest::SHA1->new->addfile($archive);
+        close $archive;
+        substr $sha1->hexdigest, 0, 8;
+    };
 
     my $dist_script = 'wgd-' . $self->dist_version;
     unlink $dist_script;
     open my $fh, '>', $dist_script;
-    syswrite $fh, sprintf <<'END_SCRIPT', $archive_size;
+    syswrite $fh, sprintf <<'END_SCRIPT', $short_sha1, $archive_size;
 #!/bin/sh
 
 [[ -z "$TMPDIR" ]] && TMPDIR=/tmp
 
-OUTDIR="$TMPDIR/WGDev-$USER"
-if [ $0 -nt "$OUTDIR/.marker" ];
+OUTDIR="$TMPDIR/WGDev-%s-$USER"
+if [ ! -e "$OUTDIR/perl/script/wgd" ];
 then
-    [[ -e "$OUTDIR" ]] && rm -rf "$OUTDIR"
     mkdir "$OUTDIR"
     mkdir "$OUTDIR/perl"
     tail -c %s "$0" | tar xz -C "$OUTDIR/perl"
@@ -111,7 +114,6 @@ then
         echo 'Error extracting libraries!' 1>&2
         exit 1
     fi
-    touch "$OUTDIR/.marker"
 fi
 
 export PERL5LIB=$OUTDIR/perl/lib:$PERL5LIB
