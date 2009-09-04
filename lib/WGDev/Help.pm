@@ -29,6 +29,9 @@ sub package_perldoc {
     require File::Path;
     my $pod = package_pod( $package, $sections );
     my $tmpdir = File::Temp::tempdir( TMPDIR => 1, CLEANUP => 1 );
+    # perldoc may try to drop privs and the dir will be
+    # readable by current user only
+    chmod oct(755), $tmpdir;
     my @path_parts = split /::/msx, $package;
     my $filename   = pop @path_parts;
     my $path       = File::Spec->catdir( $tmpdir, 'perl', @path_parts );
