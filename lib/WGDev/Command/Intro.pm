@@ -71,7 +71,8 @@ the new data.
 
 The package command will generate a package for asset specified.
 Additionally, the --import option allows you to import package
-files.
+files, and --upgrade will export a package and put it into the correct
+package directory for the next WebGUI release.
 
 =head2 C< wgd reset --dev >
 
