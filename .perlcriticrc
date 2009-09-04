@@ -6,10 +6,12 @@ theme       = core || strictersubs || pulp || more
 [-Editor::RequireEmacsFileVariables]
 [-ErrorHandling::RequireCarping]
 [-ErrorHandling::RequireUseOfExceptions]
+[-InputOutput::ProhibitExplicitStdin]
 [-Miscellanea::RequireRcsKeywords]
 [-Subroutines::ProhibitCallsToUnexportedSubs]
 [-Subroutines::RequireArgUnpacking]
 [-ValuesAndExpressions::ProhibitConstantPragma]
+[-Variables::ProhibitPunctuationVars]
 [-Variables::RequireInitializationForLocalVars]
 
 # disabled until they are configurable enough to handle exceptions
@@ -29,10 +31,6 @@ lib_sections = NAME | SYNOPSIS | DESCRIPTION | AUTHOR | LICENSE
 [InputOutput::RequireCheckedSyscalls]
 functions = opendir read readline readdir closedir
 
-# ignore package portion of sub names
-[NamingConventions::Capitalization]
-subroutines = (?:.+::)?(?:[[:lower:]_\d]+|[[:upper:]_\d]+)
-
 [RegularExpressions::RequireExtendedFormatting]
 minimum_regex_length_to_complain_about = 5
 
@@ -44,7 +42,4 @@ allowed_values = -1 0 1 2 24 60 365 777 7777
 
 [Variables::ProhibitPackageVars]
 packages = File::Find Data::Dumper Config
-
-[Variables::ProhibitPunctuationVars]
-allow = $@ $/ $|
 

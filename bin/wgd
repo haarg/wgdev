@@ -9,5 +9,5 @@ if ( my $message = $@ ) {
     $message =~ s/\n?\z/\n/msx;
     die $message;
 }
-exit($return ? 0 : 1);  ##no critic (ProhibitParensWithBuiltins)
+exit( $return ? 0 : 1 );
 

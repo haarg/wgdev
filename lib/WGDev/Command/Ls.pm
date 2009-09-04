@@ -31,6 +31,7 @@ sub option_filter {
         WGDev::X->throw("Invalid filter specified: $filter");
     }
     if ( $filter_match =~ m{\A/(.*)/\Z}msx ) {
+        ##no critic (PerlMinimumVersionAndWhy)
         eval { $filter_match = qr/$1/msx; }
             || WGDev::X->throw(
             "Specified filter is not a valid regular expression: $1");
@@ -189,13 +190,17 @@ The maximum amount of entries to return
 
 =item C<--isa=>
 
-A class name where you can look for classes of a similar base class. For example, if you're looking for Donations, Subscriptions, Products and other subclasses of L<WebGUI::Asset::Sku>, then specify the parameter C<--isa=WebGUI::Asset::Sku>.
+A class name where you can look for classes of a similar base class.
+For example, if you're looking for Donations, Subscriptions, Products
+and other subclasses of L<WebGUI::Asset::Sku>, then specify the
+parameter C<--isa=WebGUI::Asset::Sku>.
 
 =item C<--filter=>
 
-Apply smart match filtering against the results. Format looks like C<%url% ~~ smartmatch>, where C<url> is
-the field to filter against, and C<smartmatch> is either a Perl regular expression such as C</(?i:partial_match)/> or
-a string such as C<my_exact_match>.
+Apply smart match filtering against the results. Format looks like
+C<%url% ~~ smartmatch>, where C<url> is the field to filter against,
+and C<smartmatch> is either a Perl regular expression such as
+C</(?i:partial_match)/> or a string such as C<my_exact_match>.
 
 =back
 
@@ -203,7 +208,8 @@ a string such as C<my_exact_match>.
 
 =head2 C<format_output ( $format, $asset )>
 
-Returns the formatted information about an asset.  C<$format> is the format to output as specifed in the L<format option|/-f>.
+Returns the formatted information about an asset.  C<$format> is
+the format to output as specified in the L<format option|/-f>.
 
 =head2 C<option_filter ( $filter )>
 
@@ -215,14 +221,15 @@ Checks if a given asset passes the saved filter.  Returns true or false.
 
 =head1 AUTHOR
 
-Graham Knop <graham@plainblack.com>
+Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.
+Copyright (c) 2009, Graham Knop
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut
 

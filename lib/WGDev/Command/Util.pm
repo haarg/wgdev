@@ -39,7 +39,7 @@ sub process {
         unshift @args, $command;
 
         # $^X is the name of the current perl executable
-        $command = $^X;    ##no critic (ProhibitPunctuationVars)
+        $command = $^X;
     }
 
     my $pid = fork;
@@ -56,7 +56,7 @@ sub process {
     waitpid $pid, 0;
 
     # $? is the child's exit value
-    return $? ? 0 : 1;    ##no critic (ProhibitPunctuationVars)
+    return $? ? 0 : 1;
 }
 
 1;
@@ -81,14 +81,15 @@ Has no options of its own.  All options are passed on to specified command.
 
 =head1 AUTHOR
 
-Graham Knop <graham@plainblack.com>
+Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.
+Copyright (c) 2009, Graham Knop
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut
 

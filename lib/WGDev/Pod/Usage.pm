@@ -8,8 +8,9 @@ our $VERSION = '0.0.1';
 use constant OPTION_INDENT      => 4;
 use constant OPTION_TEXT_INDENT => 24;
 
-use Pod::PlainText;
-use Pod::Select;
+use Pod::PlainText ();
+use Pod::Select    ();
+
 BEGIN {
     our @ISA = qw(Pod::PlainText Pod::Select);
 }
@@ -119,4 +120,43 @@ sub parse_from_string {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+WGDev::Pod::Usage - Produce usage documentation for WGDev commands
+
+=head1 SYNOPSIS
+
+    use WGDev::Pod::Usage;
+    my $parser = WGDev::Pod::Usage->new;
+    my $usage = $parser->parse_from_string($pod);
+
+=head1 DESCRIPTION
+
+Formats POD documentation into a format suitable for showing as
+usage text.  WGDev::Pod::Usage is a subclass of L<Pod::Select>.
+
+=head1 AUTHOR
+
+Graham Knop <haarg@haarg.org>
+
+=head1 LICENSE
+
+Copyright (c) 2009, Graham Knop
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
+
+=for Pod::Coverage
+    cmd_head1
+    new
+    parse_from_string
+    seq_c
+    textblock
+    verbosity
+
+=cut
 

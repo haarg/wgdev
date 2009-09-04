@@ -196,14 +196,15 @@ deleted or created so the two match.
 
 =head1 AUTHOR
 
-Graham Knop <graham@plainblack.com>
+Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.
+Copyright (c) 2009, Graham Knop
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut
 

@@ -1,0 +1,46 @@
+WGDev is Copyright (c) 2009, Graham Knop.
+
+DESCRIPTION
+    Performs common actions needed by WebGUI developers such as recreating
+    their site from defaults, checking version numbers, exporting packages,
+    and more.
+
+INSTALLATION
+    To install this module, run the following commands:
+
+        perl Build.PL
+        ./Build
+        ./Build test
+        ./Build install
+
+    Alternatively, have the CPAN client install it:
+
+        cpan .
+
+
+SUPPORT AND DOCUMENTATION
+    After installing, you can find documentation using several commands:
+        wgd intro
+            Introductory documentation to get started using the wgd command.
+        wgd <command> -h
+            Usage summary for any wgd command.
+        wgd help <command>
+            Full documentation for any wgd command.
+
+    Source code is hosted on GitHub at:
+        http://github.com/haarg/wgdev
+
+    Bug reports and feature requests can be posted on the issue tracker:
+        http://github.com/haarg/wgdev/issues
+
+CONTRIBUTORS
+    Graham Knop <graham@plainblack.com>
+    Patrick Donelan <pat@patspam.com>
+    Doug Bell <doug@plainblack.com>
+    Colin Kuskie <colink@perldreamer.com>
+
+LICENSE INFORMATION
+    This library is free software; you can redistribute it and/or
+    modify it under the same terms as Perl 5.10.0. For more details,
+    see the full text of the licenses in the directory LICENSES.
+

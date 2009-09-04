@@ -6,7 +6,6 @@ my $build = WGDev::Builder->new(
     dynamic_config     => 0,
     create_license     => 1,
     create_makefile_pl => 'traditional',
-    create_readme      => 1,
     sign               => 1,
     requires           => {
         'perl'             => '5.8.8',
@@ -27,7 +26,9 @@ my $build = WGDev::Builder->new(
         'Text::ParseWords' => 0,
         'version'          => 0,
         'Exception::Class' => 0,
+        # 'Scope::Guard'     => 0, # for tests only
     },
+
     recommends          => {
         'Term::ANSIColor'  => 0,
     },

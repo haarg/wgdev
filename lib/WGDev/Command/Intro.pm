@@ -41,13 +41,18 @@ WGDev provides a variety of commands useful for WebGUI developers.
 
 The first step in using WGDev is getting it to find your WebGUI
 root directory and site config file.  For this, you can either use
-the C<WEBGUI_ROOT> and C<WEBGUI_CONFIG> environment variables,
-setting the C<command.webgui_root> and C<command.webgui_config>
-options, using command line paramters, or relying on auto-detection.
+the C<WEBGUI_ROOT> and C<WEBGUI_CONFIG>/C<WEBGUI_SITENAME> environment
+variables, setting the C<command.webgui_root> and
+C<command.webgui_config>/C<command.webgui_sitename> options, using
+command line parameters, or (for the root path) relying on auto-detection.
 
 Auto-detection works by searching upward from the current directory
-for a valid WebGUI directory, and if there is only one site config
-file, using it.
+for a valid WebGUI directory.  The config file cannot be detected
+and must be specified.
+
+The WebGUI config file can be specified relative to the current
+directory, relative to WebGUI's etc directory, or as an absolute
+path.
 
 Once you have the root and config file set or otherwise specified,
 you can use any of the WGDev commands.
@@ -74,34 +79,36 @@ Additionally, the --import option allows you to import package
 files, and --upgrade will export a package and put it into the correct
 package directory for the next WebGUI release.
 
-=head2 C< wgd reset --dev >
+=head2 C<wgd reset --dev>
 
 Resets a site to its defaults and sets it up for development.  The
 site started is disabled, leaving the admin login with the default
-password of 123qwe.  Additionally, all of the default example content
-is cleared from the site giving you a blank slate to work from.
+password of C<123qwe>.  Additionally, all of the default example
+content is cleared from the site giving you a blank slate to work
+from.
 
-=head2 C< wgd reset --build >
+=head2 C<wgd reset --build>
 
 Resets a site it its defaults and prepares it to generate a site
 creation script.  The site starter is enabled, and old version tags
 and revisions of content are cleaned up.
 
-=head2 C< wgd db >
+=head2 C<wgd db>
 
 Starts the C<mysql> client in the site's database, using the login
 information from the site config file.
 
 =head1 AUTHOR
 
-Graham Knop <graham@plainblack.com>
+Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.
+Copyright (c) 2009, Graham Knop
 
 This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut
 

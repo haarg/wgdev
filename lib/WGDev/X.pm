@@ -69,6 +69,27 @@ use Exception::Class (
     },
 );
 
+BEGIN {
+    if ( $ENV{WGDEV_DEBUG} ) {
+        WGDev::X->Trace(1);
+    }
+    ##no critic (ProhibitMagicNumbers)
+    if ( !eval { Exception::Class->VERSION(1.27) } ) {
+
+        # work around bad behavior of Exception::Class < 1.27
+        # where it defaults the message to $!
+        *WGDev::X::new = sub {
+            my $errno = qq{$!};
+            my $class = shift;
+            my $self  = $class->SUPER::new(@_);
+            if ( $self->{message} eq $errno ) {
+                $self->{message} = q{};
+            }
+            return $self;
+            }
+    }
+}
+
 ##no critic (ProhibitQualifiedSubDeclarations)
 
 sub WGDev::X::full_message {
@@ -115,7 +136,7 @@ sub WGDev::X::System::new {
 }
 
 sub WGDev::X::System::full_message {
-    my $self = shift;
+    my $self    = shift;
     my $message = $self->SUPER::full_message;
     $message .= ' - ' . $self->errno_string;
     return $message;
@@ -124,7 +145,7 @@ sub WGDev::X::System::full_message {
 sub WGDev::X::IO::full_message {
     my $self = shift;
     my $message = $self->SUPER::message || $self->description;
-    if ($self->path) {
+    if ( $self->path ) {
         $message .= ' Path: ' . $self->path;
     }
     $message .= ' - ' . $self->errno_string;
@@ -154,10 +175,11 @@ Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop
+Copyright (c) 2009, Graham Knop
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut
 

@@ -34,16 +34,18 @@ sub ACTION_testpodcoverage {
     eval {
         require Test::Pod::Coverage;
         Test::Pod::Coverage->VERSION(1.0);
+        require Pod::Coverage::TrustPod;
+        Pod::Coverage::TrustPod->VERSION(0.092400);
     }
         or die q{The 'testpodcoverage' action requires },
-        q{Test::Pod::Coverage version 1.00};
+        q{Test::Pod::Coverage version 1.00 and Pod::Coverage::TrustPod version 0.092400};
 
     local @INC = @INC;
     my $p = $self->{properties};
     unshift @INC, File::Spec->catdir( $p->{base_dir}, $self->blib, 'lib' );
 
     Test::Pod::Coverage::all_pod_coverage_ok(
-        { coverage_class => 'Pod::Coverage::CountParents' } );
+        { coverage_class => 'Pod::Coverage::TrustPod' } );
     return;
 }
 
@@ -88,28 +90,34 @@ sub ACTION_distexec {
     }
     system 'tar', 'czf', $temp, '-C', $self->blib, 'lib', 'script';
     my $archive_size = (stat $temp)[7];
-    open my $archive, '<', $temp;
 
     my $dist_script = 'wgd-' . $self->dist_version;
+    unlink $dist_script;
     open my $fh, '>', $dist_script;
     syswrite $fh, sprintf <<'END_SCRIPT', $archive_size;
 #!/bin/sh
 
-if [ $0 -nt "$TMPDIR/WGDev/.marker" ];
+[[ -z "$TMPDIR" ]] && TMPDIR=/tmp
+
+OUTDIR="$TMPDIR/WGDev-$USER"
+if [ $0 -nt "$OUTDIR/.marker" ];
 then
-    [[ -e "$TMPDIR/WGDev" ]] && rm -rf "$TMPDIR/WGDev"
-    mkdir "$TMPDIR/WGDev"
-    mkdir "$TMPDIR/WGDev/perl"
-    tail -c %s $0 | tar xz -C "$TMPDIR/WGDev/perl"
-    touch "$TMPDIR/WGDev/.marker"
+    [[ -e "$OUTDIR" ]] && rm -rf "$OUTDIR"
+    mkdir "$OUTDIR"
+    mkdir "$OUTDIR/perl"
+    tail -c %s "$0" | tar xz -C "$OUTDIR/perl"
+    if [ ! $? -eq 0 ];
+    then
+        echo 'Error extracting libraries!' 1>&2
+        exit 1
+    fi
+    touch "$OUTDIR/.marker"
 fi
 
-export PERL5LIB=$TMPDIR/WGDev/perl/lib:$PERL5LIB
-$TMPDIR/WGDev/perl/script/wgd $@
-exit $?
+export PERL5LIB=$OUTDIR/perl/lib:$PERL5LIB
+exec $OUTDIR/perl/script/wgd $@
 
 ################## END #################
-
 END_SCRIPT
     open my $tar_fh, '<', $temp;
     while (1) {
@@ -121,7 +129,7 @@ END_SCRIPT
     }
     close $tar_fh;
     close $fh;
-    $self->make_executable($dist_script);
+    chmod oct(555), $dist_script;
 }
 
 1;

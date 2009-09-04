@@ -29,6 +29,9 @@ sub package_perldoc {
     require File::Path;
     my $pod = package_pod( $package, $sections );
     my $tmpdir = File::Temp::tempdir( TMPDIR => 1, CLEANUP => 1 );
+    # perldoc may try to drop privs and the dir will be
+    # readable by current user only
+    chmod oct(755), $tmpdir;
     my @path_parts = split /::/msx, $package;
     my $filename   = pop @path_parts;
     my $path       = File::Spec->catdir( $tmpdir, 'perl', @path_parts );
@@ -47,7 +50,7 @@ sub package_perldoc {
     waitpid $pid, 0;
 
     # error status of subprocess
-    if ($?) {    ##no critic (ProhibitPunctuationVars)
+    if ($?) {
         WGDev::X->throw('Error displaying help!');
     }
     return;
@@ -60,14 +63,15 @@ sub package_pod {
     require $file;
     my $actual_file = $INC{$file};
     my $pod;
+    ##no critic (RequireBriefOpen)
     open my $pod_in, '<', $actual_file
-        or WGDev::X::IO::Read->throw(path => $actual_file);
+        or WGDev::X::IO::Read->throw( path => $actual_file );
     if ($sections) {
         my @sections = ref $sections ? @{$sections} : $sections;
         require Pod::Select;
         my $parser = Pod::Select->new;
         $parser->select(@sections);
-        $pod = '';
+        $pod = q{};
         open my $pod_out, '>', \$pod
             or WGDev::X::IO->throw;
         $parser->parse_from_filehandle( $pod_in, $pod_out );
@@ -128,13 +132,14 @@ Can be either a scalar value or an array reference.
 
 =head1 AUTHOR
 
-Graham Knop <graham@plainblack.com>
+Graham Knop <haarg@haarg.org>
 
 =head1 LICENSE
 
-Copyright (c) Graham Knop.
+Copyright (c) 2009, Graham Knop
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl 5.10.0. For more details, see the
+full text of the licenses in the directory LICENSES.
 
 =cut
