@@ -1,6 +1,6 @@
 Change log for WGDev
 
-0.4.0
+0.4.0 - Sep 03 2009
  - Full POD coverage of API added
  - include real README file instead of autogenerating one
  - Fixed processing of config option on Reset or any other command
