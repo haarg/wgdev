@@ -375,7 +375,7 @@ my $config2_abs = catfile($etc, 'www.example2.com.conf');
     open my $fh, '<', catfile($test_data, 'www.example.com.conf');
     my $config_data = $json->decode(scalar do { local $/; <$fh> });
     close $fh;
-    $config_data->{sitename} = ['www.example2.com', 'www.example.com'];
+    $config_data->{sitename} = ['www.example2.com', 'www.example.com', 'www.example4.com', 'example5.com'];
     open $fh, '>', $config2_abs;
     print {$fh} $json->encode($config_data);
     close $fh;
@@ -392,10 +392,39 @@ my $config2_abs = catfile($etc, 'www.example2.com.conf');
     }
     'guess_webgui_paths finds config file when given sitename';
 
+    lives_and {
+        is_path +WGDev::Command->guess_webgui_paths(
+            wgd => WGDev->new,
+            root => $root,
+            sitename => 'example2.com',
+        )->config_file, $config2_abs;
+    }
+    'guess_webgui_paths finds config file when given shortened sitename';
+
     throws_ok {
         WGDev::Command->guess_webgui_paths( wgd => WGDev->new, root => $root, sitename => 'www.example.com' )
     } 'WGDev::X',
         'guess_webgui_paths throws error for ambiguous sitenames';
+
+    throws_ok {
+        WGDev::Command->guess_webgui_paths( wgd => WGDev->new, root => $root, sitename => 'w.example2.com' )
+    } 'WGDev::X',
+        q{guess_webgui_paths throws error for shortened sitename that isn't shortened on domain boundary};
+
+    throws_ok {
+        WGDev::Command->guess_webgui_paths( wgd => WGDev->new, root => $root, sitename => 'www.example2' )
+    } 'WGDev::X',
+        q{guess_webgui_paths throws error for shortened sitename that is shortened on the wrong end};
+
+    throws_ok {
+        WGDev::Command->guess_webgui_paths( wgd => WGDev->new, root => $root, sitename => 'example4.com' )
+    } 'WGDev::X',
+        'guess_webgui_paths throws error for ambiguous shortened sitename';
+
+    throws_ok {
+        WGDev::Command->guess_webgui_paths( wgd => WGDev->new, root => $root, sitename => 'example5.com' )
+    } 'WGDev::X',
+        'guess_webgui_paths throws error for ambiguous sitenames even when exact match exists';
 
     throws_ok {
         WGDev::Command->guess_webgui_paths( wgd => WGDev->new, root => $root, sitename => 'www.newexample.com' )

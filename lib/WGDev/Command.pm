@@ -206,12 +206,13 @@ sub set_config_by_sitename {
     require Config::JSON;
     my @configs = $wgd->list_site_configs;
     my $found_config;
+    my $sitename_regex = qr/ (?:^|[.])  \Q$sitename\E $ /msx;
     for my $config_file (@configs) {
         my $config = eval { Config::JSON->new($config_file) };
         next
             if !$config;
         for my $config_sitename ( @{ $config->get('sitename') } ) {
-            if ( $config_sitename eq $sitename ) {
+            if ( $config_sitename =~ m/$sitename_regex/msx ) {
                 if ($found_config) {
                     WGDev::X->throw("Ambigious site name: $sitename");
                 }
