@@ -12,6 +12,7 @@ sub config_options {
     return qw(
         number|n=i
         dashes!
+        toHex
     );
 }
 
@@ -20,12 +21,20 @@ sub process {
     my $wgd  = $self->wgd;
 
     my $session = $wgd->session();
+    my $id      = $session->id;
+
+    if ($self->option('toHex')) {
+        foreach my $guid ( $self->arguments ) {
+            printf "%s : %s\n", $guid, $id->toHex($guid);
+        }
+        return;
+    }
 
     my $number = $self->option('number') || 1;
     $self->set_option_default( dashes => 1 );
 
     for ( 1 .. $number ) {
-        my $guid = $session->id->generate();
+        my $guid = $id->generate();
         if ( !$self->option('dashes') && $guid =~ /[-_]/msx ) {
             redo;
         }
