@@ -10,9 +10,7 @@ BEGIN { our @ISA = qw(Test::Builder::Module) }
 use Scope::Guard ();
 use Cwd ();
 
-our @EXPORT = qw(capture_output guard_chdir is_path);
-
-use base 'Test::Builder::Module';
+our @EXPORT = qw(capture_output guard_chdir is_path output_is output_like);
 
 sub is_path ($$;$) {
     my ($got, $expected, $name) = @_;
@@ -40,6 +38,20 @@ sub capture_output (&) {
 
     $sub->();
     return $output;
+}
+
+sub output_is (&$;$) {
+    my ($sub, $expected, $name) = @_;
+    my $tb = __PACKAGE__->builder;
+    my $got = capture_output \&$sub;
+    $tb->is_eq($got, $expected, $name);
+}
+
+sub output_like (&$;$) {
+    my ($sub, $expected, $name) = @_;
+    my $tb = __PACKAGE__->builder;
+    my $got = capture_output \&$sub;
+    $tb->like($got, $expected, $name);
 }
 
 sub guard_chdir {

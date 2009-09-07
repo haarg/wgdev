@@ -5,6 +5,8 @@ use Test::More 'no_plan';
 use Test::NoWarnings;
 use Test::Exception;
 use Test::Warn;
+use Test::MockObject;
+use Test::MockObject::Extends;
 
 use File::Spec::Functions qw(catdir catfile catpath rel2abs splitpath);
 use Cwd qw(realpath cwd);
@@ -37,75 +39,91 @@ local $ENV{WEBGUI_ROOT};
 local $ENV{WEBGUI_CONFIG};
 
 my ( $ret, $output );
-$output = capture_output {
+output_is {
     ok +WGDev::Command->report_version, 'report_version returns true value';
-};
-is $output, 'WGDev::Command version ' . WGDev::Command->VERSION . "\n",
-    'version number reported to standard output';
+} 'WGDev::Command version ' . WGDev::Command->VERSION . "\n",
+    '... and reports version number on standard output';
 
-$output = capture_output {
+my $command_object = bless \(my $s), 'WGDev::Command';
+output_is {
+    ok $command_object->report_version, 'report_version on object returns true value';
+} 'WGDev::Command version ' . WGDev::Command->VERSION . "\n",
+    '... and reports version number on standard output';
+
+output_is {
     ok +WGDev::Command->report_version(
         'command name', 'WGDev::Command::_test_baseless'
     ),
         'report_version with module returns true value';
-};
-is $output,
-    sprintf(
+} sprintf(
     "WGDev::Command version %s - WGDev::Command::_test_baseless version %s\n",
     WGDev::Command->VERSION, WGDev::Command::_test_baseless->VERSION
-    ),
-    'version number of additional module reported to standard output';
+),
+    '... and reports version number of additional module on standard output';
 
-$output = capture_output {
+output_is {
     ok +WGDev::Command->report_help, 'report_help returns true value';
-};
-my $general_usage
-    = WGDev::Command->usage( 1 );
-is $output, $general_usage, 'report_help prints usage message';
+} WGDev::Command->usage( 1 ),
+    '... and prints usage message';
+
+output_is {
+    ok $command_object->report_help, 'report_help on object returns true value';
+} WGDev::Command->usage( 1 ),
+    '... and prints usage message';
 
 warning_like {
-    $output = capture_output {
+    output_is {
         ok +WGDev::Command->report_help(
             'command name', 'WGDev::Command::_test_baseless'
         ), 'report_help returns true value for command with no usage info';
-    };
+    } q{}, 'report_help prints nothing if command has no usage info';
 } qr{^\QNo documentation for command name command.\E$},
     'report_help warns about command with no usage info';
-is $output, q{}, 'report_help prints nothing if command has no usage info';
 
-$output = capture_output {
+output_is {
     ok +WGDev::Command->report_help(
         'command name', 'WGDev::Command::_test'
     ), 'report_help returns true value for command with usage info';
-};
-is $output, WGDev::Command::_test->usage,
+} WGDev::Command::_test->usage,
     'report_help prints usage info for provided command';
 
-is +WGDev::Command::get_command_module('_test'), 'WGDev::Command::_test',
+is +WGDev::Command->get_command_module('_test'), 'WGDev::Command::_test',
     'get_command_module finds normal command modules';
 
-is +WGDev::Command::get_command_module('_test-subclass'),
+is +WGDev::Command->get_command_module('_test-subclass'),
     'WGDev::Command::_test::Subclass',
     'get_command_module finds subclass command modules';
 
-throws_ok { WGDev::Command::get_command_module('base') } 'WGDev::X::BadCommand',
+throws_ok { WGDev::Command->get_command_module('command...') } 'WGDev::X::BadCommand',
+    q{get_command_module throws exception for invalid command names};
+
+throws_ok { WGDev::Command->get_command_module('_test_cant_run') } 'WGDev::X::BadCommand',
+    q{get_command_module throws exception for existing command modules with no run method};
+
+throws_ok { WGDev::Command->get_command_module('_test_cant_is_runnable') } 'WGDev::X::BadCommand',
+    q{get_command_module throws exception for existing command modules with no is_runnable method};
+
+throws_ok { WGDev::Command->get_command_module('base') } 'WGDev::X::BadCommand',
     q{get_command_module throws exception for existing command modules that aren't runnable};
 
-throws_ok { WGDev::Command::get_command_module('_nonexistant') } 'WGDev::X::BadCommand',
+throws_ok { WGDev::Command->get_command_module('_nonexistant') } 'WGDev::X::BadCommand',
     'get_command_module throws exception for nonexisting command modules';
 
-is +WGDev::Command::command_to_module('command'), 'WGDev::Command::Command',
+is +WGDev::Command->command_to_module('command'), 'WGDev::Command::Command',
     'command_to_module converts command name to module name properly';
 
-is +WGDev::Command::command_to_module('sub-command'),
+is +WGDev::Command->command_to_module('sub-command'),
     'WGDev::Command::Sub::Command',
     'command_to_module converts multi-part command name to module name properly';
 
-is +WGDev::Command::_find_cmd_exec('tester-executable'),
+is +WGDev::Command->_find_cmd_exec('tester-executable'),
     catfile( TEST_DIR, 'bin', 'wgd-tester-executable' ),
     '_find_cmd_exec returns file path for executables in path starting with wgd-';
-is +WGDev::Command::_find_cmd_exec('tester-non-executable'), undef,
+is +WGDev::Command->_find_cmd_exec('tester-non-executable'), undef,
     '_find_cmd_exec returns undef for non-executables in path starting with wgd-';
+
+is +WGDev::Command->_find_cmd_exec(), undef,
+    '_find_cmd_exec returns undef when not given command parameter';
 
 my $usage_base = WGDev::Help::package_usage('WGDev::Command');
 is +WGDev::Command->usage, $usage_base,
@@ -134,6 +152,12 @@ is +( grep { $_ eq 'tester-non-executable' } @commands ), 0,
 
 is +( grep { $_ eq 'base' } @commands ), 0,
     q{command_list doesn't include command modules that are not runnable};
+
+is +( grep { $_ eq '_test_cant_run' } @commands ), 0,
+    q{command_list doesn't include command modules with no run method};
+
+is +( grep { $_ eq '_test_cant_is_runnable' } @commands ), 0,
+    q{command_list doesn't include command modules with no is_runnable method};
 
 my $emptydir = File::Temp->newdir;
 my $root     = File::Temp->newdir;
@@ -278,6 +302,24 @@ lives_and {
 } 'guess_webgui_paths finds config file when given bare filename';
 
 {
+    throws_ok {
+        WGDev::Command->guess_webgui_paths(
+            wgd => WGDev->new,
+            config_file => 'www.example.com.conf',
+        );
+    } 'WGDev::X', q{guess_webgui_paths throws if it can't find config file};
+
+    my $mock = Test::MockObject::Extends->new('WGDev::Command');
+    $mock->mock('set_config_by_input', sub { die "non-exception error\n" });
+    throws_ok {
+        $mock->guess_webgui_paths(
+            wgd => WGDev->new,
+            config_file => 'www.example.com.conf',
+        );
+    } 'WGDev::X', q{guess_webgui_paths throws exception even if set_config_by_input fails some other way};
+}
+
+{
     local $ENV{WEBGUI_CONFIG} = 'www.example.com.conf';
     lives_and {
         is_path +WGDev::Command->guess_webgui_paths(
@@ -401,6 +443,21 @@ my $config2_abs = catfile($etc, 'www.example2.com.conf');
     }
     'guess_webgui_paths finds config file when given shortened sitename';
 
+    {
+        open my $fh, '>', catfile($etc, 'www.broken.com.conf');
+        print {$fh} 'garbage data';
+        close $fh;
+    }
+    lives_and {
+        is_path +WGDev::Command->guess_webgui_paths(
+            wgd => WGDev->new,
+            root => $root,
+            sitename => 'www.example2.com',
+        )->config_file, $config2_abs;
+    }
+    q{broken config file doesn't interfere with sitename search};
+    unlink catfile($etc, 'www.broken.com.conf');
+
     throws_ok {
         WGDev::Command->guess_webgui_paths( wgd => WGDev->new, root => $root, sitename => 'www.example.com' )
     } 'WGDev::X',
@@ -430,6 +487,16 @@ my $config2_abs = catfile($etc, 'www.example2.com.conf');
         WGDev::Command->guess_webgui_paths( wgd => WGDev->new, root => $root, sitename => 'www.newexample.com' )
     } 'WGDev::X',
         'guess_webgui_paths throws error for invalid sitenames';
+
+    throws_ok {
+        WGDev::Command->guess_webgui_paths(
+            wgd => WGDev->new,
+            root => $root,
+            sitename => 'www.example2.com',
+            config_file => $config2_abs,
+        )
+    } 'WGDev::X::BadParameter',
+        'guess_webgui_paths throws error if given both sitename and config';
 
     {
         local $ENV{WEBGUI_SITENAME} = 'www.example2.com';
@@ -469,10 +536,90 @@ my $config2_abs = catfile($etc, 'www.example2.com.conf');
 
 # TODO: test cwd in valid WebGUI root and specified config in different valid WebGUI root
 
-my $return;
-$output = capture_output {
-    $return = WGDev::Command->run;
-};
-like $output, qr/^\QRun WGDev commands/, 'run with no params outputs correct message';
-ok $return, '... and returns a true value';
+throws_ok {
+    WGDev::Command->run('invalid-command');
+} 'WGDev::X::CommandLine::BadCommand',
+    'run with invalid command throws correct error';
+
+{
+    no warnings qw(once redefine);
+    local $INC{'WGDev/Command/Commands.pm'} = __FILE__;
+    local *WGDev::Command::Commands::help = sub { 'magic' };
+
+    my $mock = Test::MockObject::Extends->new('WGDev::Command');
+    $mock->mock('usage', sub {
+        $_[0]->{verbosity} = $_[1];
+        return 'printed usage';
+    });
+
+    output_is {
+        is $mock->run, 'magic', 'run with no params dispatches to WGDev::Command::Commands->help';
+    } 'printed usage', '... after printing usage information';
+    is $mock->{verbosity}, 0, '... with verbosity of 0';
+}
+
+{
+    no warnings qw(once redefine);
+    # This normally can't fail with the config used
+    local *Getopt::Long::GetOptions = sub { 0 };
+
+    throws_ok {
+        WGDev::Command->run;
+    } 'WGDev::X::CommandLine', 'run throws correct error if option parsing failed somehow';
+}
+
+{
+    no warnings qw(once redefine);
+    my @run_params;
+    local $INC{'WGDev/Command/Run.pm'} = __FILE__;
+    local @WGDev::Command::Run::ISA = ();
+    local *WGDev::Command::Run::is_runnable = sub { 1 };
+    local *WGDev::Command::Run::new = sub {
+        my $class = shift;
+        return bless \(my $s), $class;
+    };
+    local *WGDev::Command::Run::run = sub {
+        my $self = shift;
+        @run_params = @_;
+        return 1;
+    };
+
+    my $exec_file = WGDev::Command->_find_cmd_exec('tester-executable');
+    ok +WGDev::Command->run('tester-executable', 'parameter'),
+        'running external executable returns true value on success';
+    is_deeply \@run_params, [$exec_file, 'parameter'],
+        'running external executable dispatches correctly to WGDev::Command::Run';
+
+    WGDev::Command->run('-h', '-V', 'tester-executable', 'parameter');
+    is_deeply \@run_params, [$exec_file, qw(--help --version parameter)],
+        'running external executable passes help and version params when requested';
+}
+
+{
+    my $mock = Test::MockObject::Extends->new('WGDev::Command');
+    $mock->set_true('report_version', 'report_help');
+
+    $mock->run('_test', '--help');
+    $mock->called_ok('report_help', 'run with --help switch calls report_help method');
+
+    $mock->clear;
+
+    $mock->run('_test', '--version');
+    $mock->called_ok('report_version', 'run with --version switch calls report_version method');
+
+    my $mocked_command = Test::MockObject->new;
+    $mocked_command->set_always('run', 'magic');
+
+    my $mocked_command_module = Test::MockObject::Extends->new('UNIVERSAL');
+    $mocked_command_module->set_always('new', $mocked_command);
+
+    $mock->set_always('get_command_module', $mocked_command_module);
+
+    my $return = $mock->run('command-name', 'run parameter');
+
+    $mocked_command_module->called_ok('new', 'run call constructed new command object');
+    $mocked_command->called_ok('run', '... then called run method on it');
+    $mocked_command->called_args_pos_is(0, 2, 'run parameter', '... passing correct parameters');
+    is $return, 'magic', '... and returns value from object directly';
+}
 

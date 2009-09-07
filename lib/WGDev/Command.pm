@@ -27,9 +27,9 @@ sub run {
 
     my $command_name = shift @params;
 
-    my $command_module = eval { get_command_module($command_name) };
+    my $command_module = eval { $class->get_command_module($command_name) };
     if ( $command_name && !$command_module ) {
-        my $command_exec = _find_cmd_exec($command_name);
+        my $command_exec = $class->_find_cmd_exec($command_name);
         if ($command_exec) {
             require WGDev::Command::Run;
             $command_module = 'WGDev::Command::Run';
@@ -158,9 +158,6 @@ sub guess_webgui_paths {
     elsif ($webgui_config) {
         $class->set_config_by_input( $wgd, $webgui_config );
     }
-    elsif ($e) {
-        $e->rethrow;
-    }
     return $wgd;
 }
 
@@ -260,9 +257,9 @@ sub report_help {
 }
 
 sub get_command_module {
-    my $command_name = shift;
-    if ( $command_name && $command_name =~ /^[-\w]+$/mxs ) {
-        my $module = command_to_module($command_name);
+    my ( $class, $command_name ) = @_;
+    if ( $command_name && $command_name =~ /^\w+(-\w+)*+$/mxs ) {
+        my $module = $class->command_to_module($command_name);
         ( my $module_file = "$module.pm" ) =~ s{::}{/}mxsg;
         if (   eval { require $module_file; 1 }
             && $module->can('run')
@@ -276,14 +273,14 @@ sub get_command_module {
 }
 
 sub command_to_module {
-    my $command = shift;
+    my ($class, $command) = @_;
     my $module = join q{::}, __PACKAGE__, map {ucfirst} split /-/msx,
         $command;
     return $module;
 }
 
 sub _find_cmd_exec {
-    my ( $command_name, $root, $config ) = @_;
+    my ( $class, $command_name, $root, $config ) = @_;
     if ($command_name) {
         for my $path ( File::Spec->path ) {
             my $execpath = File::Spec->catfile( $path, "wgd-$command_name" );
@@ -374,7 +371,8 @@ WGDev::Command - Run WGDev commands
 
 =head1 DESCRIPTION
 
-Runs sub-commands from the C<WGDev::Command> namespace, or standalone scripts starting with F<wgd->
+Runs sub-commands from the C<WGDev::Command> namespace, or standalone
+scripts starting with F<wgd->
 
 =head1 OPTIONS
 
@@ -418,20 +416,6 @@ The sub-command to run or get help for.
 
 =back
 
-=head1 SUBROUTINES
-
-=head2 C<command_to_module ( $command )>
-
-Converts a command into the module that would implement it.  Returns
-that module name.
-
-=head2 C<get_command_module ( $command )>
-
-Converts the command to a module, then attempts to load that module.
-If the module loads successfully, implements the C<run> and
-C<is_runnable> methods, and C<is_runnable> returns true, returns
-the module.  If not, returns C<undef>.
-
 =head1 METHODS
 
 =head2 C<run ( @arguments )>
@@ -449,6 +433,18 @@ Searches for available sub-commands and returns them as an array.
 This list includes available Perl modules that pass the
 L</get_command_module> check and executable files beginning with
 F<wgd->.
+
+=head2 C<command_to_module ( $command )>
+
+Converts a command into the module that would implement it.  Returns
+that module name.
+
+=head2 C<get_command_module ( $command )>
+
+Converts the command to a module, then attempts to load that module.
+If the module loads successfully, implements the C<run> and
+C<is_runnable> methods, and C<is_runnable> returns true, returns
+the module.  If not, returns C<undef>.
 
 =head2 C<< get_params_or_defaults ( wgd => $wgd, %params ) >>
 

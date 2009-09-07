@@ -30,7 +30,7 @@ sub process {
         $command_module = 'WGDev::Command';
     }
     else {
-        $command_module = WGDev::Command::get_command_module($command);
+        $command_module = WGDev::Command->get_command_module($command);
     }
 
     if ( !$command_module ) {
