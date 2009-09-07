@@ -193,7 +193,7 @@ If modifications are made, the assets are updated.
 
 =over 8
 
-=item C<--comman=>
+=item C<--command=>
 
 Command to be executed.  If not specified, uses the EDITOR environment
 variable.  If that is not specified, uses C<$EDITOR> or C<vi>.
