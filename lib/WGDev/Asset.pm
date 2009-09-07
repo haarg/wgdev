@@ -27,6 +27,7 @@ sub import_node {
     my $self = shift;
     return WebGUI::Asset->getImportNode( $self->{session} );
 }
+
 sub default_asset { goto &home }
 
 sub home {
