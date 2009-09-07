@@ -46,7 +46,7 @@ This is a sample command.
 
 =over 8
 
-=item C<--all> C<-A>
+=item C<-A> C<--all>
 
 Does everything.
 
