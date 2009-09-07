@@ -7,7 +7,14 @@ my $build = WGDev::Builder->new(
     create_license     => 1,
     create_makefile_pl => 'traditional',
     sign               => 1,
-    requires           => {
+    meta_merge         => {
+        resources => {
+            bugtracker => 'http://github.com/haarg/wgdev/issues',
+            repository => 'http://github.com/haarg/wgdev/tree',
+            WebGUI     => 'http://www.webgui.org/',
+        },
+    },
+    requires => {
         'perl'             => '5.8.8',
         'App::Prove'       => 0,
         'Config::JSON'     => 0,
@@ -26,11 +33,20 @@ my $build = WGDev::Builder->new(
         'Text::ParseWords' => 0,
         'version'          => 0,
         'Exception::Class' => 0,
-        # 'Scope::Guard'     => 0, # for tests only
+
+        # for tests only
+        'Scope::Guard'              => 0,
+        'Test::Builder::Module'     => 0,
+        'Test::Exception'           => 0,
+        'Test::MockObject::Extends' => 0,
+        'Test::MockObject'          => 0,
+        'Test::More'                => 0,
+        'Test::NoWarnings'          => 0,
+        'Test::Warn'                => 0,
     },
 
-    recommends          => {
-        'Term::ANSIColor'  => 0,
+    recommends => {
+        'Term::ANSIColor' => 0,
     },
 );
 $build->create_build_script;
