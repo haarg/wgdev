@@ -300,7 +300,7 @@ sub reset_uploads {
 
     umask $initial_umask;
 
-    $self->report("Done\n");
+    $self->report("Done.\n");
     return 1;
 }
 
@@ -318,7 +318,7 @@ sub import_db_script {
         = $self->option('upgrade') ? 'previousVersion.sql' : 'create.sql';
     $wgd->db->clear;
     $wgd->db->load( File::Spec->catfile( $wgd->root, 'docs', $db_file ) );
-    $self->report("Done\n");
+    $self->report("Done.\n");
     return 1;
 }
 
@@ -357,7 +357,7 @@ sub upgrade {
     if ($?) {
         WGDev::X->throw('Upgrade failed!');
     }
-    $self->report("Done\n");
+    $self->report("Done.\n");
     return 1;
 }
 
@@ -403,7 +403,7 @@ sub reset_config {
         $config->set( $key, $value );
     }
 
-    $self->report("Done\n");
+    $self->report("Done.\n");
     return 1;
 }
 
@@ -432,7 +432,7 @@ sub set_settings {
     elsif ( defined $self->option('starter') ) {
         $dbh->do(q{DELETE FROM `settings` WHERE `name`='specialState'});
     }
-    $self->report("Done\n");
+    $self->report("Done.\n");
     return 1;
 }
 
@@ -460,7 +460,7 @@ sub clear_default_content {
             $child->getName, $child->get('title') );
         $child->purge;
     }
-    $self->report("Done\n");
+    $self->report("Done.\n");
     return 1;
 }
 
@@ -492,7 +492,7 @@ END_SQL
             $asset->purgeRevision;
         }
     }
-    $self->report("Done\n");
+    $self->report("Done.\n");
     return 1;
 }
 
@@ -513,7 +513,7 @@ sub empty_trash {
             $asset->getName, $asset->get('title') );
         $asset->purge;
     }
-    $self->report("Done\n");
+    $self->report("Done.\n");
     return 1;
 }
 
@@ -523,7 +523,7 @@ sub clean_version_tags {
 
     $self->report('Finding current version number... ');
     my $version = $wgd->version->database( $wgd->db->connect );
-    $self->report("$version. Done\n");
+    $self->report("$version. Done.\n");
 
     $self->report('Cleaning out versions Tags... ');
     my $tag_id = 'pbversion0000000000001';
@@ -541,7 +541,7 @@ END_SQL
     my $now = time;
     $sth->execute( $tag_id, "Base $version Install",
         1, $now, '3', $now, '3', 0, q{}, '3', q{} );
-    $self->report("Done\n");
+    $self->report("Done.\n");
     return 1;
 }
 
@@ -584,7 +584,7 @@ sub run_all_workflows {
             last;
         }
     }
-    $self->report("Done\n");
+    $self->report("Done.\n");
     return 1;
 }
 
@@ -612,7 +612,7 @@ sub rebuild_lineage {
         exit;
     }
     waitpid $pid, 0;
-    $self->report("Done\n");
+    $self->report("Done.\n");
     return 1;
 }
 
@@ -641,7 +641,7 @@ sub rebuild_index {
         exit;
     }
     waitpid $pid, 0;
-    $self->report("Done\n");
+    $self->report("Done.\n");
     return 1;
 }
 
