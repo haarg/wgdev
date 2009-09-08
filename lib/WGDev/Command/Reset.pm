@@ -39,6 +39,7 @@ sub config_options {
             emptytrash!
             index!
             runwf!
+            autologon!
             util=s@
 
             delusers
@@ -170,6 +171,10 @@ sub process {
     if ( $self->option('index') ) {
         $self->rebuild_lineage;
         $self->rebuild_index;
+    }
+
+    if ( $self->option('autologon') ) {
+        $self->autologon;
     }
 
     if ( $self->option('util') ) {
@@ -645,6 +650,159 @@ sub rebuild_index {
     return 1;
 }
 
+sub autologon {
+    my $self = shift;
+    my $wgd  = $self->wgd;
+    my @session_ids;
+    $self->report('Getting active browser site sessions... ');
+    my $success;
+    if ( eval { push @session_ids, $self->get_firefox_sessions; 1 } ) {
+        $success = 1;
+    }
+    if ( eval { push @session_ids, $self->get_safari_sessions; 1 } ) {
+        $success = 1;
+    }
+    if ($success) {
+        $self->report("Done.\n");
+    }
+    else {
+        $self->report("Failed!\n");
+    }
+
+    if (@session_ids) {
+        require WebGUI::Session;
+        $self->report('Creating sessions on site... ');
+        for my $session_id (@session_ids) {
+            my $session = WebGUI::Session->open( $wgd->root,
+                $wgd->config_file_relative, undef, undef, $session_id, );
+            $session->user( { userId => 3 } );
+            $session->var->switchAdminOn;
+        }
+        $self->report("Done.\n");
+    }
+}
+
+sub get_firefox_sessions {
+    my $self = shift;
+    my $wgd  = $self->wgd;
+
+    require DBI;
+    require DBD::SQLite;
+
+    my $cookies_file = $self->get_firefox_cookiedb;
+    my $dbh          = DBI->connect(
+        'dbi:SQLite:dbname=' . $cookies_file,
+        q{}, q{},
+        {
+            PrintError => 0,
+            RaiseError => 1,
+            unicode    => 1,
+        } );
+    my @sitenames         = @{ $wgd->config->get('sitename') };
+    my $cookie_name       = $wgd->config->get('cookieName');
+    my $gateway           = $wgd->config->get('gateway');
+    my $site_placeholders = join q{,}, (q{?}) x @sitenames;
+    my $sth               = $dbh->prepare(<<"END_SQL");
+        SELECT
+            value
+        FROM
+            moz_cookies
+        WHERE
+            name = ?
+            AND host IN ($site_placeholders)
+            AND path = ?
+            AND expiry > ?
+END_SQL
+    $sth->execute( $cookie_name, @sitenames, $gateway, time );
+    my @session_ids;
+
+    while ( my ($session_id) = $sth->fetchrow_array ) {
+        push @session_ids, $session_id;
+    }
+    $sth->finish;
+    $dbh->disconnect;
+    return @session_ids;
+}
+
+sub get_firefox_cookiedb {
+    my $self = shift;
+
+    require File::HomeDir;
+    require Config::INI::Reader;
+    require File::Temp;
+    require File::Copy;
+
+    my $firefox_subdir
+        = $^O eq 'darwin' ? 'Firefox'
+        : $^O eq 'linux'  ? '.firefox'
+        :                   WGDev::X->throw('Unsupported operating system');
+
+    my $firefox_data_dir
+        = File::Spec->catdir( File::HomeDir->my_data, $firefox_subdir );
+    my $profile_path;
+
+    my $profile_config = Config::INI::Reader->read_file(
+        File::Spec->catfile( $firefox_data_dir, 'profiles.ini' ) );
+    my @profiles = grep {/^Profile/msx} keys %{$profile_config};
+    if ( @profiles == 1 ) {
+        $profile_path = $profile_config->{ $profiles[0] }{Path};
+    }
+    else {
+        for my $key (@profiles) {
+            next
+                if !$profile_config->{$key}{Default};
+            $profile_path = $profile_config->{$key}{Path};
+        }
+        WGDev::X->throw('Unable to find a profile')
+            if !$profile_path;
+    }
+
+    $profile_path = File::Spec->rel2abs( $profile_path, $firefox_data_dir );
+
+    # database is locked so we have to make a copy to check it
+    my $cookies_file = File::Spec->catfile( $profile_path, 'cookies.sqlite' );
+    my $tmpdir       = File::Temp::tempdir();
+    my $cookies_copy = File::Spec->catfile( $tmpdir, 'cookies.sqlite' );
+    File::Copy::copy( $cookies_file, $cookies_copy );
+    return $cookies_copy;
+}
+
+sub get_safari_sessions {
+    my $self = shift;
+    my $wgd  = $self->wgd;
+
+    if ( $^O ne 'darwin' ) {
+        WGDev::X->throw('Safari cookies only available in Mac OS X.');
+    }
+
+    require HTTP::Cookies::Safari;
+    require File::HomeDir;
+
+    my %sitename    = map { $_ => 1 } @{ $wgd->config->get('sitename') };
+    my $cookie_name = $wgd->config->get('cookieName');
+    my $gateway     = $wgd->config->get('gateway');
+
+    my $cookies_file
+        = File::Spec->catfile( File::HomeDir->home, 'Library', 'Cookies',
+        'Cookies.plist', );
+    my $cookie_jar = HTTP::Cookies::Safari->new( file => $cookies_file );
+    $cookie_jar->load;
+
+    my @session_ids;
+    $cookie_jar->scan(
+        sub {
+            my ( undef, $key, $value, $path, $domain ) = @_;
+            if (   $key eq $cookie_name
+                && $path eq $gateway
+                && $sitename{$domain} )
+            {
+                push @session_ids, $value;
+            }
+        } );
+
+    return @session_ids;
+}
+
 1;
 
 __END__
@@ -752,6 +910,11 @@ Rebuild the site lineage and reindex all of the content
 =item C<--[no-]runwf>
 
 Attempt to finish any running workflows
+
+=item C<--[no-]autologon>
+
+Attempt to create sessions on the site logged in as Admin, with
+admin mode enabled based on browser cookies.
 
 =item C<--util=>
 
@@ -927,6 +1090,22 @@ Rebuilds the lineage of the site using the F<rebuildLineage.pl> script.
 
 Attempts to finish processing all active workflows.  Waiting workflows
 will be run up to 10 times to complete them.
+
+=head2 C<autologon>
+
+Attempts to create sessions on the site matching browser cookies.
+
+=head2 C<get_firefox_sessions>
+
+Returns a list of session IDs that Firefox has set in cookies for the site.
+
+=head2 C<get_firefox_cookiedb>
+
+Returns the name of a copy of Firefox's cookie database.
+
+=head2 C<get_safari_sessions>
+
+Returns a list of session IDs that Safari has set in cookies for the site.
 
 =head1 AUTHOR
 

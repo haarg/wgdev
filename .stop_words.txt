@@ -1,6 +1,8 @@
 API
 DSN
 Donelan
+Firefox
+Firefox's
 GUIDs
 JSON
 Knop
