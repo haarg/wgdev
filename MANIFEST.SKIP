@@ -10,22 +10,23 @@
 \b_darcs\b
 
 # Avoid Makemaker generated and utility files.
-\bMANIFEST\.SKIP\b
-\bMANIFEST\.bak
-\bMakefile$
-\bblib/
-\bMakeMaker-\d
-\bpm_to_blib\.ts$
-\bpm_to_blib$
-\bblibdirs\.ts$         # 6.18 through 6.25 generated this
+^MYMETA\.yml$
+^MANIFEST\.SKIP$
+^MANIFEST\.bak$
+^Makefile$
+^blib/
+^MakeMaker-\d
+^pm_to_blib\.ts$
+^pm_to_blib$
+^blibdirs\.ts$
 
 # Avoid Module::Build generated and utility files.
-\bBuild$
-\bBuild\.bat$
-\b_build
-\bBuild\.COM$
-\bBUILD\.COM$
-\bbuild\.com$
+^Build$
+^Build\.bat$
+^_build
+^Build\.COM$
+^BUILD\.COM$
+^build\.com$
 
 # Avoid temp and backup files.
 ~$
@@ -51,6 +52,6 @@
 \B\._
 
 # Avoid archives of this distribution
-\bWGDev-[\d\.\_]+
-\bwgd-[\d\.\_]+
+\bWGDev-v?[\d\.\_]+
+\bwgd-v?[\d\.\_]+
 
