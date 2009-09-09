@@ -21,6 +21,7 @@ sub config_options {
     return qw(
         create|c
         bare|b
+        dist|d
     );
 }
 
@@ -36,6 +37,10 @@ sub process {
 
     my $wgv = $wgd->version;
     my ( $perl_version, $perl_status ) = $wgv->module;
+    if ( $self->option('dist') ) {
+        print $perl_version, '-', $perl_status, "\n";
+        return 1;
+    }
     if ( $self->option('bare') ) {
         print $perl_version, "\n";
         return 1;
@@ -167,7 +172,7 @@ WGDev::Command::Version - Reports and updates version numbers
 
 =head1 SYNOPSIS
 
-    wgd version [-b | -c] [<version>]
+    wgd version [-b | -c | -d] [<version>]
 
 =head1 DESCRIPTION
 
@@ -185,6 +190,11 @@ Adds a new section to the change log for the new version, updates the version
 number in F<WebGUI.pm>, and creates a new upgrade script.  The version number
 to update to can be specified on the command line.  If not specified, defaults
 to incrementing the patch level by one.
+
+=item C<-d> C<--dist>
+
+Output the version number and status of the current WebGUI, joined by a dash.
+If the version is passed as well, it will be ignored.
 
 =item C<-b> C<--bare>
 
