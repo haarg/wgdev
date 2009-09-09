@@ -9,6 +9,13 @@ use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
 use File::Spec ();
+sub config_options {
+    return (
+        shift->SUPER::config_options, qw(
+            buildDir|b=s
+        )
+    );
+}
 
 sub needs_config {
     return;
@@ -22,17 +29,19 @@ sub process {
     require Cwd;
 
     my ( $version, $status ) = $wgd->version->module;
-    my $build_root   = File::Temp->newdir;
+    my $build_dir    = $self->option('buildDir');
+    my $build_root   = ($build_dir && -e $build_dir) ? $build_dir : File::Temp->newdir;
     my $build_webgui = File::Spec->catdir( $build_root, 'WebGUI' );
     my $build_docs   = File::Spec->catdir( $build_root, 'api' );
     my $cwd          = Cwd::cwd();
 
     mkdir $build_webgui;
     $self->export_files($build_webgui);
+    my $inst_dir = $build_dir || $cwd;
     if ( !fork ) {
         chdir $build_root;
         exec 'tar', 'czf',
-            File::Spec->catfile( $cwd, "webgui-$version-$status.tar.gz" ),
+            File::Spec->catfile( $inst_dir, "webgui-$version-$status.tar.gz" ),
             'WebGUI';
     }
     wait;
@@ -42,7 +51,7 @@ sub process {
     if ( !fork ) {
         chdir $build_root;
         exec 'tar', 'czf',
-            File::Spec->catfile( $cwd, "webgui-api-$version-$status.tar.gz" ),
+            File::Spec->catfile( $inst_dir, "webgui-api-$version-$status.tar.gz" ),
             'api';
     }
     wait;
@@ -130,7 +139,7 @@ WGDev::Command::Dist - Create a distribution file for WebGUI
 
 =head1 SYNOPSIS
 
-    wgd dist [-c] [-d]
+    wgd dist [-c] [-d] [-b /data/builds]
 
 =head1 DESCRIPTION
 
@@ -149,6 +158,11 @@ Generates a code distribution
 =item C<-d> C<--documentation>
 
 Generates an API documentation distribution
+
+=item C<-b> C<--buildDir>
+
+Install the directories and tarballs in a different location.  If no build directory
+is specified, it will create a temp file.
 
 =back
 
