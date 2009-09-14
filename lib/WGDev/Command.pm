@@ -171,7 +171,7 @@ sub set_root_relative {
         }
         my $parent
             = Cwd::realpath( File::Spec->catdir( $dir, File::Spec->updir ) );
-        WGDex::X::NoWebGUIRoot->throw
+        WGDev::X::NoWebGUIRoot->throw
             if $dir eq $parent;
         $dir = $parent;
     }
@@ -258,7 +258,7 @@ sub report_help {
 
 sub get_command_module {
     my ( $class, $command_name ) = @_;
-    if ( $command_name && $command_name =~ /^\w+(-\w+)*+$/mxs ) {
+    if ( $command_name && $command_name =~ /^\w+(?:-\w+)*$/mxs ) {
         my $module = $class->command_to_module($command_name);
         ( my $module_file = "$module.pm" ) =~ s{::}{/}mxsg;
         if (   eval { require $module_file; 1 }
