@@ -1,8 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
-use Test::NoWarnings;
+use Test::More;
 use Test::Exception;
 use Test::Warn;
 use Test::MockObject;
@@ -31,6 +30,12 @@ use WGDev_tester_command           ();
 use WGDev::Help                    ();
 
 BEGIN { $INC{'WGDev/Command/_tester.pm'} = $INC{'WGDev_tester_command.pm'} }
+
+use constant HAS_DONE_TESTING => Test::More->can('done_testing') ? 1 : undef;
+# use done_testing if possible
+if ( ! HAS_DONE_TESTING ) {
+    plan 'no_plan';
+}
 
 my $test_data = catdir( TEST_DIR, 'testdata' );
 
@@ -177,6 +182,12 @@ my $config = catfile( $etc, 'www.example.com.conf' );
 copy catfile( $test_data, 'www.example.com.conf' ), $config;
 my $config_in_empty = catfile( $emptydir, 'www.example.com.conf' );
 copy catfile( $test_data, 'www.example.com.conf' ), $config_in_empty;
+my $config_broken = catfile( $etc, 'www.broken.com.conf' );
+{
+    open my $fh, '>', $config_broken;
+    print {$fh} 'garbage data';
+    close $fh;
+}
 
 my $module = catfile( $lib, 'WebGUI.pm' );
 copy catfile( $test_data, 'WebGUI.pm' ), $module;
@@ -443,11 +454,6 @@ my $config2_abs = catfile($etc, 'www.example2.com.conf');
     }
     'guess_webgui_paths finds config file when given shortened sitename';
 
-    {
-        open my $fh, '>', catfile($etc, 'www.broken.com.conf');
-        print {$fh} 'garbage data';
-        close $fh;
-    }
     lives_and {
         is_path +WGDev::Command->guess_webgui_paths(
             wgd => WGDev->new,
@@ -456,7 +462,6 @@ my $config2_abs = catfile($etc, 'www.example2.com.conf');
         )->config_file, $config2_abs;
     }
     q{broken config file doesn't interfere with sitename search};
-    unlink catfile($etc, 'www.broken.com.conf');
 
     throws_ok {
         WGDev::Command->guess_webgui_paths( wgd => WGDev->new, root => $root, sitename => 'www.example.com' )
@@ -533,6 +538,11 @@ my $config2_abs = catfile($etc, 'www.example2.com.conf');
 
     # TODO: Add more tests for sitename/config conflicts
 }
+
+throws_ok {
+    my $wgd = WGDev->new;
+    WGDev::Command->guess_webgui_paths(wgd => $wgd, config_file => $config_broken);
+} 'WGDev::X::BadParameter', 'throws when given a broken config file';
 
 # TODO: test cwd in valid WebGUI root and specified config in different valid WebGUI root
 
@@ -621,5 +631,9 @@ throws_ok {
     $mocked_command->called_ok('run', '... then called run method on it');
     $mocked_command->called_args_pos_is(0, 2, 'run parameter', '... passing correct parameters');
     is $return, 'magic', '... and returns value from object directly';
+}
+
+if ( HAS_DONE_TESTING ) {
+    done_testing;
 }
 

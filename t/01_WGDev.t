@@ -1,8 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 32;
-use Test::NoWarnings;
+use Test::More;
 use Test::Exception;
 
 use File::Spec::Functions qw(catdir catfile catpath rel2abs splitpath);
@@ -14,6 +13,12 @@ use Config ();
 use constant TEST_DIR => catpath( ( splitpath(__FILE__) )[ 0, 1 ], '' );
 
 use WGDev ();
+
+use constant HAS_DONE_TESTING => Test::More->can('done_testing') ? 1 : undef;
+# use done_testing if possible
+if ( ! HAS_DONE_TESTING ) {
+    plan 'no_plan';
+}
 
 my $wgd = WGDev->new;
 
@@ -45,6 +50,13 @@ my $config = catfile( $etc, 'www.example.com.conf' );
 copy catfile( $test_data, 'www.example.com.conf' ), $config;
 copy catfile( $test_data, 'www.example.com.conf' ),
     catfile( $etc, 'WebGUI.conf.original' );
+my $config_broken = catfile( $etc, 'www.broken.com.conf' );
+{
+    open my $fh, '>', $config_broken;
+    print {$fh} 'garbage data';
+    close $fh;
+}
+
 
 my $module = catfile( $lib, 'WebGUI.pm' );
 copy catfile( $test_data, 'WebGUI.pm' ), $module;
@@ -130,6 +142,9 @@ is $wgd->root, $root_abs, 'Root not modified after failed attempts to set';
 throws_ok { $wgd->config_file('nonexistant') } 'WGDev::X::BadParameter',
     'Error thrown when trying to set config to nonexistant file with root set';
 
+throws_ok { $wgd->config_file($config_broken) } 'WGDev::X::BadParameter',
+    'Error thrown when trying to set config to broken config file';
+
 $wgd = WGDev->new;
 
 throws_ok { $wgd->config_file('nonexistant') } 'WGDev::X::BadParameter',
@@ -142,6 +157,9 @@ is realpath( $wgd->root ), realpath($root_abs),
     'Root set correctly based on absolute config file';
 
 ok scalar( grep { $_ eq $wgd->lib } @INC ), 'WebGUI lib path added to @INC';
+
+ok $wgd->close_config, 'Can close config';
+lives_and { isa_ok $wgd->config, 'Config::JSON' } 'Call to config reopens config as needed';
 
 open my $fh, '>', catfile( $sbin, 'preload.custom' );
 print {$fh} $sbin . "\n"
@@ -164,4 +182,8 @@ $wgd = WGDev->new($config);
 
 is_deeply [ map { realpath($_) } $wgd->lib ], [ map { realpath($_) } ($lib) ],
     'Unreadable preload.custom silently ignored';
+
+if ( HAS_DONE_TESTING ) {
+    done_testing;
+}
 

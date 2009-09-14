@@ -82,6 +82,7 @@ sub config_file {
     my $self = shift;
     if (@_) {
         my $path = shift;
+        require Config::JSON;
         if ( -f $path ) {
         }
         elsif (
@@ -108,9 +109,18 @@ sub config_file {
                     ) );
             };
         }
+        my $path_abs = File::Spec->rel2abs($path);
+        my $config;
+        if ( ! eval { $config = Config::JSON->new($path_abs); 1 } ) {
+            WGDev::X::BadParameter->throw(
+                'parameter' => 'WebGUI config file',
+                'value'     => $path
+            );
+        }
         $self->close_session;
         $self->close_config;
-        $self->{config_file} = File::Spec->rel2abs($path);
+        $self->{config_file} = $path_abs;
+        $self->{config} = $config;
         delete $self->{config_file_relative};
     }
     return $self->{config_file};
