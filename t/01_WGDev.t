@@ -176,12 +176,17 @@ is_deeply [ map { realpath($_) } $wgd->lib ],
 is realpath( scalar $wgd->lib ), realpath($lib),
     '->lib in scalar context returns primary lib path';
 
-chmod 0, catfile( $sbin, 'preload.custom' );
+SKIP: {
+    skip q{Can't test non-readability as root}, 1
+        if $< == 0;
 
-$wgd = WGDev->new($config);
+    chmod 0, catfile( $sbin, 'preload.custom' );
 
-is_deeply [ map { realpath($_) } $wgd->lib ], [ map { realpath($_) } ($lib) ],
-    'Unreadable preload.custom silently ignored';
+    $wgd = WGDev->new($config);
+
+    is_deeply [ map { realpath($_) } $wgd->lib ], [ map { realpath($_) } ($lib) ],
+        'Unreadable preload.custom silently ignored';
+}
 
 if ( HAS_DONE_TESTING ) {
     done_testing;
