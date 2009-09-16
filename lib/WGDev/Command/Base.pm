@@ -40,9 +40,10 @@ sub parse_params {
     for my $option ( $self->config_options ) {
 
         # for complex options, name is first word segment
-        ( my $option_name ) = ( $option =~ /(\w+)/msx );
-        if ( $self->can("option_$option_name") ) {
-            my $method = "option_$option_name";
+        ( my $option_name ) = ( $option =~ /([\w-]+)/msx );
+        my $method = 'option_' . $option_name;
+        $method =~ tr/-/_/;
+        if ( $self->can($method) ) {
             $getopt_params{$option} = sub {
                 $self->$method( @_[ 1 .. $#_ ] );
             };
