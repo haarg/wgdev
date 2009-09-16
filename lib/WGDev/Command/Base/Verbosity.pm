@@ -12,22 +12,27 @@ sub new {
     my $class = shift;
     my $self  = $class->SUPER::new(@_);
     $self->{verbosity} = 1;
+    $self->{tab_level} = 0;
     return $self;
 }
 
 sub config_options {
     return qw(
-        verbose|v+
-        quiet|q+
+        verbose|v
+        quiet|q
     );
 }
 
-sub parse_params {
+sub option_verbose {
     my $self   = shift;
-    my $result = $self->SUPER::parse_params(@_);
-    $self->{verbosity} += ( $self->option('verbose') || 0 )
-        - ( $self->option('quiet') || 0 );
-    return $result;
+    $self->{verbosity}++;
+    return;
+}
+
+sub option_quiet {
+    my $self   = shift;
+    $self->{verbosity}--;
+    return;
 }
 
 sub verbosity {
@@ -47,8 +52,17 @@ sub report {
     }
     return
         if $verbose_limit > $self->verbosity;
-    print $message;
+    my $tabs = "\t" x $self->tab_level;
+    print $tabs . $message;
     return 1;
+}
+
+sub tab_level {
+    my $self = shift;
+    if (@_) {
+        $self->{tab_level} += shift;
+    }
+    return $self->{tab_level};
 }
 
 1;
