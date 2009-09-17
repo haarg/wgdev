@@ -233,6 +233,18 @@ sub _get_property_default {
     return $default;
 }
 
+sub export_extension {
+    my $self        = shift;
+    my $asset       = shift;
+    my $class       = ref $asset || $asset;
+    my $short_class = $class;
+    $short_class =~ s/.*:://msx;
+    my $extension = lc $short_class;
+    $extension =~ s/(?<!^)[aeiouy]//msxg;
+    $extension =~ tr/a-z//s;
+    return $extension;
+}
+
 1;
 
 __END__
