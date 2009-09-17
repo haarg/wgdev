@@ -21,7 +21,8 @@ sub config_options {
 
             backup!
             delcache!
-            import!
+            import:s
+            no-import|noimport
 
             test|t
             dev|d
@@ -54,6 +55,12 @@ sub parse_params {
     return $self->SUPER::parse_params(@args);
 }
 
+sub option_no_import {
+    my $self = shift;
+    $self->option( 'import', undef );
+    return;
+}
+
 sub option_profile {
     my $self           = shift;
     my $profile        = shift;
@@ -81,7 +88,7 @@ sub option_fast {
 sub option_dev {
     my $self = shift;
     $self->option( backup  => 1 );
-    $self->option( import  => 1 );
+    $self->option( import  => '' );
     $self->option( uploads => 1 );
     $self->option( upgrade => 1 );
     $self->option( starter => 0 );
@@ -95,7 +102,7 @@ sub option_build {
     $self->verbosity( $self->verbosity + 1 );
     $self->option( backup     => 1 );
     $self->option( uploads    => 1 );
-    $self->option( import     => 1 );
+    $self->option( import     => '' );
     $self->option( starter    => 1 );
     $self->option( debug      => 0 );
     $self->option( upgrade    => 1 );
@@ -130,7 +137,7 @@ sub process {
         $self->reset_uploads;
     }
 
-    if ( $self->option('import') ) {
+    if ( defined $self->option('import') ) {
         $self->import_db_script;
     }
 
@@ -218,7 +225,7 @@ sub clear_cache {
     elsif ( $wgd->config->get('cacheType') eq 'WebGUI::Cache::Database' ) {
 
    # Don't clear the DB cache if we are importing, as that will wipe it anyway
-        if ( !$self->option('import') ) {
+        if ( ! defined $self->option('import') ) {
             my $dsn = $wgd->db->connect;
             $dsn->do('DELETE FROM cache');
         }
@@ -318,11 +325,15 @@ sub import_db_script {
 
     $self->report('Importing clean database dump... ');
 
-    # If we aren't upgrading, we're using the current DB version
-    my $db_file
-        = $self->option('upgrade') ? 'previousVersion.sql' : 'create.sql';
-    $wgd->db->clear;
-    $wgd->db->load( File::Spec->catfile( $wgd->root, 'docs', $db_file ) );
+    my $db_file = $self->option('import');
+    if ( defined $db_file && $db_file eq q{} ) {
+        # If we aren't upgrading, we're using the current DB version
+        $db_file
+            = File::Spec->catfile( $wgd->root, 'docs',
+            $self->option('upgrade') ? 'previousVersion.sql' : 'create.sql',
+            );
+    }
+    $wgd->db->load($db_file);
     $self->report("Done.\n");
     return 1;
 }
@@ -861,9 +872,11 @@ Backup database before doing any other operations.
 
 Delete the site's cache.  Defaults to on.
 
-=item C<--[no-]import>
+=item C<--[no-]import=>
 
-Import a database script
+Import a database script.  If no database file is specified,
+F<docs/create.sql> or F<docs/previousVersion.sql> will be used
+depending on if the upgrade option has been specified.
 
 =item C<--[no-]uploads>
 
