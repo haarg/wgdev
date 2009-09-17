@@ -8,14 +8,14 @@ our $VERSION = '0.0.2';
 use Module::Build ();
 BEGIN { our @ISA = qw(Module::Build) }
 
-use File::Spec     ();
-use File::Temp     ();
+use File::Spec ();
+use File::Temp ();
 ##no critic (ProhibitMagicNumbers Capitalization)
 
 sub new {
     my $class   = shift;
     my %options = @_;
-    $options{test_types}{author}   = ['.at'];
+    $options{test_types}{author} = ['.at'];
     my $self = $class->SUPER::new(%options);
     return $self;
 }
@@ -54,12 +54,12 @@ sub ACTION_testpodcoverage {
 sub ACTION_tidy {
     my $self = shift;
 
-    my %found_files = map {%{$_}} $self->find_pm_files,
+    my %found_files = map { %{$_} } $self->find_pm_files,
         $self->_find_file_by_type( 'pm', 't' ),
         $self->_find_file_by_type( 'pm', 'inc' ),
         $self->_find_file_by_type( 't',  't' ),
         $self->_find_file_by_type( 'at', 't' ),
-        $self->_find_file_by_type( 'PL', q{.} );
+        { 'Build.PL' => 'Build.PL' };
 
     my @files = sort keys %found_files;
 
@@ -86,7 +86,7 @@ sub ACTION_distexec {
 
     my $temp = File::Temp::tmpnam();
     system 'tar', 'czf', $temp, '-C', $self->blib, 'lib', 'script';
-    my $archive_size = (stat $temp)[7];
+    my $archive_size = ( stat $temp )[7];
 
     my $short_sha1 = do {
         open my $archive, '<', $temp;
@@ -126,7 +126,7 @@ END_SCRIPT
         my $buffer;
         my $read = sysread $tar_fh, $buffer, 1000;
         last
-            if ! $read;
+            if !$read;
         syswrite $fh, $buffer;
     }
     close $tar_fh;

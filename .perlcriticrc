@@ -3,6 +3,7 @@ theme       = core || strictersubs || pulp || more
 
 [-BuiltinFunctions::ProhibitReverseSortBlock]
 [-ClassHierarchies::ProhibitExplicitISA]
+[-Compatibility::PerlMinimumVersionAndWhy]
 [-Editor::RequireEmacsFileVariables]
 [-ErrorHandling::RequireCarping]
 [-ErrorHandling::RequireUseOfExceptions]

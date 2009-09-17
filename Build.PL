@@ -45,9 +45,7 @@ my $build = WGDev::Builder->new(
         'Test::Warn'                => 0,
     },
 
-    recommends => {
-        'Term::ANSIColor' => 0,
-    },
+    recommends => { 'Term::ANSIColor' => 0, },
 );
 $build->create_build_script;
 

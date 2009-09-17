@@ -15,8 +15,9 @@ use constant TEST_DIR => catpath( ( splitpath(__FILE__) )[ 0, 1 ], '' );
 use WGDev ();
 
 use constant HAS_DONE_TESTING => Test::More->can('done_testing') ? 1 : undef;
+
 # use done_testing if possible
-if ( ! HAS_DONE_TESTING ) {
+if ( !HAS_DONE_TESTING ) {
     plan 'no_plan';
 }
 
@@ -56,7 +57,6 @@ my $config_broken = catfile( $etc, 'www.broken.com.conf' );
     print {$fh} 'garbage data';
     close $fh;
 }
-
 
 my $module = catfile( $lib, 'WebGUI.pm' );
 copy catfile( $test_data, 'WebGUI.pm' ), $module;
@@ -151,7 +151,7 @@ throws_ok { $wgd->config_file('nonexistant') } 'WGDev::X::BadParameter',
     'Error thrown when trying to set config to nonexistant file with no root set';
 
 lives_ok { $wgd->config_file($config_abs) }
-    'Can set just config file using full path';
+'Can set just config file using full path';
 
 is realpath( $wgd->root ), realpath($root_abs),
     'Root set correctly based on absolute config file';
@@ -159,7 +159,8 @@ is realpath( $wgd->root ), realpath($root_abs),
 ok scalar( grep { $_ eq $wgd->lib } @INC ), 'WebGUI lib path added to @INC';
 
 ok $wgd->close_config, 'Can close config';
-lives_and { isa_ok $wgd->config, 'Config::JSON' } 'Call to config reopens config as needed';
+lives_and { isa_ok $wgd->config, 'Config::JSON' }
+'Call to config reopens config as needed';
 
 open my $fh, '>', catfile( $sbin, 'preload.custom' );
 print {$fh} $sbin . "\n"
@@ -184,11 +185,12 @@ SKIP: {
 
     $wgd = WGDev->new($config);
 
-    is_deeply [ map { realpath($_) } $wgd->lib ], [ map { realpath($_) } ($lib) ],
+    is_deeply [ map { realpath($_) } $wgd->lib ],
+        [ map { realpath($_) } ($lib) ],
         'Unreadable preload.custom silently ignored';
 }
 
-if ( HAS_DONE_TESTING ) {
+if (HAS_DONE_TESTING) {
     done_testing;
 }
 

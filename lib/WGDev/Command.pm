@@ -273,7 +273,7 @@ sub get_command_module {
 }
 
 sub command_to_module {
-    my ($class, $command) = @_;
+    my ( $class, $command ) = @_;
     my $module = join q{::}, __PACKAGE__, map {ucfirst} split /-/msx,
         $command;
     return $module;

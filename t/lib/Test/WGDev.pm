@@ -8,57 +8,59 @@ our $VERSION = '0.0.1';
 use Test::Builder::Module ();
 BEGIN { our @ISA = qw(Test::Builder::Module) }
 use Scope::Guard ();
-use Cwd ();
+use Cwd          ();
 
 our @EXPORT = qw(capture_output guard_chdir is_path output_is output_like);
 
 sub is_path ($$;$) {
-    my ($got, $expected, $name) = @_;
+    my ( $got, $expected, $name ) = @_;
     my $tb = __PACKAGE__->builder;
-    if (defined $got) {
+    if ( defined $got ) {
         $got = Cwd::realpath($got);
     }
-    if (defined $expected) {
+    if ( defined $expected ) {
         $expected = Cwd::realpath($expected);
     }
-    $tb->is_eq($got, $expected, $name);
+    $tb->is_eq( $got, $expected, $name );
 }
 
 sub capture_output (&) {
-    my $sub    = shift;
+    my $sub = shift;
 
     my $output = q{};
     open my $out_fh, '>', \$output;
     my $orig_out = select $out_fh;
 
-    my $guard = Scope::Guard->new(sub {
-        select $orig_out;
-        close $out_fh;
-    });
+    my $guard = Scope::Guard->new(
+        sub {
+            select $orig_out;
+            close $out_fh;
+        } );
 
     $sub->();
     return $output;
 }
 
 sub output_is (&$;$) {
-    my ($sub, $expected, $name) = @_;
-    my $tb = __PACKAGE__->builder;
+    my ( $sub, $expected, $name ) = @_;
+    my $tb  = __PACKAGE__->builder;
     my $got = capture_output \&$sub;
-    $tb->is_eq($got, $expected, $name);
+    $tb->is_eq( $got, $expected, $name );
 }
 
 sub output_like (&$;$) {
-    my ($sub, $expected, $name) = @_;
-    my $tb = __PACKAGE__->builder;
+    my ( $sub, $expected, $name ) = @_;
+    my $tb  = __PACKAGE__->builder;
     my $got = capture_output \&$sub;
-    $tb->like($got, $expected, $name);
+    $tb->like( $got, $expected, $name );
 }
 
 sub guard_chdir {
-    my $cwd = Cwd::cwd;
-    my $guard = Scope::Guard->new(sub {
-        chdir $cwd;
-    });
+    my $cwd   = Cwd::cwd;
+    my $guard = Scope::Guard->new(
+        sub {
+            chdir $cwd;
+        } );
     if (@_) {
         my $dir = shift;
         chdir $dir;

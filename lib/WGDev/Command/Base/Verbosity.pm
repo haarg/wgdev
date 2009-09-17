@@ -24,13 +24,13 @@ sub config_options {
 }
 
 sub option_verbose {
-    my $self   = shift;
+    my $self = shift;
     $self->{verbosity}++;
     return;
 }
 
 sub option_quiet {
-    my $self   = shift;
+    my $self = shift;
     $self->{verbosity}--;
     return;
 }

@@ -23,7 +23,7 @@ sub process {
     my $session = $wgd->session();
     my $id      = $session->id;
 
-    if ($self->option('toHex')) {
+    if ( $self->option('toHex') ) {
         foreach my $guid ( $self->arguments ) {
             printf "%s : %s\n", $guid, $id->toHex($guid);
         }
