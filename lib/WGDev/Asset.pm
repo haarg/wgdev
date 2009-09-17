@@ -64,16 +64,25 @@ sub find {
 sub validate_class {
     my $self = shift;
     my $in_class = my $class = shift;
-    if ( $class =~ s/\A(?:(?:WebGUI::Asset)?::)?(.*)/WebGUI::Asset::$1/msx ) {
+    if (
+        $class =~ s{\A
+            (?:(?:WebGUI::Asset)?::)?
+            (
+                [[:upper:]]\w+
+                (?: ::[[:upper:]]\w+ )*
+            )
+            \z
+        }{WebGUI::Asset::$1}msx
+        )
+    {
         my $short_class = $1;
-        if ( $class =~ /\A [[:upper:]]\w+ (?: ::[[:upper:]]\w+ )* \z/msx ) {
-            return wantarray ? ( $class, $short_class ) : $class;
-        }
+        return wantarray ? ( $class, $short_class ) : $class;
     }
     WGDev::X::BadAssetClass->throw( class => $in_class );
 }
 
 sub _gen_serialize_header {
+    my $self        = shift;
     my $header_text = shift;
     my $header      = "==== $header_text ";
     $header .= ( q{=} x ( LINE_LENGTH - length $header ) ) . "\n";
@@ -83,10 +92,14 @@ sub _gen_serialize_header {
 sub serialize {
     my ( $self, $asset, $properties ) = @_;
     my $class = ref $asset || $asset;
+    WGDev::X::BadParameter->throw('No asset or class specified')
+        if not defined $class;
+    if ( !ref $asset ) {
+        ( my $module = $class . '.pm' ) =~ s{::}{/}msxg;
+        require $module;
+    }
     my $short_class = $class;
     $short_class =~ s/^WebGUI::Asset:://xms;
-    ( my $module = $class . '.pm' ) =~ s{::}{/}msxg;
-    require $module;
     my $definition = $class->definition( $self->{session} );
     my %text;
     my %meta;
@@ -147,19 +160,19 @@ sub serialize {
     # line up colons
     $basic_yaml =~ s/^([^:]+):/sprintf("%-12s:", $1)/msxeg;
     $basic_yaml =~ s/\n?\z/\n/msx;
-    my $output = _gen_serialize_header($short_class) . $basic_yaml;
+    my $output = $self->_gen_serialize_header($short_class) . $basic_yaml;
 
     while ( my ( $field, $value ) = each %text ) {
         if ( !defined $value ) {
             $value = q{~};
         }
         $value =~ s/\r\n?/\n/msxg;
-        $output .= _gen_serialize_header($field) . $value . "\n";
+        $output .= $self->_gen_serialize_header($field) . $value . "\n";
     }
 
     my $meta_yaml = WGDev::yaml_encode( \%meta );
     $meta_yaml =~ s/\A---(?:\Q {}\E)?\n?//msx;
-    $output .= _gen_serialize_header('Properties') . $meta_yaml . "\n";
+    $output .= $self->_gen_serialize_header('Properties') . $meta_yaml . "\n";
 
     return $output;
 }
@@ -181,9 +194,10 @@ sub deserialize {
         [ ]=+       # space + equals
         (?:\n|\z)   # end of line or end of string
     }msx, $asset_data;
+
+    # due to split, there is an extra empty entry at the beginning
     shift @text_sections;
-    my $class = shift @text_sections;
-    $class =~ s/^(?:(?:WebGUI::Asset)?::)?/WebGUI::Asset::/msx;
+    my $class      = $self->validate_class( shift @text_sections );
     my $basic_data = shift @text_sections;
     my %sections;
     my %properties;
@@ -234,9 +248,11 @@ sub _get_property_default {
 }
 
 sub export_extension {
-    my $self        = shift;
-    my $asset       = shift;
-    my $class       = ref $asset || $asset;
+    my $self  = shift;
+    my $asset = shift;
+    my $class = ref $asset || $asset;
+    return
+        if !defined $class;
     my $short_class = $class;
     $short_class =~ s/.*:://msx;
     my $extension = lc $short_class;
@@ -311,6 +327,13 @@ Accepts a class name of an asset in either full (C<WebGUI::Asset::Template>) or
 short (C<Template>) form.  In scalar context, returns the full class name.  In
 array context, returns an array of the full and the short class name.  Will
 throw an error if the provided class is not valid.
+
+=head2 C<export_extension ( $asset_or_class )>
+
+Returns a file extension to use for exporting the given asset or
+class.  The extension will be the last segment of the class name,
+lower cased, with repeated letters and vowels (except for an initial
+vowel) removed.
 
 =head1 AUTHOR
 

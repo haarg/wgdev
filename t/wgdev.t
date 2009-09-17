@@ -10,7 +10,12 @@ use File::Temp ();
 use File::Copy qw(copy);
 use Config ();
 
-use constant TEST_DIR => catpath( ( splitpath(__FILE__) )[ 0, 1 ], '' );
+use constant TEST_DIR =>
+    catpath( ( splitpath( realpath(__FILE__) ) )[ 0, 1 ], '' );
+
+use lib catdir( TEST_DIR, 'lib' );
+
+use Test::WGDev;
 
 use WGDev ();
 
@@ -21,14 +26,14 @@ if ( !HAS_DONE_TESTING ) {
     plan 'no_plan';
 }
 
+my $test_data = catdir( TEST_DIR, 'testdata' );
+
 my $wgd = WGDev->new;
 
 isa_ok $wgd, 'WGDev', 'WGDev->new returns WGDev object';
 
 throws_ok { $wgd->set_environment } 'WGDev::X::NoWebGUIRoot',
     'Exception thrown for ->set_environment with no root set';
-
-my $test_data = catdir( TEST_DIR, 'testdata' );
 
 {
     my $root_invalid = File::Temp->newdir;
@@ -153,7 +158,7 @@ throws_ok { $wgd->config_file('nonexistant') } 'WGDev::X::BadParameter',
 lives_ok { $wgd->config_file($config_abs) }
 'Can set just config file using full path';
 
-is realpath( $wgd->root ), realpath($root_abs),
+is_path $wgd->root, $root_abs,
     'Root set correctly based on absolute config file';
 
 ok scalar( grep { $_ eq $wgd->lib } @INC ), 'WebGUI lib path added to @INC';
@@ -174,7 +179,7 @@ is_deeply [ map { realpath($_) } $wgd->lib ],
     [ map { realpath($_) } ( $sbin, $lib ) ],
     'WebGUI lib paths are read from preload.custom, ignoring invalid entries';
 
-is realpath( scalar $wgd->lib ), realpath($lib),
+is_path scalar $wgd->lib, $lib,
     '->lib in scalar context returns primary lib path';
 
 SKIP: {
