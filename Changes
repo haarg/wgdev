@@ -1,5 +1,18 @@
 Change log for WGDev
 
+0.5.0
+ - Fix misc small documentation issues
+ - Fix some typos in WGDev::Command
+ - export-branch command has been added to export a tree of assets in serialized form
+ - More complete testing
+ - fixed test failure when ran as root
+ - allow using options with dashes
+ - Proper handling of broken WebGUI configuration files
+ - dist command learned to --builddir option to place build files in a specific directory
+ - version command learned the --dist option for outputting the version in version-status format
+ - reset command learned --autologon option to automatically set up admin sessions in a web browser
+ - Added test prerequisites and resources metadata to Build.PL
+
 0.4.0 - Sep 03 2009
  - Full POD coverage of API added
  - include real README file instead of autogenerating one
