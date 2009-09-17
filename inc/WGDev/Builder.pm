@@ -24,7 +24,7 @@ sub ACTION_testauthor {
     return shift->generic_test( type => 'author' );
 }
 
-# we're overriding this to use Pod::Coverage::CountParent instead of the
+# we're overriding this to use Pod::Coverage::TrustPod instead of the
 # default
 sub ACTION_testpodcoverage {
     my $self = shift;
@@ -84,10 +84,12 @@ sub ACTION_distexec {
     require Digest::SHA1;
     $self->depends_on('build');
 
+    # generate temporary tar file of needed libraries
     my $temp = File::Temp::tmpnam();
     system 'tar', 'czf', $temp, '-C', $self->blib, 'lib', 'script';
     my $archive_size = ( stat $temp )[7];
 
+    # use SHA1 hash when extracting to ensure we are using the correct libs
     my $short_sha1 = do {
         open my $archive, '<', $temp;
         my $sha1 = Digest::SHA1->new->addfile($archive);
@@ -95,6 +97,8 @@ sub ACTION_distexec {
         substr $sha1->hexdigest, 0, 8;
     };
 
+    # create shell script with tar file attached to it.  when run, it
+    # extracts the attached file if needed and runs the wgd script.
     my $dist_script = 'wgd-' . $self->dist_version;
     unlink $dist_script;
     open my $fh, '>', $dist_script;
@@ -121,6 +125,8 @@ exec $OUTDIR/perl/script/wgd $@
 
 ################## END #################
 END_SCRIPT
+
+    # add tar file to the end of the shell script
     open my $tar_fh, '<', $temp;
     while (1) {
         my $buffer;
