@@ -19,6 +19,7 @@ sub config_options {
         live|L
         reset:s
         cover|C:s
+        html=s
         coverOptions:s
     );
 }
@@ -71,6 +72,13 @@ sub process {
     my $prove = App::Prove->new;
     my @args  = $self->arguments;
     my $orig_dir;
+    my $tar_file;
+    my $html_file;
+    if ( $self->option('html') ) {
+        $html_file = File::Spec->rel2abs($self->option('html'));
+        $tar_file = File::Temp->new(TEMPLATE => 'webgui-test-XXXXXX', SUFFIX => '.tar', DIR => File::Spec->tmpdir);
+        unshift @args, "--archive=$tar_file";
+    }
     if ( $self->option('all') ) {
         $orig_dir = Cwd::cwd();
         chdir $wgd->root;
@@ -81,10 +89,77 @@ sub process {
     if ($orig_dir) {
         chdir $orig_dir;
     }
+    if ( $html_file ) {
+        $self->generate_html_from_archive($html_file, $tar_file);
+    }
     if ( defined $cover_dir ) {
         system 'cover', '-silent', $cover_dir;
     }
     return $result;
+}
+
+sub generate_html_from_archive {
+    my ($self, $html_file, $tar_file) = @_;
+
+    require File::Temp;
+    require File::Spec;
+    require Cwd;
+    require Archive::Tar;
+    require TAP::Parser;
+    require TAP::Parser::Aggregator;
+    require TAP::Formatter::HTML;
+    require Benchmark;
+    require YAML::Tiny;
+
+    my $dir = File::Temp->newdir;
+
+    my $cwd = Cwd::cwd();
+    chdir $dir;
+    Archive::Tar->extract_archive("$tar_file");
+
+    my $test_data = YAML::Tiny->read('meta.yml')->[0];
+
+    my $aggregator = TAP::Parser::Aggregator->new;
+    my $formatter = TAP::Formatter::HTML->new({
+        verbosity => -3,
+        output_file => $html_file,
+    });
+
+    # Formatter gets only names.
+    $formatter->prepare( map { $_->{description} } @{$test_data->{file_attributes}} );
+
+    for my $test_details ( @{ $test_data->{file_attributes} } ) {
+        my $test_name = $test_details->{description};
+        open my $fh, '<', $test_name;
+        my $tap = do { local $/; <$fh> };
+        close $fh;
+        my $parser = TAP::Parser->new({tap => $tap});
+
+        my $session = $formatter->open_test($test_name, $parser);
+
+        while ( defined( my $result = $parser->next ) ) {
+            $session->result($result);
+        }
+
+        $parser->start_time($test_details->{start_time});
+        $parser->end_time($test_details->{end_time});
+
+        $session->close_test;
+
+        $aggregator->add($test_name, $parser);
+    }
+
+    # this is ugly but will do for now
+    $aggregator->{start_time}
+        = bless [$test_data->{start_time}, (0) x 5], 'Benchmark';
+    $aggregator->{end_time}
+        = bless [$test_data->{stop_time}, (0) x 5], 'Benchmark';
+
+    $formatter->summary($aggregator);
+
+    chdir $cwd;
+
+    return 1;
 }
 
 1;
