@@ -121,7 +121,7 @@ then
 fi
 
 export PERL5LIB=$OUTDIR/perl/lib:$PERL5LIB
-exec $OUTDIR/perl/script/wgd $@
+exec perl $OUTDIR/perl/script/wgd $@
 
 ################## END #################
 END_SCRIPT
