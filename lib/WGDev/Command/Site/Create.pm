@@ -53,7 +53,7 @@ sub process {
             $config_file,
         );
 
-        my $config = Config::JSON->create($config_file);
+        my $config = Config::JSON->new($config_file);
         $config->set('dsn', 'dbi:mysql:' . $database);
         $config->set('dbuser', $dbuser);
         $config->set('dbpass', $dbpass);
