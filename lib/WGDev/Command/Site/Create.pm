@@ -44,8 +44,8 @@ sub process {
 
         my $quoted_db = $dbh->quote_identifier($database);
 
-        $dbh->do(sprintf 'CREATE DATABASE %s', $quoted_db);
-        $dbh->do(sprintf(q{GRANT ALL ON %s.* TO ?@? IDENTIFIED BY ?}, $quoted_db), $dbuser, 'localhost', $dbpass);
+        $dbh->do(sprintf(q{CREATE DATABASE %s}, $quoted_db));
+        $dbh->do(sprintf(q{GRANT ALL ON %s.* TO ?@? IDENTIFIED BY ?}, $quoted_db), {}, $dbuser, 'localhost', $dbpass);
 
         my $config_file = File::Spec->catfile($wgd->root, 'etc', "$site.conf");
         File::Copy::copy(
