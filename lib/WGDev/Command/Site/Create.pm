@@ -14,7 +14,7 @@ sub needs_config { return }
 
 sub config_options {
     return qw(
-        uploads
+        uploads=s
     );
 }
 
