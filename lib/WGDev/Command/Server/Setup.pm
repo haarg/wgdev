@@ -35,7 +35,7 @@ log4perl.logger = WARN, mainlog
 log4perl.appender.mainlog = Log::Log4perl::Appender::File
 log4perl.appender.mainlog.filename = %s
 log4perl.appender.mainlog.layout = PatternLayout
-log4perl.appender.mainlog.layout.ConversionPattern = %%d - %%p - %%c - %%M[%%L] - %m%n
+log4perl.appender.mainlog.layout.ConversionPattern = %%d - %%p - %%c - %%M[%%L] - %%m%%n
 
 END_LOGCONF
     close $fh;
