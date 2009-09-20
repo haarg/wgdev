@@ -19,7 +19,7 @@ sub process {
 
 sub parse_params {
     my ( $self, @args ) = @_;
-    @{ $self->{arguments} } = @args;
+    $self->arguments(\@args);
     return 1;
 }
 
