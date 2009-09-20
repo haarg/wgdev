@@ -38,8 +38,8 @@ sub process {
         $uploads_path = File::Spec->rel2abs($uploads_path);
         File::Path::mkpath($uploads_path);
 
-        my $database = "webgui_${site}_" . $self->_random_string(10);
-        my $dbuser = $database;
+        my $dbuser = $self->_random_string(16);
+        my $database = "webgui_${site}_" . $dbuser;
         my $dbpass = $self->_random_string(20, ['A'..'Z', 'a'..'z', 0..9]);
 
         my $quoted_db = $dbh->quote_identifier($database);
