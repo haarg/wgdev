@@ -18,6 +18,9 @@ sub config_options {
 sub process {
     my $self = shift;
     require Config::JSON;
+    require DBI;
+    require File::Path;
+
     my $wgd  = $self->wgd;
 
     my $mysql_admin = $wgd->wgd_config('mysql.admin');
