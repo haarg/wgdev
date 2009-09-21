@@ -17,7 +17,7 @@ sub config_options {
         all|A
         slow|S
         live|L
-        debug|D
+        debug
         reset:s
         cover|C:s
         coverOptions:s
@@ -102,7 +102,7 @@ WGDev::Command::Test - Run WebGUI tests
 
 =head1 SYNOPSIS
 
-    wgd test [-ASCL] [<prove options>]
+    wgd test [-ASCL] [--debug] [<prove options>]
 
 =head1 DESCRIPTION
 
@@ -127,7 +127,7 @@ Includes slow tests by defining CODE_COP, TEST_SYNTAX, and TEST_POD.
 
 Includes live tests by defining WEBGUI_LIVE.
 
-=item C<-D> C<--debug>
+=item C<--debug>
 
 After a test, output the number of assets, version tags, users, groups, sessions
 and session scratch variables, to determine when tests leak objects that can interfere
