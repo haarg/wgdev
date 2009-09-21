@@ -359,7 +359,7 @@ sub upgrade {
         # child process, don't need to worry about restoring anything
         chdir File::Spec->catdir( $wgd->root, 'sbin' );
 
-        local @ARGV = qw(--doit --override --skipBackup);
+        local @ARGV = qw(--doit --override --skipBackup --skipDelete);
         if ( $self->verbosity < 2 ) {
             push @ARGV, '--quiet';
         }
