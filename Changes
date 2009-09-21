@@ -12,6 +12,7 @@ Change log for WGDev
  - version command learned the --dist option for outputting the version in version-status format
  - reset command learned --autologon option to automatically set up admin sessions in a web browser
  - Added test prerequisites and resources metadata to Build.PL
+ - Add -D switch for setting WEBGUI_TEST_DEBUG in wgd test.
 
 0.4.0 - Sep 03 2009
  - Full POD coverage of API added

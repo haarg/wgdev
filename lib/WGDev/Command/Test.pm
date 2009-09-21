@@ -17,6 +17,7 @@ sub config_options {
         all|A
         slow|S
         live|L
+        debug|D
         reset:s
         cover|C:s
         coverOptions:s
@@ -52,6 +53,10 @@ sub process {
     if ( $self->option('live') ) {
         ##no critic (RequireLocalizedPunctuationVars)
         $ENV{WEBGUI_LIVE} = 1;
+    }
+    if ( $self->option('debug') ) {
+        ##no critic (RequireLocalizedPunctuationVars)
+        $ENV{WEBGUI_TEST_DEBUG} = 1;
     }
     local $ENV{HARNESS_PERL_SWITCHES} = $ENV{HARNESS_PERL_SWITCHES};
     my $cover_dir;
@@ -121,6 +126,14 @@ Includes slow tests by defining CODE_COP, TEST_SYNTAX, and TEST_POD.
 =item C<-L> C<--live>
 
 Includes live tests by defining WEBGUI_LIVE.
+
+=item C<-D> C<--debug>
+
+After a test, output the number of assets, version tags, users, groups, sessions
+and session scratch variables, to determine when tests leak objects that can interfere
+with downstream tests.
+
+This option is really only useful when passing the --verbose switch through to prove.
 
 =item C<--reset=>
 
