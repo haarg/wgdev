@@ -26,10 +26,12 @@ sub config_options {
 
 sub process {
     my $self = shift;
-    my $wgd  = $self->wgd;
-    $wgd->set_environment;
     require Cwd;
     require App::Prove;
+
+    my $wgd = $self->wgd;
+    $wgd->set_environment;
+
     if ( defined $self->option('reset') ) {
         my $reset_options = $self->option('reset');
         if ( $reset_options eq q{} ) {
@@ -40,24 +42,21 @@ sub process {
         $reset->parse_params_string($reset_options);
         $reset->process;
     }
-    local $ENV{CODE_COP}    = $ENV{CODE_COP};
-    local $ENV{TEST_SYNTAX} = $ENV{TEST_SYNTAX};
-    local $ENV{TEST_POD}    = $ENV{TEST_POD};
-    if ( $self->option('slow') ) {
-        ##no critic (RequireLocalizedPunctuationVars)
-        $ENV{CODE_COP}    = 1;
-        $ENV{TEST_SYNTAX} = 1;
-        $ENV{TEST_POD}    = 1;
-    }
-    local $ENV{WEBGUI_LIVE} = $ENV{WEBGUI_LIVE};
-    if ( $self->option('live') ) {
-        ##no critic (RequireLocalizedPunctuationVars)
-        $ENV{WEBGUI_LIVE} = 1;
-    }
-    if ( $self->option('debug') ) {
-        ##no critic (RequireLocalizedPunctuationVars)
-        $ENV{WEBGUI_TEST_DEBUG} = 1;
-    }
+
+    ##no critic (RequireLocalizedPunctuationVars)
+    local $ENV{CODE_COP} = 1
+        if $self->option('slow');
+    local $ENV{TEST_SYNTAX} = 1
+        if $self->option('slow');
+    local $ENV{TEST_POD} = 1
+        if $self->option('slow');
+
+    local $ENV{WEBGUI_LIVE} = 1
+        if $self->option('live');
+
+    local $ENV{WEBGUI_TEST_DEBUG} = 1
+        if $self->option('debug');
+
     local $ENV{HARNESS_PERL_SWITCHES} = $ENV{HARNESS_PERL_SWITCHES};
     my $cover_dir;
     if ( defined $self->option('cover') ) {
@@ -67,12 +66,17 @@ sub process {
         }
         my $cover_options = $self->option('coverOptions')
             || '-select,WebGUI,+ignore,^t';
-        ##no critic (RequireLocalizedPunctuationVars)
-        $ENV{HARNESS_PERL_SWITCHES}
-            = '-MDevel::Cover=-silent,1'
-            . ",$cover_options," . '-db,'
-            . $cover_dir;
+        if ( $ENV{HARNESS_PERL_SWITCHES} ) {
+            $ENV{HARNESS_PERL_SWITCHES} .= q{ };
+        }
+        else {
+            $ENV{HARNESS_PERL_SWITCHES} = q{};
+        }
+        $ENV{HARNESS_PERL_SWITCHES} .= '-MDevel::Cover=' . join q{,},
+            -silent => 1,
+            $cover_options, -db => $cover_dir;
     }
+
     my $prove = App::Prove->new;
     my @args  = $self->arguments;
     my $orig_dir;
