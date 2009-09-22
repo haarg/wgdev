@@ -87,7 +87,6 @@ sub ACTION_distexec {
     # generate temporary tar file of needed libraries
     my $temp = File::Temp::tmpnam();
     system 'tar', 'czf', $temp, '-C', $self->blib, 'lib', 'script';
-    my $archive_size = ( stat $temp )[7];
 
     # use SHA1 hash when extracting to ensure we are using the correct libs
     my $short_sha1 = do {
@@ -97,36 +96,32 @@ sub ACTION_distexec {
         substr $sha1->hexdigest, 0, 8;
     };
 
-    # create shell script with tar file attached to it.  when run, it
-    # extracts the attached file if needed and runs the wgd script.
+    # create perl script with tar file attached in the __DATA__ secion.
+    # when run, it extracts the attached file if needed and runs the wgd
+    # script.
     my $dist_script = 'wgd-' . $self->dist_version;
     unlink $dist_script;
     open my $fh, '>', $dist_script;
-    syswrite $fh, sprintf <<'END_SCRIPT', $short_sha1, $archive_size;
-#!/bin/sh
-
-[[ -z "$TMPDIR" ]] && TMPDIR=/tmp
-
-OUTDIR="$TMPDIR/WGDev-%s-$USER"
-if [ ! -e "$OUTDIR/perl/script/wgd" ];
-then
-    mkdir "$OUTDIR"
-    mkdir "$OUTDIR/perl"
-    tail -c %s "$0" | tar xz -C "$OUTDIR/perl"
-    if [ ! $? -eq 0 ];
-    then
-        echo 'Error extracting libraries!' 1>&2
-        exit 1
-    fi
-fi
-
-export PERL5LIB=$OUTDIR/perl/lib:$PERL5LIB
-exec perl $OUTDIR/perl/script/wgd $@
-
-################## END #################
+    syswrite $fh, sprintf <<'END_SCRIPT', $short_sha1;
+#!/usr/bin/env perl
+my $out_dir = ($ENV{TMPDIR} || '/tmp') . "/WGDev-%s-$ENV{USER}";
+if (! -e "$out_dir/perl/script/wgd") {
+    mkdir $out_dir;
+    mkdir "$out_dir/perl";
+    open my $fh, '|-', 'tar', 'xz', '-C', "$out_dir/perl";
+    my $buffer;
+    syswrite $fh, $buffer
+        while sysread \*DATA, $buffer, 1024;
+    close $fh;
+    die "Error extracting libraries!\n"
+        if $?;
+}
+unshift @INC, "$out_dir/perl/lib";
+require "$out_dir/perl/script/wgd";
+__DATA__
 END_SCRIPT
 
-    # add tar file to the end of the shell script
+    # add tar file to the end of the script
     open my $tar_fh, '<', $temp;
     while (1) {
         my $buffer;
