@@ -30,9 +30,14 @@ sub process {
 
     my ( $version, $status ) = $wgd->version->module;
     my $build_dir = $self->option('buildDir');
-    my $build_root
-        = ( $build_dir && -e $build_dir ) ? $build_dir : File::Temp->newdir;
-    mkdir $build_root;
+    my $build_root;
+    if ($build_dir) {
+        $build_root = $build_dir;
+        mkdir $build_root;
+    }
+    if ($build_root && !-e $build_root) {
+        $build_root = File::Temp->newdir;
+    }
     my $build_webgui = File::Spec->catdir( $build_root, 'WebGUI' );
     my $build_docs   = File::Spec->catdir( $build_root, 'api' );
     my $cwd          = Cwd::cwd();
