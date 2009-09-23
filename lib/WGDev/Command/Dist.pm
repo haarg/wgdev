@@ -32,6 +32,7 @@ sub process {
     my $build_dir = $self->option('buildDir');
     my $build_root
         = ( $build_dir && -e $build_dir ) ? $build_dir : File::Temp->newdir;
+    mkdir $build_root;
     my $build_webgui = File::Spec->catdir( $build_root, 'WebGUI' );
     my $build_docs   = File::Spec->catdir( $build_root, 'api' );
     my $cwd          = Cwd::cwd();
