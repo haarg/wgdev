@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.0.2';
 
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
@@ -43,8 +43,9 @@ The first step in using WGDev is getting it to find your WebGUI
 root directory and site config file.  For this, you can either use
 the C<WEBGUI_ROOT> and C<WEBGUI_CONFIG>/C<WEBGUI_SITENAME> environment
 variables, setting the C<command.webgui_root> and
-C<command.webgui_config>/C<command.webgui_sitename> options, using
-command line parameters, or (for the root path) relying on auto-detection.
+C<command.webgui_config>/C<command.webgui_sitename> options via the C<config>
+command, using command line parameters (see C<wgd help>), or (for the root
+path) relying on auto-detection.
 
 Auto-detection works by searching upward from the current directory
 for a valid WebGUI directory.  The config file cannot be detected
@@ -97,6 +98,10 @@ and revisions of content are cleaned up.
 
 Starts the C<mysql> client in the site's database, using the login
 information from the site config file.
+
+=head2 C<< wgd export <asset> >>
+
+Exports assets to files. You can export to stdout by using C<--stdout>. Either an asset URL, ID, or class name can be entered. You may enter as many assets as you like.
 
 =head1 AUTHOR
 
