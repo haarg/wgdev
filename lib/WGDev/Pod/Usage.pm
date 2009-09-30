@@ -37,6 +37,13 @@ sub verbosity {
     return;
 }
 
+sub command {
+    my $self    = shift;
+    my $command = shift;
+    $self->{_last_command} = $command;
+    return $self->SUPER::command( $command, @_ );
+}
+
 sub cmd_head1 {
     my $self = shift;
     my $head = shift;
@@ -64,7 +71,18 @@ sub textblock {
     if ( $self->{_last_head1} eq 'NAME' ) {
         $text =~ s/^[\w:]+\Q - //msx;
     }
+    if ( $self->{_last_command} eq 'item' && !$self->{ITEM} ) {
+        return;
+    }
     return $self->SUPER::textblock( $text, $para );
+}
+
+sub verbatim {
+    my $self = shift;
+    if ( $self->{_last_command} eq 'item' && !$self->{ITEM} ) {
+        return;
+    }
+    return $self->SUPER::verbatim(@_);
 }
 
 sub item {
