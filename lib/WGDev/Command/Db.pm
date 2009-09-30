@@ -115,7 +115,7 @@ Shows database information via C<mysqlshow>.
 For example, to display a summary of the number of columns and rows in each table,
 use C<mysqlshow>'s C<--count> option:
 
- wgd db --show --count
+    wgd db --show --count
 
 =back
 
