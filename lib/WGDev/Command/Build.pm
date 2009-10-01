@@ -54,7 +54,6 @@ sub create_db_script {
 
     $self->report('Creating database dump... ');
     my $db_file = File::Spec->catfile( $wgd->root, 'docs', 'create.sql' );
-    ##no critic (RequireBriefOpen)
     open my $out, q{>}, $db_file
         or WGDev::X::IO::Write->throw( path => 'docs/create.sql' );
     open my $in, q{-|}, 'mysqldump',

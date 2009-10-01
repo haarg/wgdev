@@ -129,7 +129,6 @@ sub update_version {
     close $fh
         or WGDev::X::IO::Write->throw( path => $change_file );
 
-    ##no critic (RequireBriefOpen)
     open my $in, '<',
         File::Spec->catfile( $root, 'docs', 'upgrades', '_upgrade.skeleton' )
         or WGDev::X::IO::Read->throw( path => '_upgrade.skeleton' );

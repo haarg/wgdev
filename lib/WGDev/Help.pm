@@ -64,7 +64,6 @@ sub package_pod {
     require $file;
     my $actual_file = $INC{$file};
     my $pod;
-    ##no critic (RequireBriefOpen)
     open my $pod_in, '<', $actual_file
         or WGDev::X::IO::Read->throw( path => $actual_file );
     if ($sections) {

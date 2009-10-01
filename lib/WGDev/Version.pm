@@ -21,7 +21,6 @@ sub module {
     my $dir = ${ +shift };
     my $version;
     my $status;
-    ##no critic (RequireBriefOpen)
     open my $fh, '<', File::Spec->catfile( $dir, 'lib', 'WebGUI.pm' )
         or WGDev::X::IO::Read->throw( path => 'WebGUI.pm' );
     while ( my $line = <$fh> ) {
@@ -45,7 +44,6 @@ sub db_script { goto &database_script }
 sub database_script {
     my $dir = ${ +shift };
     my $version;
-    ##no critic (RequireBriefOpen)
     open my $fh, '<', File::Spec->catfile( $dir, 'docs', 'create.sql' )
         or WGDev::X::IO::Write->throw( path => 'create.sql' );
     while ( my $line = <$fh> ) {
@@ -131,7 +129,7 @@ sub upgrade {
         or WGDev::X::IO::Read->throw( path => 'docs/upgrades' );
     @upgrades = sort { $a->[2] <=> $b->[2] } @upgrades;
     my $latest = pop @upgrades;
-    open my $fh, '<',    ##no critic (RequireBriefOpen)
+    open my $fh, '<',
         File::Spec->catfile( $dir, 'docs', 'upgrades', $latest->[0] )
         or
         WGDev::X::IO::Read->throw( path => 'docs/upgrades/' . $latest->[0] );

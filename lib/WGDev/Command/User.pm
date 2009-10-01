@@ -66,7 +66,6 @@ sub find_by_dictionary {
         'select fieldData from authentication where fieldName = ?',
         ['identifier'] );
     my %hashed_passwords = map { $_ => 1 } @hashed_passwords;
-    ##no critic (RequireBriefOpen)
     open my $d, '<', $dict
         or WGDev::X::IO::Read->throw(
         path    => $dict,

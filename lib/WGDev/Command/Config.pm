@@ -42,7 +42,6 @@ sub process {
         if ( $value =~ s/\A@//msx ) {
             my $file = $value;
             my $fh;
-            ##no critic (RequireBriefOpen)
             if ( $file eq q{-} ) {
                 open $fh, '<&=', \*STDIN
                     or WGDev::X::IO::Read->throw;
