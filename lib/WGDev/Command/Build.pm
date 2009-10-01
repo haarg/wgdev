@@ -46,36 +46,88 @@ sub process {
 sub create_db_script {
     my $self = shift;
     my $wgd  = $self->wgd;
-    require File::Copy;
 
-    $self->report('Finding current version number... ');
     my $version = $wgd->version->database( $wgd->db->connect );
-    $self->report("$version. Done.\n");
+    $self->report("WebGUI version: $version\n");
 
     $self->report('Creating database dump... ');
     my $db_file = File::Spec->catfile( $wgd->root, 'docs', 'create.sql' );
     open my $out, q{>}, $db_file
         or WGDev::X::IO::Write->throw( path => 'docs/create.sql' );
+    print {$out} <<'END_SQL';
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+END_SQL
+
+    $self->write_db_structure($out);
+    $self->write_db_data( $out, $version );
+
+    print {$out} <<'END_SQL';
+SET character_set_client = @saved_cs_client;
+END_SQL
+
+    close $out
+        or WGDev::X::IO::Write->throw( path => 'docs/create.sql' );
+    $self->report("Done.\n");
+    return 1;
+}
+
+sub write_db_structure {
+    my $self = shift;
+    my $out  = shift;
+    my $wgd  = $self->wgd;
+
     open my $in, q{-|}, 'mysqldump',
-        $wgd->db->command_line( '--compact', '--no-data' )
+        $wgd->db->command_line( '--compact', '--no-data',
+        '--compatible=mysql40' )
         or WGDev::X::System->throw('Unable to run mysqldump');
-    File::Copy::copy( $in, $out );
+    while ( my $line = <$in> ) {
+        next
+            if $line =~ /\bSET[^=]+=\s*[@][@]character_set_client;/msx
+                || $line =~ /\bSET\s+character_set_client\b/msx;
+        print {$out} $line;
+    }
     close $in
         or WGDev::X::System->throw('Unable to run mysqldump');
+    return 1;
+}
 
-    my @skip_data_tables = qw(
+sub write_db_data {
+    my $self = shift;
+    my $out  = shift;
+    my $wgd  = $self->wgd;
+
+    my $dbh     = $wgd->db->connect;
+    my $version = $wgd->version->database($dbh);
+
+    my %skip_data_tables = map { $_ => 1 } qw(
         userSession     userSessionScratch
         webguiVersion   userLoginLog
         assetHistory    cache
     );
-    open $in, q{-|}, 'mysqldump', $wgd->db->command_line(
-        '--compact',
-        '--no-create-info',
-        map { '--ignore-table=' . $wgd->db->database . q{.} . $_ }
-            @skip_data_tables
-    ) or WGDev::X::System->throw('Unable to run mysqldump');
-    File::Copy::copy( $in, $out )
-        or WGDev::X::IO::Write->throw( path => 'docs/create.sql' );
+
+    my @tables;
+
+    my $sth = $dbh->table_info( undef, undef, q{%}, undef );
+    while ( ( undef, undef, my $table ) = $sth->fetchrow_array ) {
+        next
+            if $skip_data_tables{$table};
+        my ($count)
+            = $dbh->selectrow_array(
+            'SELECT COUNT(*) FROM ' . $dbh->quote_identifier($table) );
+        next
+            if !$count;
+        push @tables, $table;
+    }
+
+    open my $in, q{-|}, 'mysqldump',
+        $wgd->db->command_line( '--no-create-info', '--compact',
+        '--disable-keys', sort @tables, )
+        or WGDev::X::System->throw('Unable to run mysqldump');
+    while ( my $line = <$in> ) {
+        $line =~ s{ /[*] !\d+ \s+ ([^*]+?) \s* [*]/; }{$1;}msx;
+        print {$out} $line;
+    }
     close $in
         or WGDev::X::System->throw('Unable to run mysqldump');
 
@@ -83,9 +135,6 @@ sub create_db_script {
         . '(webguiVersion,versionType,dateApplied) '
         . "VALUES ('$version','Initial Install',UNIX_TIMESTAMP());\n";
 
-    close $out
-        or WGDev::X::IO::Write->throw( path => 'docs/create.sql' );
-    $self->report("Done.\n");
     return 1;
 }
 
