@@ -25,9 +25,9 @@ sub option_filter {
     my $self   = shift;
     my $filter = shift;
 
-    my ( $filter_prop, $filter_match )
-        = $filter =~ m{%(\w+)% \s* ~~ \s* (.*)}msx;
-    if ( !defined $filter_prop || !defined $filter_match ) {
+    my ( $filter_prop, $filter_sense, $filter_match )
+        = $filter =~ m{%(\w+)% \s* ([~!])~ \s* (.*)}msx;
+    if ( !defined $filter_prop || !defined $filter_sense || !defined $filter_match ) {
         WGDev::X->throw("Invalid filter specified: $filter");
     }
     if ( $filter_match =~ m{\A/(.*)/\Z}msx ) {
@@ -40,6 +40,7 @@ sub option_filter {
         $filter_match = qr/\A\Q$filter_match\E\z/msx;
     }
     $self->{filter_property} = $filter_prop;
+    $self->{filter_sense}    = $filter_sense eq '~';
     $self->{filter_match}    = $filter_match;
     return;
 }
@@ -109,6 +110,7 @@ sub process {
 sub pass_filter {
     my ( $self, $asset ) = @_;
     my $filter_prop  = $self->{filter_property};
+    my $filter_sense = $self->{filter_sense};
     my $filter_match = $self->{filter_match};
 
     return 1
@@ -116,7 +118,11 @@ sub pass_filter {
 
     {
         no warnings 'uninitialized';
-        return $asset->get($filter_prop) =~ $filter_match;
+        if ($filter_sense) {
+            return $asset->get($filter_prop) =~ $filter_match;
+        } else {
+            return $asset->get($filter_prop) !~ $filter_match;
+        }
     }
 }
 
