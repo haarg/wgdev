@@ -356,16 +356,11 @@ sub upgrade {
         no warnings qw(once redefine);
         local *WebGUI::Config::readAllConfigs = sub { return $config_hash };
 
-        # child process, don't need to worry about restoring anything
-        chdir File::Spec->catdir( $wgd->root, 'sbin' );
-
-        local @ARGV = qw(--doit --override --skipBackup --skipDelete);
+        my @args = qw(--doit --override --skipBackup --skipDelete);
         if ( $self->verbosity < 2 ) {
-            push @ARGV, '--quiet';
+            push @args, '--quiet';
         }
-        do 'upgrade.pl';
-        die $@ if $@;
-        exit;
+        $self->_run_script('upgrade.pl', @args);
     }
     waitpid $pid, 0;
 
@@ -619,13 +614,7 @@ sub rebuild_lineage {
             open STDERR, '>', File::Spec->devnull;
         }
         $self->report("\n\n");
-        chdir File::Spec->catdir( $wgd->root, 'sbin' );
-        local @ARGV = ( '--configFile=' . $wgd->config_file_relative );
-
-        # $0 should have the filename of the script being run
-        local $0 = './rebuildLineage.pl';
-        do $0;
-        exit;
+        $self->_run_script('rebuildLineage.pl', '--configFile=' . $wgd->config_file_relative);
     }
     waitpid $pid, 0;
     $self->report("Done.\n");
@@ -647,14 +636,7 @@ sub rebuild_index {
             open STDERR, '>', File::Spec->devnull;
         }
         print "\n\n";
-        chdir File::Spec->catdir( $wgd->root, 'sbin' );
-        local @ARGV
-            = ( '--configFile=' . $wgd->config_file_relative, '--indexsite' );
-
-        # $0 should have the filename of the script being run
-        local $0 = './search.pl';
-        do $0;
-        exit;
+        $self->_run_script('search.pl', '--indexsite', '--configFile=' . $wgd->config_file_relative);
     }
     waitpid $pid, 0;
     $self->report("Done.\n");
@@ -812,6 +794,23 @@ sub get_safari_sessions {
         } );
 
     return @session_ids;
+}
+
+sub _run_script {
+    my $self = shift;
+    my $script = shift;
+    my @args = @_;
+
+    # child process, don't need to worry about restoring anything
+    chdir File::Spec->catdir( $self->wgd->root, 'sbin' );
+
+    local @ARGV = @args;
+    local $0 = './' . $script;
+    package main;
+    do $0;
+    die $@
+        if $@;
+    exit;
 }
 
 1;
