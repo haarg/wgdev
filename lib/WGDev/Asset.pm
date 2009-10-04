@@ -61,16 +61,19 @@ sub find {
     WGDev::X::AssetNotFound->throw( asset => $asset_spec );
 }
 
+my $package_re = qr{
+    [[:upper:]]\w+
+    (?: ::[[:upper:]]\w+ )*
+}msx;
+
 sub validate_class {
     my $self = shift;
     my $in_class = my $class = shift;
     if (
         $class =~ s{\A
+            # optionally starting with WebGUI::Asset:: or ::
             (?:(?:WebGUI::Asset)?::)?
-            (
-                [[:upper:]]\w+
-                (?: ::[[:upper:]]\w+ )*
-            )
+            ( $package_re )
             \z
         }{WebGUI::Asset::$1}msx
         )
@@ -100,14 +103,63 @@ sub serialize {
     }
     my $short_class = $class;
     $short_class =~ s/^WebGUI::Asset:://xms;
+
+    my ( $asset_properties, $meta, $text )
+        = $self->_asset_properties( $asset, $properties );
+
+    my $basic_yaml = WGDev::yaml_encode( {
+            'Asset ID'   => $asset_properties->{assetId},
+            'Title'      => $asset_properties->{title},
+            'Menu Title' => $asset_properties->{menuTitle},
+            'URL'        => $asset_properties->{url},
+            'Parent'     => (
+                ref $asset
+                ? $asset->getParent->get('url')
+                : $self->import_node->get('url')
+            ),
+        } );
+
+    # filter out unneeded YAML syntax
+    $basic_yaml =~ s/\A---(?:\Q {}\E)?\n?//msx;
+
+    # line up colons
+    $basic_yaml =~ s/^([^:]+):/sprintf("%-12s:", $1)/msxeg;
+    $basic_yaml =~ s/\n?\z/\n/msx;
+    my $output = $self->_gen_serialize_header($short_class) . $basic_yaml;
+
+    for my $field ( sort keys %{$text} ) {
+        my $value = $text->{$field};
+        if ( !defined $value ) {
+            $value = q{~};
+        }
+        $value =~ s/\r\n?/\n/msxg;
+        $output .= $self->_gen_serialize_header($field) . $value . "\n";
+    }
+
+    my $meta_yaml = WGDev::yaml_encode($meta);
+    $meta_yaml =~ s/\A---(?:\Q {}\E)?\n?//msx;
+    $output .= $self->_gen_serialize_header('Properties') . $meta_yaml . "\n";
+
+    return $output;
+}
+
+sub _asset_properties {
+    my $self       = shift;
+    my $class      = shift;
+    my $properties = shift;
+    my $asset;
+    if ( ref $class ) {
+        $asset = $class;
+        $class = ref $asset;
+    }
+
     my $definition = $class->definition( $self->{session} );
     my %text;
     my %meta;
 
-    my $asset_properties = {
-        ref $asset  ? %{ $asset->get } : (),
-        $properties ? %{$properties}   : () };
-
+    my $asset_properties
+        = { $asset ? %{ $asset->get } : (), $properties ? %{$properties} : (),
+        };
     for my $def ( @{$definition} ) {
         while ( my ( $property, $property_def )
             = each %{ $def->{properties} } )
@@ -141,40 +193,7 @@ sub serialize {
             }
         }
     }
-
-    my $basic_yaml = WGDev::yaml_encode( {
-            'Asset ID'   => $asset_properties->{assetId},
-            'Title'      => $asset_properties->{title},
-            'Menu Title' => $asset_properties->{menuTitle},
-            'URL'        => $asset_properties->{url},
-            'Parent'     => (
-                ref $asset
-                ? $asset->getParent->get('url')
-                : $self->import_node->get('url')
-            ),
-        } );
-
-    # filter out unneeded YAML syntax
-    $basic_yaml =~ s/\A---(?:\Q {}\E)?\n?//msx;
-
-    # line up colons
-    $basic_yaml =~ s/^([^:]+):/sprintf("%-12s:", $1)/msxeg;
-    $basic_yaml =~ s/\n?\z/\n/msx;
-    my $output = $self->_gen_serialize_header($short_class) . $basic_yaml;
-
-    while ( my ( $field, $value ) = each %text ) {
-        if ( !defined $value ) {
-            $value = q{~};
-        }
-        $value =~ s/\r\n?/\n/msxg;
-        $output .= $self->_gen_serialize_header($field) . $value . "\n";
-    }
-
-    my $meta_yaml = WGDev::yaml_encode( \%meta );
-    $meta_yaml =~ s/\A---(?:\Q {}\E)?\n?//msx;
-    $output .= $self->_gen_serialize_header('Properties') . $meta_yaml . "\n";
-
-    return $output;
+    return ( $asset_properties, \%meta, \%text );
 }
 
 my %basic_translation = (
