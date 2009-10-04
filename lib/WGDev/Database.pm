@@ -95,9 +95,11 @@ sub clear {
     my $dbh    = $self->connect;
     my $sth    = $dbh->table_info( undef, undef, q{%} );
     my @tables = map { @{$_} } @{ $sth->fetchall_arrayref( [2] ) };
+    $dbh->do('SET FOREIGN_KEY_CHECKS = 0');
     for my $table (@tables) {
         $dbh->do( 'DROP TABLE ' . $dbh->quote_identifier($table) );
     }
+    $dbh->do('SET FOREIGN_KEY_CHECKS = 1');
     return 1;
 }
 
