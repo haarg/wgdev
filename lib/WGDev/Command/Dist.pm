@@ -35,7 +35,7 @@ sub process {
         $build_root = $build_dir;
         mkdir $build_root;
     }
-    if ($build_root && !-e $build_root) {
+    if ( $build_root && !-e $build_root ) {
         $build_root = File::Temp->newdir;
     }
     my $build_webgui = File::Spec->catdir( $build_root, 'WebGUI' );

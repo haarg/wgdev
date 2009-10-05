@@ -12,6 +12,7 @@ SQL
 WGDev
 WebGUI
 WebGUI's
+Workflow
 YAML
 command's
 config

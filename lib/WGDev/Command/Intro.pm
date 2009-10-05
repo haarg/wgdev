@@ -66,7 +66,7 @@ with the C<--help> option.  Full documentation is available using
 the C<wgd help> command.  A full list of available commands is
 available by running C<wgd commands>.
 
-=head1 SPECIYING ASSETS
+=head1 SPECIFYING ASSETS
 
 When specifying assets as parameters to commands, either an asset
 URL or an asset ID can be specified.  Some commands will also accept
@@ -109,8 +109,8 @@ information from the site config file.
 
 =head2 C<< wgd export <asset> >>
 
-Exports assets to files. You can export to stdout by using the
-C<--stdout> option.  Multiple assets can be specified.
+Exports assets to files. You can export to standard out by using
+the C<--stdout> option.  Multiple assets can be specified.
 
 =head1 AUTHOR
 

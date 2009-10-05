@@ -88,7 +88,7 @@ sub option_fast {
 sub option_dev {
     my $self = shift;
     $self->option( backup  => 1 );
-    $self->option( import  => '' );
+    $self->option( import  => q{} );
     $self->option( uploads => 1 );
     $self->option( upgrade => 1 );
     $self->option( starter => 0 );
@@ -102,7 +102,7 @@ sub option_build {
     $self->verbosity( $self->verbosity + 1 );
     $self->option( backup     => 1 );
     $self->option( uploads    => 1 );
-    $self->option( import     => '' );
+    $self->option( import     => q{} );
     $self->option( starter    => 1 );
     $self->option( debug      => 0 );
     $self->option( upgrade    => 1 );
@@ -225,7 +225,7 @@ sub clear_cache {
     elsif ( $wgd->config->get('cacheType') eq 'WebGUI::Cache::Database' ) {
 
    # Don't clear the DB cache if we are importing, as that will wipe it anyway
-        if ( ! defined $self->option('import') ) {
+        if ( !defined $self->option('import') ) {
             my $dsn = $wgd->db->connect;
             $dsn->do('DELETE FROM cache');
         }
@@ -327,6 +327,7 @@ sub import_db_script {
 
     my $db_file = $self->option('import');
     if ( defined $db_file && $db_file eq q{} ) {
+
         # If we aren't upgrading, we're using the current DB version
         $db_file
             = File::Spec->catfile( $wgd->root, 'docs',

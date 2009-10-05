@@ -27,11 +27,13 @@ sub option_filter {
 
     my ( $filter_prop, $filter_sense, $filter_match )
         = $filter =~ m{%(\w+)% \s* ([~!])~ \s* (.*)}msx;
-    if ( !defined $filter_prop || !defined $filter_sense || !defined $filter_match ) {
+    if (   !defined $filter_prop
+        || !defined $filter_sense
+        || !defined $filter_match )
+    {
         WGDev::X->throw("Invalid filter specified: $filter");
     }
     if ( $filter_match =~ m{\A/(.*)/\Z}msx ) {
-        ##no critic (PerlMinimumVersionAndWhy)
         eval { $filter_match = qr/$1/msx; }
             || WGDev::X->throw(
             "Specified filter is not a valid regular expression: $1");
@@ -40,7 +42,7 @@ sub option_filter {
         $filter_match = qr/\A\Q$filter_match\E\z/msx;
     }
     $self->{filter_property} = $filter_prop;
-    $self->{filter_sense}    = $filter_sense eq '~';
+    $self->{filter_sense}    = $filter_sense eq q{~};
     $self->{filter_match}    = $filter_match;
     return;
 }
@@ -120,7 +122,8 @@ sub pass_filter {
         no warnings 'uninitialized';
         if ($filter_sense) {
             return $asset->get($filter_prop) =~ $filter_match;
-        } else {
+        }
+        else {
             return $asset->get($filter_prop) !~ $filter_match;
         }
     }

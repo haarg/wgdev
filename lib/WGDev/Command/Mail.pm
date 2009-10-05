@@ -127,8 +127,9 @@ Sends emails via the L<WebGUI::Mail::Send> API
 If run with no arguments, displays the number of messages currently
 in the mail queue.
 
-Accepts all options supported by L<WebGUI::Mail::Send::create>,
-plus the following additional items:
+Accepts all options supported by
+L<WebGUI::Mail::Send::create|WebGUI::Mail::Send/create>, plus the
+following additional items:
 
 =head1 OPTIONS
 
@@ -136,23 +137,24 @@ plus the following additional items:
 
 =item C<-l> C<--list>
 
-List (print) the raw contents of the mailQueue table
+List (print) the raw contents of the mail queue.
 
 =item C<--delete>
 
-Delete the contents of the mail queue
+Delete the contents of the mail queue.
 
 =item C<--processQueue>
 
-Trigger the default "Send Queued Email Messages" Workflow (so that messages in the Mail Queue are sent)
+Trigger the default "Send Queued Email Messages" Workflow.  This
+will send all of the messages in the mail queue.
 
 =item C<-q> C<--queue>
 
-Add the message to the queue rather than sending it immediately
+Add the message to the queue rather than sending it immediately.
 
 =item C<-s>
 
-Short-hand for C<--subject>
+Short-hand for C<--subject>.
 
 =back
 

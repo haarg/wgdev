@@ -38,7 +38,7 @@ sub process {
     my $wgv = $wgd->version;
     my ( $perl_version, $perl_status ) = $wgv->module;
     if ( $self->option('dist') ) {
-        print $perl_version, '-', $perl_status, "\n";
+        print $perl_version, q{-}, $perl_status, "\n";
         return 1;
     }
     if ( $self->option('bare') ) {
