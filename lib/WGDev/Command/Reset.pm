@@ -215,14 +215,15 @@ sub backup {
 sub clear_cache {
     my $self = shift;
     my $wgd  = $self->wgd;
-    require File::Path;
+    my $cacheType = $wgd->config->get('cacheType');
     $self->report('Clearing cache... ');
-    if ( $wgd->config->get('cacheType') eq 'WebGUI::Cache::FileCache' ) {
+    if ( $cacheType && $cacheType eq 'WebGUI::Cache::FileCache' ) {
         my $cache_dir = $wgd->config->get('fileCacheRoot')
             || '/tmp/WebGUICache';
+        require File::Path;
         File::Path::rmtree($cache_dir);
     }
-    elsif ( $wgd->config->get('cacheType') eq 'WebGUI::Cache::Database' ) {
+    elsif ( $cacheType && $cacheType eq 'WebGUI::Cache::Database' ) {
 
    # Don't clear the DB cache if we are importing, as that will wipe it anyway
         if ( !defined $self->option('import') ) {
