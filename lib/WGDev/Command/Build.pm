@@ -54,23 +54,61 @@ sub create_db_script {
     my $db_file = File::Spec->catfile( $wgd->root, 'docs', 'create.sql' );
     open my $out, q{>}, $db_file
         or WGDev::X::IO::Write->throw( path => 'docs/create.sql' );
-    print {$out} <<'END_SQL';
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
-END_SQL
 
+    $self->write_db_header($out);
     $self->write_db_structure($out);
-    $self->write_db_data( $out, $version );
-
-    print {$out} <<'END_SQL';
-SET character_set_client = @saved_cs_client;
-END_SQL
+    $self->write_db_data( $out );
+    $self->write_db_footer($out);
 
     close $out
         or WGDev::X::IO::Write->throw( path => 'docs/create.sql' );
     $self->report("Done.\n");
     return 1;
 }
+
+sub write_db_header {
+    my $self = shift;
+    my $out = shift;
+    print {$out} <<'END_SQL';
+SET @OLD_CHARACTER_SET_CLIENT       = @@CHARACTER_SET_CLIENT;
+SET @OLD_CHARACTER_SET_RESULTS      = @@CHARACTER_SET_RESULTS;
+SET @OLD_CHARACTER_SET_CONNECTION   = @@CHARACTER_SET_CONNECTION;
+SET @OLD_COLLATION_CONNECTION       = @@COLLATION_CONNECTION;
+SET @OLD_TIME_ZONE                  = @@TIME_ZONE;
+SET @OLD_UNIQUE_CHECKS              = @@UNIQUE_CHECKS;
+SET @OLD_FOREIGN_KEY_CHECKS         = @@FOREIGN_KEY_CHECKS;
+SET @OLD_SQL_MODE                   = @@SQL_MODE;
+SET @OLD_SQL_NOTES                  = @@SQL_NOTES;
+
+SET CHARACTER_SET_CLIENT            = 'utf8';
+SET CHARACTER_SET_RESULTS           = 'utf8';
+SET CHARACTER_SET_CONNECTION        = 'utf8';
+SET TIME_ZONE                       = '+00:00';
+SET UNIQUE_CHECKS                   = 0;
+SET FOREIGN_KEY_CHECKS              = 0;
+SET SQL_MODE                        = 'NO_AUTO_VALUE_ON_ZERO';
+SET SQL_NOTES                       = 0;
+END_SQL
+    return;
+}
+
+sub write_db_footer {
+    my $self = shift;
+    my $out = shift;
+    print {$out} <<'END_SQL';
+SET CHARACTER_SET_CLIENT        = @OLD_CHARACTER_SET_CLIENT;
+SET CHARACTER_SET_RESULTS       = @OLD_CHARACTER_SET_RESULTS;
+SET CHARACTER_SET_CONNECTION    = @OLD_CHARACTER_SET_CONNECTION;
+SET COLLATION_CONNECTION        = @OLD_COLLATION_CONNECTION;
+SET TIME_ZONE                   = @OLD_TIME_ZONE;
+SET UNIQUE_CHECKS               = @OLD_UNIQUE_CHECKS;
+SET FOREIGN_KEY_CHECKS          = @OLD_FOREIGN_KEY_CHECKS;
+SET SQL_MODE                    = @OLD_SQL_MODE;
+SET SQL_NOTES                   = @OLD_SQL_NOTES;
+END_SQL
+    return;
+}
+
 
 sub write_db_structure {
     my $self = shift;
@@ -83,8 +121,8 @@ sub write_db_structure {
         or WGDev::X::System->throw('Unable to run mysqldump');
     while ( my $line = <$in> ) {
         next
-            if $line =~ /\bSET[^=]+=\s*[@][@]character_set_client;/msx
-                || $line =~ /\bSET\s+character_set_client\b/msx;
+            if $line =~ /\bSET[^=]+=\s*[@][@]character_set_client;/msxi
+                || $line =~ /\bSET\s+character_set_client\b/msxi;
         print {$out} $line;
     }
     close $in
