@@ -37,34 +37,48 @@ sub process {
     my $self = shift;
     my $wgd  = $self->wgd;
 
-    my $session = $wgd->session();
     my $verbose = $self->option('verbose');
 
     # Handle special cases
     if ( !$self->arguments ) {
-        my $count = $session->db->quickScalar('select count(*) from mailQueue');
-        print "Mail queue has @{[ $count || 'no' ]} message(s)\n";
-        
-        if ($self->option('l')) {
-            print for $session->db->buildArray('select message from mailQueue');
-        } elsif ($self->option('delete')) {
-            $session->db->write('delete from mailQueue');
-            print "Deleted all messages from mail queue\n";
-        } elsif ($self->option('processQueue')) {
+        my $dbh   = $wgd->db->connect;
+        my $count = $dbh->selectrow_array('SELECT COUNT(*) FROM mailQueue');
+        print "Mail queue has @{[ $count || 'no' ]} message(s).\n";
+
+        if ( $self->option('list') ) {
+            for my $message (
+                @{ $dbh->selectcol_arrayref('SELECT message FROM mailQueue') }
+                )
+            {
+                print $message . "\n";
+            }
+        }
+        elsif ( $self->option('delete') ) {
+            $dbh->do('DELETE FROM mailQueue');
+            print "Deleted all messages from mail queue.\n";
+        }
+        elsif ( $self->option('processQueue') ) {
             my $WORKFLOW_ID = 'pbworkflow000000000007';
-            my $found = $session->db->quickScalar('select count(*) from Workflow where workflowId = ?', [$WORKFLOW_ID]);
-            croak qq{The default "Send Queued Email Messages" Workflow was not found, unable to run\n} unless $found;
+            my $found
+                = $dbh->selectrow_array(
+                'SELECT count(*) FROM Workflow WHERE workflowId = ?',
+                {}, $WORKFLOW_ID, );
+            if ( !$found ) {
+                WGDev::X->throw(
+                    q{The default "Send Queued Email Messages" Workflow was not found,}
+                        . q{ unable to run.} );
+            }
             require WebGUI::Workflow::Instance;
-            WebGUI::Workflow::Instance->create(
-                $session,
-                {   workflowId => $WORKFLOW_ID,
-                }
-            )->start;
-            print qq{Triggered Workflow, the mail queue should be being processed as we speak\n};
+            my $session = $wgd->session;
+            WebGUI::Workflow::Instance->create( $session,
+                { workflowId => $WORKFLOW_ID, } )->start;
+            print
+                qq{Triggered Workflow, the mail queue should be being processed as we speak.\n};
         }
         return 1;
     }
 
+    my $session = $wgd->session;
     my $to = join q{,}, $self->arguments;
     my $body;
     while ( my $line = <STDIN> ) {
