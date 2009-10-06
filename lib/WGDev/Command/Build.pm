@@ -57,7 +57,7 @@ sub create_db_script {
 
     $self->write_db_header($out);
     $self->write_db_structure($out);
-    $self->write_db_data( $out );
+    $self->write_db_data($out);
     $self->write_db_footer($out);
 
     close $out
@@ -68,7 +68,7 @@ sub create_db_script {
 
 sub write_db_header {
     my $self = shift;
-    my $out = shift;
+    my $out  = shift;
     print {$out} <<'END_SQL';
 SET @OLD_CHARACTER_SET_CLIENT       = @@CHARACTER_SET_CLIENT;
 SET @OLD_CHARACTER_SET_RESULTS      = @@CHARACTER_SET_RESULTS;
@@ -94,7 +94,7 @@ END_SQL
 
 sub write_db_footer {
     my $self = shift;
-    my $out = shift;
+    my $out  = shift;
     print {$out} <<'END_SQL';
 SET CHARACTER_SET_CLIENT        = @OLD_CHARACTER_SET_CLIENT;
 SET CHARACTER_SET_RESULTS       = @OLD_CHARACTER_SET_RESULTS;
@@ -108,7 +108,6 @@ SET SQL_NOTES                   = @OLD_SQL_NOTES;
 END_SQL
     return;
 }
-
 
 sub write_db_structure {
     my $self = shift;

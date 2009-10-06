@@ -213,17 +213,17 @@ sub backup {
 }
 
 sub clear_cache {
-    my $self = shift;
-    my $wgd  = $self->wgd;
-    my $cacheType = $wgd->config->get('cacheType');
+    my $self       = shift;
+    my $wgd        = $self->wgd;
+    my $cache_type = $wgd->config->get('cacheType');
     $self->report('Clearing cache... ');
-    if ( $cacheType && $cacheType eq 'WebGUI::Cache::FileCache' ) {
+    if ( $cache_type && $cache_type eq 'WebGUI::Cache::FileCache' ) {
         my $cache_dir = $wgd->config->get('fileCacheRoot')
             || '/tmp/WebGUICache';
         require File::Path;
         File::Path::rmtree($cache_dir);
     }
-    elsif ( $cacheType && $cacheType eq 'WebGUI::Cache::Database' ) {
+    elsif ( $cache_type && $cache_type eq 'WebGUI::Cache::Database' ) {
 
    # Don't clear the DB cache if we are importing, as that will wipe it anyway
         if ( !defined $self->option('import') ) {
@@ -362,7 +362,7 @@ sub upgrade {
         if ( $self->verbosity < 2 ) {
             push @args, '--quiet';
         }
-        $self->_run_script('upgrade.pl', @args);
+        $self->_run_script( 'upgrade.pl', @args );
     }
     waitpid $pid, 0;
 
@@ -616,7 +616,8 @@ sub rebuild_lineage {
             open STDERR, '>', File::Spec->devnull;
         }
         $self->report("\n\n");
-        $self->_run_script('rebuildLineage.pl', '--configFile=' . $wgd->config_file_relative);
+        $self->_run_script( 'rebuildLineage.pl',
+            '--configFile=' . $wgd->config_file_relative );
     }
     waitpid $pid, 0;
     $self->report("Done.\n");
@@ -638,7 +639,8 @@ sub rebuild_index {
             open STDERR, '>', File::Spec->devnull;
         }
         print "\n\n";
-        $self->_run_script('search.pl', '--indexsite', '--configFile=' . $wgd->config_file_relative);
+        $self->_run_script( 'search.pl', '--indexsite',
+            '--configFile=' . $wgd->config_file_relative );
     }
     waitpid $pid, 0;
     $self->report("Done.\n");
@@ -799,16 +801,17 @@ sub get_safari_sessions {
 }
 
 sub _run_script {
-    my $self = shift;
+    my $self   = shift;
     my $script = shift;
-    my @args = @_;
+    my @args   = @_;
 
     # child process, don't need to worry about restoring anything
     chdir File::Spec->catdir( $self->wgd->root, 'sbin' );
 
     local @ARGV = @args;
-    local $0 = './' . $script;
-    package main;
+    local $0    = q{./} . $script;
+
+    package main;    ##no critic (ProhibitMultiplePackages)
     do $0;
     die $@
         if $@;
