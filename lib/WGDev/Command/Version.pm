@@ -49,40 +49,50 @@ sub process {
     my $db_version = $wgv->database_script;
     my ( $change_file, $change_version ) = $wgv->changelog;
     my ( $up_file, undef, $up_file_ver, $up_version ) = $wgv->upgrade;
+    my $db_live_version = eval { $wgv->database($wgd->db->connect) };
 
     my $err_count = 0;
     my $expect_ver = $ver || $perl_version;
     if ( $perl_version ne $expect_ver ) {
         $err_count++;
-        $perl_version = _colored( $perl_version, 'bold red' );
+        $perl_version = _colored( $perl_version, 'red' );
     }
     if ( $db_version ne $expect_ver ) {
         $err_count++;
-        $db_version = _colored( $db_version, 'bold red' );
+        $db_version = _colored( $db_version, 'magenta' );
     }
     if ( $change_version ne $expect_ver ) {
         $err_count++;
-        $change_version = _colored( $change_version, 'bold red' );
+        $change_version = _colored( $change_version, 'red' );
     }
     if ( $up_version ne $expect_ver ) {
         $err_count++;
-        $up_version = _colored( $up_version, 'bold red' );
+        $up_version = _colored( $up_version, 'red' );
     }
     if ( $up_file_ver ne $expect_ver ) {
         $err_count++;
-        $up_file = _colored( $up_file, 'bold red' );
+        $up_file = _colored( $up_file, 'red' );
+    }
+    if ( !defined $db_live_version ) {
+        $err_count++;
+        $db_live_version = _colored( 'Not available', 'magenta' );
+    }
+    elsif ( $db_live_version ne $expect_ver ) {
+        $err_count++;
+        $db_live_version = _colored( $db_live_version, 'red' );
     }
 
     print <<"END_REPORT";
   Perl version:             $perl_version - $perl_status
-  Database version:         $db_version
+  Database version:         $db_live_version
+  Database script version:  $db_version
   Changelog version:        $change_version
   Upgrade script version:   $up_version
   Upgrade script filename:  $up_file
 END_REPORT
 
     if ($err_count) {
-        print _colored( "\n  Version numbers don't match!\n", 'bold red' );
+        return 0;
     }
     return 1;
 }
