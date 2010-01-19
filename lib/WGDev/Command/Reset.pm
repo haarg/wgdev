@@ -693,7 +693,10 @@ sub get_firefox_sessions {
         {
             PrintError => 0,
             RaiseError => 1,
-            unicode    => 1,
+            eval { DBD::SQLite->VERSION(1.27) }
+                ? ( sqlite_unicode => 1 )
+                : ( unicode => 1 )
+            ,
         } );
     my @sitenames         = @{ $wgd->config->get('sitename') };
     my $cookie_name       = $wgd->config->get('cookieName');
