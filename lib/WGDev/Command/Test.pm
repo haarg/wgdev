@@ -15,7 +15,7 @@ sub config_parse_options { return qw(gnu_getopt pass_through) }
 sub config_options {
     return qw(
         all|A
-        slow|S
+        slow
         live|L
         debug
         reset:s
@@ -79,11 +79,12 @@ sub process {
 
     my $prove = App::Prove->new;
     my @args  = $self->arguments;
+    @args = ('-r', grep { $_ ne '-r' } @args);
     my $orig_dir;
     if ( $self->option('all') ) {
         $orig_dir = Cwd::cwd();
         chdir $wgd->root;
-        unshift @args, '-r', 't';
+        unshift @args, 't';
     }
     $prove->process_args(@args);
     my $result = $prove->run;
@@ -123,7 +124,7 @@ Unrecognized options will be passed through to prove.
 
 Run all tests recursively.  Otherwise, tests will need to be specified.
 
-=item C<-S> C<--slow>
+=item C<--slow>
 
 Includes slow tests by defining CODE_COP, TEST_SYNTAX, and TEST_POD.
 
