@@ -1,18 +1,32 @@
 Change log for WGDev
 
-0.5.0
+0.5.0 - Feb 26 2010
  - Fix misc small documentation issues
  - Fix some typos in WGDev::Command
  - export-branch command has been added to export a tree of assets in serialized form
  - More complete testing
- - fixed test failure when ran as root
- - allow using options with dashes
+ - Fixed help text for items with multiple paragraphs
+ - Fixed test failure when ran as root
+ - Allow using options with dashes
  - Proper handling of broken WebGUI configuration files
- - dist command learned to --builddir option to place build files in a specific directory
- - version command learned the --dist option for outputting the version in version-status format
- - reset command learned --autologon option to automatically set up admin sessions in a web browser
+ - Group command added to list groups
+ - Dist command learned to --builddir option to place build files in a specific directory
+ - Version command learned the --dist option for outputting the version in version-status format
+ - Reset command learned --autologon option to automatically set up admin sessions in a web browser
+ - Test command learned --debug option for setting WEBGUI_TEST_DEBUG
+ - Mail command learned --list option to show items in the mail queue
+ - Mail command learned --delete option to delete items from the mail queue
+ - Mail command learned --processQueue option force sending items in the mail queue
+ - Ls command filter now accepts negative smart match (!~)
+ - Reset command now allows the --import option to accept a filename to import
  - Added test prerequisites and resources metadata to Build.PL
- - Add -D switch for setting WEBGUI_TEST_DEBUG in wgd test.
+ - Reset command will always tell upgrade.pl to skip deleting the cache
+ - Build command will create more consistant and compatible SQL scripts
+ - Mail command speed-ups for some options
+ - Fixed clearing a database with foreign keys
+ - Test command will always pass -r to prove
+ - Removed -S option shortcut from Test command
+ - Clean up output output from version command
 
 0.4.0 - Sep 03 2009
  - Full POD coverage of API added
