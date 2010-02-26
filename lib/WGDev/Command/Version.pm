@@ -49,7 +49,7 @@ sub process {
     my $db_version = $wgv->database_script;
     my ( $change_file, $change_version ) = $wgv->changelog;
     my ( $up_file, undef, $up_file_ver, $up_version ) = $wgv->upgrade;
-    my $db_live_version = eval { $wgv->database($wgd->db->connect) };
+    my $db_live_version = eval { $wgv->database( $wgd->db->connect ) };
 
     my $err_count = 0;
     my $expect_ver = $ver || $perl_version;

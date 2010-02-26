@@ -79,7 +79,7 @@ sub process {
 
     my $prove = App::Prove->new;
     my @args  = $self->arguments;
-    @args = ('-r', grep { $_ ne '-r' } @args);
+    @args = ( '-r', grep { $_ ne '-r' } @args );
     my $orig_dir;
     if ( $self->option('all') ) {
         $orig_dir = Cwd::cwd();

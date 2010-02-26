@@ -469,7 +469,7 @@ sub clear_default_content {
             invertTree     => 1,
         } );
     for my $child ( @{$children} ) {
-        $self->report( 2, sprintf "\tRemoving \%-35s '\%s'\n",
+        $self->report( 2, sprintf "\tRemoving %-35s '%s'\n",
             $child->getName, $child->get('title') );
         $child->purge;
     }
@@ -500,7 +500,7 @@ END_SQL
             = WebGUI::Asset->new( $wgd->session, $id, $class, $revision )
             || next;
         if ( $asset->getRevisionCount('approved') > 1 ) {
-            $self->report( 2, sprintf "\tPurging \%-35s \%s '\%s'\n",
+            $self->report( 2, sprintf "\tPurging %-35s %s '%s'\n",
                 $asset->getName, $revision, $asset->get('title') );
             $asset->purgeRevision;
         }
@@ -522,7 +522,7 @@ sub empty_trash {
         } );
     for my $asset_id ( @{$assets} ) {
         my $asset = $wgd->asset->by_id($asset_id);
-        $self->report( 2, sprintf "\tPurging \%-35s '\%s'\n",
+        $self->report( 2, sprintf "\tPurging %-35s '%s'\n",
             $asset->getName, $asset->get('title') );
         $asset->purge;
     }
@@ -693,10 +693,10 @@ sub get_firefox_sessions {
         {
             PrintError => 0,
             RaiseError => 1,
+            ##no critic (ProhibitMagicNumbers)
             eval { DBD::SQLite->VERSION(1.27) }
-                ? ( sqlite_unicode => 1 )
-                : ( unicode => 1 )
-            ,
+            ? ( sqlite_unicode => 1 )
+            : ( unicode => 1 ),
         } );
     my @sitenames         = @{ $wgd->config->get('sitename') };
     my $cookie_name       = $wgd->config->get('cookieName');

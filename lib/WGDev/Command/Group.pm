@@ -9,7 +9,6 @@ use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
 use WGDev::X ();
-use Carp;
 
 sub config_options {
     return qw(
@@ -29,21 +28,23 @@ sub process {
     if ( $self->option('list') ) {
         my $format = $self->option('format');
         if ( $self->option('long') ) {
-            $format = 'Name: %groupName% %%n Id: %groupId% %%n Description: %description% %%n';
+            $format
+                = 'Name: %groupName% %%n Id: %groupId% %%n Description: %description% %%n';
         }
         elsif ( !$format ) {
             $format = '%groupName%';
         }
-        my $showInForms = $self->option('hidden');
-        my $groupIds = $session->db->buildArrayRef('select groupId from groups order by groupName');
-        for my $groupId ( @$groupIds ) {
-            my $group = WebGUI::Group->new($session, $groupId);
-            if (!$group) {
-                carp "Unable to instantiate group via groupId: $groupId";
+        my $show_in_forms = $self->option('hidden');
+        my $group_ids     = $session->db->buildArrayRef(
+            'select groupId from groups order by groupName');
+        for my $group_id ( @{$group_ids} ) {
+            my $group = WebGUI::Group->new( $session, $group_id );
+            if ( !$group ) {
+                warn "Unable to instantiate group via groupId: $group_id";
                 next;
             }
-            next if !$showInForms && !$group->showInForms;
-            
+            next if !$show_in_forms && !$group->showInForms;
+
             my $output = $self->format_output( $format, $group );
             print $output . "\n";
         }
@@ -52,7 +53,7 @@ sub process {
 
 sub format_output {
     my ( $self, $format, $group ) = @_;
-    $format =~ s/%%n/\n/g;
+    $format =~ s/%%n/\n/msxg;
     {
         no warnings 'uninitialized';
         $format =~ s{% (?: (\w+) (?: :(-?\d+) )? )? %}{

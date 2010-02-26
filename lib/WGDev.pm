@@ -83,11 +83,11 @@ sub config_file {
     if (@_) {
         my $path = shift;
         require Config::JSON;
-        if ( -f $path ) {
+        if ( -e $path ) {
         }
         elsif (
             $self->root
-            && -f (
+            && -e (
                 my $fullpath
                     = File::Spec->catfile( $self->root, 'etc', $path ) ) )
         {
@@ -139,7 +139,7 @@ sub lib {
         $self->{custom_lib} = \@custom_lib;
         my $custom
             = File::Spec->catfile( $self->root, 'sbin', 'preload.custom' );
-        if ( -f $custom && open my $fh, '<', $custom ) {
+        if ( -e $custom && open my $fh, '<', $custom ) {
             while ( my $line = <$fh> ) {
                 $line =~ s/[#].*//msx;
                 $line =~ s/\A\s+//msx;
@@ -336,7 +336,7 @@ my $json;
 sub read_wgd_config {
     my $self = shift;
     for my $config_file ( "$ENV{HOME}/.wgdevcfg", '/etc/wgdevcfg' ) {
-        if ( -f $config_file ) {
+        if ( -e $config_file ) {
             my $config;
             open my $fh, '<', $config_file or next;
             my $content = do { local $/; <$fh> };
