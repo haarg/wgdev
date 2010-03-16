@@ -5,15 +5,20 @@ use 5.008008;
 
 our $VERSION = '0.1.0';
 
-use WGDev::Command::Base;
-BEGIN { our @ISA = qw(WGDev::Command::Base) }
+use WGDev::Command::Base::Verbosity;
+BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
 
 use File::Spec ();
+use File::Find ();
+use File::Path ();
+use File::Copy ();
 
 sub config_options {
     return (
         shift->SUPER::config_options, qw(
             buildDir|b=s
+            langDir|l=s
+            lang|g=s@
             ) );
 }
 
@@ -28,6 +33,8 @@ sub process {
     require File::Copy;
     require Cwd;
 
+    $self->set_option_default('langDir', '/data/domains/translation.webgui.org/public/translations');
+    $self->set_option_default('lang',    [qw/Spanish Dutch German/]);
     my ( $version, $status ) = $wgd->version->module;
     my $build_dir = $self->option('buildDir');
     my $build_root;
@@ -38,12 +45,18 @@ sub process {
     if ( $build_root && !-e $build_root ) {
         $build_root = File::Temp->newdir;
     }
+    $self->report("Created build directory: " . $build_root . "\n");
     my $build_webgui = File::Spec->catdir( $build_root, 'WebGUI' );
     my $build_docs   = File::Spec->catdir( $build_root, 'api' );
     my $cwd          = Cwd::cwd();
 
     mkdir $build_webgui;
+    $self->report("Exporting files for WebGUI core\n");
     $self->export_files($build_webgui);
+    foreach my $language ( @{ $self->option('lang') } ) {
+        $self->report("Adding language pack for " . $language . "\n");
+        $self->install_language($build_webgui, $language);
+    }
     my $inst_dir = $build_dir || $cwd;
     if ( !fork ) {
         chdir $build_root;
@@ -55,6 +68,7 @@ sub process {
     wait;
 
     mkdir $build_docs;
+    $self->report("Building API docs\n");
     $self->generate_docs($build_docs);
     if ( !fork ) {
         chdir $build_root;
@@ -81,7 +95,7 @@ sub export_files {
         system 'svn', 'export', $from, $to_root;
     }
     else {
-        system 'cp', '-r', $from, $to_root;
+        $self->copy_deeply($from, $to_root);
     }
 
     for my $file (
@@ -139,6 +153,53 @@ sub generate_docs {
     return $to_root;
 }
 
+sub install_language {
+    my $self     = shift;
+    my $to_root  = shift;
+    my $language = shift;
+    my $lang_root = $self->option('langDir');
+    my $lang_dir  = File::Spec->catdir( $lang_root, $language );
+    return unless -e $lang_dir;
+    my $extras_dir = File::Spec->catdir( $lang_dir, 'extras' );
+    if (-e $extras_dir) {
+        $self->copy_deeply($extras_dir, File::Spec->catdir( $to_root, qw/www extras/ ));
+    }
+    File::Copy::copy(
+        File::Spec->catfile( $lang_dir, $language . '.pm' ),
+        File::Spec->catfile( $to_root, qw/lib WebGUI i18n/, $language . '.pm' )
+    );
+    $self->copy_deeply( File::Spec->catdir( $lang_dir, $language ), File::Spec->catdir( $to_root, qw/lib WebGUI i18n/, $language ) );
+}
+
+sub copy_deeply {
+    my $self     = shift;
+    my $from     = shift;
+    my $to       = shift;
+    my $copy_files_cb = sub {
+        no warnings 'once';
+        my $site_path = $File::Find::name;
+        my ( undef, undef, $filename ) = File::Spec->splitpath($site_path);
+        if ( $filename eq '.svn' || $filename eq 'temp' ) {
+            $File::Find::prune = 1;
+            return;
+        }
+        return
+            if -d $site_path;
+        my $rel_path = File::Spec->abs2rel( $site_path, $from );
+        my $wg_path  = File::Spec->rel2abs( $rel_path,  $to );
+
+        # stat[7] is file size
+        ##no critic (ProhibitMagicNumbers)
+        return
+            if -e $wg_path && ( stat _ )[7] == ( stat $site_path )[7];
+        my $wg_dir = File::Spec->catpath(
+            ( File::Spec->splitpath($wg_path) )[ 0, 1 ] );
+        File::Path::mkpath($wg_dir);
+        File::Copy::copy( $site_path, $wg_path );
+    };
+    File::Find::find( { no_chdir => 1, wanted => $copy_files_cb }, $from );
+}
+
 1;
 
 __END__
@@ -149,7 +210,7 @@ WGDev::Command::Dist - Create a distribution file for WebGUI
 
 =head1 SYNOPSIS
 
-    wgd dist [-c] [-d] [-b /data/builds]
+    wgd dist [-c] [-d] [-b /data/builds] [ -l /data/domains/i18n.webgui.org/public/translations ] [--lang=Dutch]
 
 =head1 DESCRIPTION
 
@@ -173,6 +234,15 @@ Generates an API documentation distribution
 
 Install the directories and tarballs in a different location.  If no build directory
 is specified, it will create a temp file.
+
+=item C<-l> C<--langDir>
+
+Source directory for languages.  Defaults to the location of the master WebGUI translation server.
+
+=item C<-lang>
+
+A language to install into the build directory.  Multiple languages can be chosen by using the
+option several times.  Defaults to --lang=Dutch --lang=German --lang=Spanish.
 
 =back
 
