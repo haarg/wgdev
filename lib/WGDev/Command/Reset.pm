@@ -730,6 +730,7 @@ sub get_firefox_cookiedb {
     require File::HomeDir;
     require Config::INI::Reader;
     require File::Temp;
+    File::Temp->VERSION(0.19);
     require File::Copy;
 
     my $firefox_subdir

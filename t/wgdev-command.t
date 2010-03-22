@@ -9,7 +9,7 @@ use Test::MockObject::Extends;
 
 use File::Spec::Functions qw(catdir catfile catpath rel2abs splitpath);
 use Cwd qw(realpath cwd);
-use File::Temp ();
+use File::Temp 0.19 ();
 use File::Copy qw(copy);
 use Config ();
 use JSON   ();

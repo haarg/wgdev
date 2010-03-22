@@ -26,6 +26,7 @@ sub package_perldoc {
     my $sections = shift;
     require Pod::Perldoc;
     require File::Temp;
+    File::Temp->VERSION(0.19);
     require File::Path;
     my $pod = package_pod( $package, $sections );
     my $tmpdir = File::Temp::tempdir( TMPDIR => 1, CLEANUP => 1 );
