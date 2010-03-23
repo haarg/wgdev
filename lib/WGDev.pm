@@ -31,13 +31,16 @@ sub new {
 
 sub set_environment {
     my $self = shift;
+    my %options = @_;
     require Config;
     WGDev::X::NoWebGUIRoot->throw
         if !$self->root;
     WGDev::X::NoWebGUIConfig->throw
         if !$self->config_file;
-    $self->{orig_env}
-        ||= { map { $_ => $ENV{$_} } qw(WEBGUI_ROOT WEBGUI_CONFIG PERL5LIB) };
+    if (! $options{localized}) {
+        $self->{orig_env}
+            ||= { map { $_ => $ENV{$_} } qw(WEBGUI_ROOT WEBGUI_CONFIG PERL5LIB) };
+    }
     ##no critic (RequireLocalizedPunctuationVars)
     $ENV{WEBGUI_ROOT}   = $self->root;
     $ENV{WEBGUI_CONFIG} = $self->config_file;
