@@ -58,30 +58,42 @@ sub package_perldoc {
     return;
 }
 
+my %pod;
+
 sub package_pod {
     my $package  = shift;
     my $sections = shift;
-    ( my $file = $package . '.pm' ) =~ s{::}{/}msxg;
-    require $file;
-    my $actual_file = $INC{$file};
-    my $pod;
-    open my $pod_in, '<', $actual_file
-        or WGDev::X::IO::Read->throw( path => $actual_file );
-    if ($sections) {
-        my @sections = ref $sections ? @{$sections} : $sections;
-        require Pod::Select;
-        my $parser = Pod::Select->new;
-        $parser->select(@sections);
-        $pod = q{};
-        open my $pod_out, '>', \$pod
-            or WGDev::X::IO->throw;
-        $parser->parse_from_filehandle( $pod_in, $pod_out );
-        close $pod_out
-            or WGDev::X::IO->throw;
+    my $raw_pod = $pod{$package};
+    if ( !$raw_pod ) {
+        ( my $file = $package . '.pm' ) =~ s{::}{/}msxg;
+        require $file;
+        my $fh = do {
+            no strict 'refs';
+            \*{$package . '::DATA'};
+        };
+        if ( eof $fh ) {
+            open $fh, '<', $INC{$file}
+                or WGDev::X::IO->throw;
+        }
+        $raw_pod = do { local $/; <$fh> };
+        $pod{$package} = $raw_pod;
     }
-    else {
-        $pod = do { local $/; <$pod_in> };
-    }
+
+    return $raw_pod
+        if !$sections;
+
+    open my $pod_in, '<', \$raw_pod
+        or WGDev::X::IO->throw;
+    my @sections = ref $sections ? @{$sections} : $sections;
+    require Pod::Select;
+    my $parser = Pod::Select->new;
+    $parser->select(@sections);
+    my $pod = q{};
+    open my $pod_out, '>', \$pod
+        or WGDev::X::IO->throw;
+    $parser->parse_from_filehandle( $pod_in, $pod_out );
+    close $pod_out
+        or WGDev::X::IO->throw;
     close $pod_in
         or WGDev::X::IO->throw;
     return $pod;
