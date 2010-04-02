@@ -7,7 +7,7 @@ our $VERSION = '0.0.1';
 
 1;
 
-__END__
+__DATA__
 
 =head1 NAME
 

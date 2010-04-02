@@ -101,7 +101,7 @@ sub package_pod {
 
 1;
 
-__END__
+__DATA__
 
 =head1 NAME
 

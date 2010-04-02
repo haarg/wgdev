@@ -152,7 +152,7 @@ sub format_output {
 
 1;
 
-__END__
+__DATA__
 
 =head1 NAME
 

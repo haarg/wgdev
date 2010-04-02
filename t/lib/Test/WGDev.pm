@@ -70,7 +70,7 @@ sub guard_chdir {
 
 1;
 
-__END__
+__DATA__
 
 =head1 NAME
 

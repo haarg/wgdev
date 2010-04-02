@@ -17,7 +17,7 @@ sub process {
 
 1;
 
-__END__
+__DATA__
 
 =head1 NAME
 

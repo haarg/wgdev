@@ -824,7 +824,7 @@ sub _run_script {
 
 1;
 
-__END__
+__DATA__
 
 =head1 NAME
 

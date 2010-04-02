@@ -163,7 +163,7 @@ sub WGDev::X::IO::full_message {
 
 1;
 
-__END__
+__DATA__
 
 =head1 NAME
 
