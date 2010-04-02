@@ -33,7 +33,9 @@ my $build = WGDev::Builder->new(
         'Text::ParseWords' => 0,
         'version'          => 0,
         'Exception::Class' => 0,
+    },
 
+    build_requires => {
         # for tests only
         'Scope::Guard'              => 0,
         'Test::Builder::Module'     => 0,
