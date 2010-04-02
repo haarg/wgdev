@@ -81,58 +81,31 @@ sub ACTION_tidy {
 
 sub ACTION_distexec {
     my $self = shift;
-    require Digest::SHA1;
-    $self->depends_on('build');
 
-    # generate temporary tar file of needed libraries
-    my $temp = File::Temp::tmpnam();
-    system 'tar', 'czf', $temp, '-C', $self->blib, 'lib', 'script';
-
-    # use SHA1 hash when extracting to ensure we are using the correct libs
-    my $short_sha1 = do {
-        open my $archive, '<', $temp;
-        my $sha1 = Digest::SHA1->new->addfile($archive);
-        close $archive;
-        substr $sha1->hexdigest, 0, 8;
-    };
-
-    # create perl script with tar file attached in the __DATA__ secion.
-    # when run, it extracts the attached file if needed and runs the wgd
-    # script.
     my $dist_script = 'wgd-' . $self->dist_version;
     unlink $dist_script;
-    open my $fh, '>', $dist_script;
-    syswrite $fh, sprintf <<'END_SCRIPT', $short_sha1;
-#!/usr/bin/env perl
-my $out_dir = ($ENV{TMPDIR} || '/tmp') . "/WGDev-%s-$ENV{USER}";
-if (! -e "$out_dir/perl/script/wgd") {
-    mkdir $out_dir;
-    mkdir "$out_dir/perl";
-    open my $fh, '|-', 'tar', 'xz', '-C', "$out_dir/perl";
-    my $buffer;
-    syswrite $fh, $buffer
-        while sysread \*DATA, $buffer, 1024;
-    close $fh;
-    die "Error extracting libraries!\n"
-        if $?;
-}
-unshift @INC, "$out_dir/perl/lib";
-require "$out_dir/perl/script/wgd";
-__DATA__
-END_SCRIPT
+    open my $out_fh, '>', $dist_script;
 
-    # add tar file to the end of the script
-    open my $tar_fh, '<', $temp;
-    while (1) {
-        my $buffer;
-        my $read = sysread $tar_fh, $buffer, 1000;
-        last
-            if !$read;
-        syswrite $fh, $buffer;
+    print { $out_fh } <<'END_HEADER';
+#!/usr/bin/env perl
+
+END_HEADER
+
+    mkdir 'fatlib';
+    open my $fh, '-|', 'fatpack', 'file'
+        or die "Can't run fatpack: $!";
+    while ( my $line = <$fh> ) {
+        print { $out_fh } $line;
     }
-    close $tar_fh;
     close $fh;
-    chmod oct(555), $dist_script;
+    rmdir 'fatlib';
+    open $fh, '<', 'bin/wgd';
+    while ( my $line = <$fh> ) {
+        print { $out_fh } $line;
+    }
+    close $fh;
+    close $out_fh;
+    chmod oct(755), $dist_script;
 }
 
 1;
