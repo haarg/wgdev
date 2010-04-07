@@ -71,7 +71,7 @@ sub process {
     while ( my $parent = shift @parents ) {
         my $asset;
         if ( !eval { $asset = $wgd->asset->find($parent) } ) {
-            warn "wgd edit: $parent: No such asset\n";
+            warn "wgd ls: $parent: No such asset\n";
             next;
         }
         if ($show_header) {
