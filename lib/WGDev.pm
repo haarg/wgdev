@@ -212,12 +212,27 @@ sub session {
         }
     }
     return $self->{session} ||= do {
-        my $session
-            = WebGUI::Session->open( $self->root, $self->config_file_relative,
-            undef, undef, $self->{session_id} );
+        my $session = $self->create_session($self->{session_id});
         $self->{session_id} = $session->getId;
         $session;
     };
+}
+
+sub create_session {
+    my $self = shift;
+    my $session_id = shift;
+    my $session;
+    if ( $self->version->module =~ /^8\./ ) {
+        $session
+            = WebGUI::Session->open( $self->config_file,
+            undef, undef, $session_id );
+    }
+    else {
+        $session
+            = WebGUI::Session->open( $self->root, $self->config_file_relative,
+            undef, undef, $session_id );
+    }
+    return $session;
 }
 
 sub close_session {

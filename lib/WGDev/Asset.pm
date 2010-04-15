@@ -42,7 +42,12 @@ sub by_url {
 
 sub by_id {
     my $self = shift;
-    return WebGUI::Asset->new( $self->{session}, @_ );
+    if (WebGUI::Asset->can('newById')) {
+        return WebGUI::Asset->newById( $self->{session}, @_ );
+    }
+    else {
+        return WebGUI::Asset->new( $self->{session}, @_ );
+    }
 }
 
 sub find {
@@ -50,7 +55,7 @@ sub find {
     my $session = $self->{session};
     my $asset;
     if ( $session->id->valid($asset_spec) ) {
-        $asset = WebGUI::Asset->new( $session, $asset_spec );
+        $asset = $self->by_id($asset_spec);
     }
     if ( !$asset ) {
         $asset = WebGUI::Asset->newByUrl( $session, $asset_spec );
