@@ -118,10 +118,20 @@ sub write_db_structure {
         $wgd->db->command_line( '--compact', '--no-data',
         '--compatible=mysql40' )
         or WGDev::X::System->throw('Unable to run mysqldump');
+    my $statement;
     while ( my $line = <$in> ) {
         next
             if $line =~ /\bSET[^=]+=\s*[@][@]character_set_client;/msxi
                 || $line =~ /\bSET\s+character_set_client\b/msxi;
+        if ( !$statement && $line =~ /^(CREATE TABLE)/ ) {
+            $statement = $1;
+        }
+        if ( $statement && $line =~ /;$/ ) {
+            if ( $statement eq 'CREATE TABLE' ) {
+                $line =~ s/;$/ CHARSET=utf8;/;
+            }
+            undef $statement;
+        }
         print {$out} $line;
     }
     close $in
