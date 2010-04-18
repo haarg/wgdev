@@ -469,7 +469,10 @@ sub _load_yaml_lib {
 
 sub DESTROY {
     my $self = shift;
-    $self->close_session;
+    local $@;
+    eval {
+        $self->close_session;
+    };
     return;
 }
 
