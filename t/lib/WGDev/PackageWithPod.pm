@@ -1,37 +1,28 @@
-package WGDev::Command::_test_baseless;
-use strict;
-use warnings;
-use 5.008008;
-
-our $VERSION = '9.8.7';
-
-sub is_runnable {
-    return 1;
-}
-
-sub run {
-    exit;
-}
-
+package WGDev::PackageWithPod;
 1;
-
 __DATA__
 
 =head1 NAME
 
-WGDev::Command::_test_baseless - WGDev command that doesn't use WGDev::Command::Base
+WGDev::PackageWithPod - Abstract goes here
 
 =head1 SYNOPSIS
 
-    wgd _test_baseless
+    synopsis
 
 =head1 DESCRIPTION
 
-WGDev Command not subclassing WGDev::Command::Base
+Description.
 
 =head1 OPTIONS
 
-None
+=over 8
+
+=item C<--all> C<-A>
+
+Does everything.
+
+=back
 
 =head1 AUTHOR
 

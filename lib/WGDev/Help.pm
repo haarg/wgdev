@@ -26,6 +26,7 @@ sub package_perldoc {
     my $sections = shift;
     require Pod::Perldoc;
     require File::Temp;
+    File::Temp->VERSION(0.19);
     require File::Path;
     my $pod = package_pod( $package, $sections );
     my $tmpdir = File::Temp::tempdir( TMPDIR => 1, CLEANUP => 1 );
@@ -57,30 +58,42 @@ sub package_perldoc {
     return;
 }
 
+my %pod;
+
 sub package_pod {
     my $package  = shift;
     my $sections = shift;
-    ( my $file = $package . '.pm' ) =~ s{::}{/}msxg;
-    require $file;
-    my $actual_file = $INC{$file};
-    my $pod;
-    open my $pod_in, '<', $actual_file
-        or WGDev::X::IO::Read->throw( path => $actual_file );
-    if ($sections) {
-        my @sections = ref $sections ? @{$sections} : $sections;
-        require Pod::Select;
-        my $parser = Pod::Select->new;
-        $parser->select(@sections);
-        $pod = q{};
-        open my $pod_out, '>', \$pod
-            or WGDev::X::IO->throw;
-        $parser->parse_from_filehandle( $pod_in, $pod_out );
-        close $pod_out
-            or WGDev::X::IO->throw;
+    my $raw_pod = $pod{$package};
+    if ( !$raw_pod ) {
+        ( my $file = $package . '.pm' ) =~ s{::}{/}msxg;
+        require $file;
+        my $fh = do {
+            no strict 'refs';
+            \*{$package . '::DATA'};
+        };
+        if ( eof $fh ) {
+            open $fh, '<', $INC{$file}
+                or WGDev::X::IO->throw;
+        }
+        $raw_pod = do { local $/; <$fh> };
+        $pod{$package} = $raw_pod;
     }
-    else {
-        $pod = do { local $/; <$pod_in> };
-    }
+
+    return $raw_pod
+        if !$sections;
+
+    open my $pod_in, '<', \$raw_pod
+        or WGDev::X::IO->throw;
+    my @sections = ref $sections ? @{$sections} : $sections;
+    require Pod::Select;
+    my $parser = Pod::Select->new;
+    $parser->select(@sections);
+    my $pod = q{};
+    open my $pod_out, '>', \$pod
+        or WGDev::X::IO->throw;
+    $parser->parse_from_filehandle( $pod_in, $pod_out );
+    close $pod_out
+        or WGDev::X::IO->throw;
     close $pod_in
         or WGDev::X::IO->throw;
     return $pod;
@@ -88,7 +101,7 @@ sub package_pod {
 
 1;
 
-__END__
+__DATA__
 
 =head1 NAME
 

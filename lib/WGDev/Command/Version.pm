@@ -172,7 +172,7 @@ sub _colored {
 
 1;
 
-__END__
+__DATA__
 
 
 =head1 NAME

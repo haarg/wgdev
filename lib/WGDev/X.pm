@@ -86,11 +86,20 @@ BEGIN {
                 $self->{message} = q{};
             }
             return $self;
-            }
+        };
     }
 }
 
 ##no critic (ProhibitQualifiedSubDeclarations)
+
+sub WGDev::X::inflate {
+    my $class = shift;
+    my $proto = shift;
+    if (@_ == 1 && ref $_[0] && $_[0]->can('throw')) {
+        $_[0]->throw;
+    }
+    $class->throw(@_);
+}
 
 sub WGDev::X::full_message {
     my $self = shift;
@@ -154,7 +163,7 @@ sub WGDev::X::IO::full_message {
 
 1;
 
-__END__
+__DATA__
 
 =head1 NAME
 

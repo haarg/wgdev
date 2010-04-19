@@ -31,13 +31,16 @@ sub new {
 
 sub set_environment {
     my $self = shift;
+    my %options = @_;
     require Config;
     WGDev::X::NoWebGUIRoot->throw
         if !$self->root;
     WGDev::X::NoWebGUIConfig->throw
         if !$self->config_file;
-    $self->{orig_env}
-        ||= { map { $_ => $ENV{$_} } qw(WEBGUI_ROOT WEBGUI_CONFIG PERL5LIB) };
+    if (! $options{localized}) {
+        $self->{orig_env}
+            ||= { map { $_ => $ENV{$_} } qw(WEBGUI_ROOT WEBGUI_CONFIG PERL5LIB) };
+    }
     ##no critic (RequireLocalizedPunctuationVars)
     $ENV{WEBGUI_ROOT}   = $self->root;
     $ENV{WEBGUI_CONFIG} = $self->config_file;
@@ -209,12 +212,27 @@ sub session {
         }
     }
     return $self->{session} ||= do {
-        my $session
-            = WebGUI::Session->open( $self->root, $self->config_file_relative,
-            undef, undef, $self->{session_id} );
+        my $session = $self->create_session($self->{session_id});
         $self->{session_id} = $session->getId;
         $session;
     };
+}
+
+sub create_session {
+    my $self = shift;
+    my $session_id = shift;
+    my $session;
+    if ( $self->version->module =~ /^8\./ ) {
+        $session
+            = WebGUI::Session->open( $self->config_file,
+            undef, undef, $session_id );
+    }
+    else {
+        $session
+            = WebGUI::Session->open( $self->root, $self->config_file_relative,
+            undef, undef, $session_id );
+    }
+    return $session;
 }
 
 sub close_session {
@@ -451,13 +469,16 @@ sub _load_yaml_lib {
 
 sub DESTROY {
     my $self = shift;
-    $self->close_session;
+    local $@;
+    eval {
+        $self->close_session;
+    };
     return;
 }
 
 1;
 
-__END__
+__DATA__
 
 =head1 NAME
 

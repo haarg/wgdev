@@ -667,13 +667,12 @@ sub autologon {
     }
 
     if (@session_ids) {
-        require WebGUI::Session;
         $self->report('Creating sessions on site... ');
         for my $session_id (@session_ids) {
-            my $session = WebGUI::Session->open( $wgd->root,
-                $wgd->config_file_relative, undef, undef, $session_id, );
+            my $session = $wgd->create_session($session_id);
             $session->user( { userId => 3 } );
             $session->var->switchAdminOn;
+            $session->close;
         }
         $self->report("Done.\n");
     }
@@ -730,6 +729,7 @@ sub get_firefox_cookiedb {
     require File::HomeDir;
     require Config::INI::Reader;
     require File::Temp;
+    File::Temp->VERSION(0.19);
     require File::Copy;
 
     my $firefox_subdir
@@ -823,7 +823,7 @@ sub _run_script {
 
 1;
 
-__END__
+__DATA__
 
 =head1 NAME
 

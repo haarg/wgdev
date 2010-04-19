@@ -24,7 +24,7 @@ my $build = WGDev::Builder->new(
         'File::Find'       => 0,
         'File::Path'       => 0,
         'File::Spec'       => 0,
-        'File::Temp'       => 0,
+        'File::Temp'       => 0.19,
         'Getopt::Long'     => 0,
         'JSON'             => '2.00',
         'Pod::Html'        => 0,
@@ -33,7 +33,9 @@ my $build = WGDev::Builder->new(
         'Text::ParseWords' => 0,
         'version'          => 0,
         'Exception::Class' => 0,
+    },
 
+    build_requires => {
         # for tests only
         'Scope::Guard'              => 0,
         'Test::Builder::Module'     => 0,

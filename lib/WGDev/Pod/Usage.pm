@@ -139,7 +139,7 @@ sub parse_from_string {
 
 1;
 
-__END__
+__DATA__
 
 =head1 NAME
 
