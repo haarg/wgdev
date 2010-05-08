@@ -277,6 +277,13 @@ sub reset_uploads {
     my ( $uploads_mode, $uploads_uid, $uploads_gid )
         = ( stat $site_uploads )[ STAT_MODE, STAT_UID, STAT_GID ];
 
+    # if uploads doesn't exist, use reasonable defaults
+    if ( ! defined $uploads_mode ) {
+        $uploads_mode = oct(755);
+        $uploads_uid = $>;
+        $uploads_gid = $);
+    }
+
     # make umask as permissive as required to match existing uploads folder
     # including sticky bits
     umask( oct(7777) & ~$uploads_mode );
