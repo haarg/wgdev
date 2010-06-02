@@ -176,7 +176,7 @@ sub _asset_properties {
                     = $self->_get_property_default($property_def);
             }
 
-            my $field_type = ucfirst $property_def->{fieldType};
+            my $field_type = ucfirst ( $property_def->{fieldType} || '' );
             if (   $property eq 'title'
                 || $property eq 'menuTitle'
                 || $property eq 'url' )
