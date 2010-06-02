@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.5.0';
+our $VERSION = '0.6.0';
 
 use Getopt::Long ();
 use File::Spec   ();
