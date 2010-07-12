@@ -45,7 +45,7 @@ sub database_script {
     my $dir = ${ +shift };
     my $version;
     open my $fh, '<', File::Spec->catfile( $dir, 'docs', 'create.sql' )
-        or WGDev::X::IO::Write->throw( path => 'create.sql' );
+        or WGDev::X::IO::Read->throw( path => 'create.sql' );
     while ( my $line = <$fh> ) {
         if (
             $line =~ m{
@@ -62,7 +62,7 @@ sub database_script {
         }
     }
     close $fh
-        or WGDev::X::IO::Write->throw( path => 'create.sql' );
+        or WGDev::X::IO::Read->throw( path => 'create.sql' );
     return $version;
 }
 
