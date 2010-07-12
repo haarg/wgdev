@@ -51,9 +51,13 @@ sub create_db_script {
     $self->report("WebGUI version: $version\n");
 
     $self->report('Creating database dump... ');
-    my $db_file = File::Spec->catfile( $wgd->root, 'docs', 'create.sql' );
+    my $wg8 = $wgd->version->module =~ /^8\./;
+    my $db_file = $wg8 ? do {
+        require WebGUI::Paths;
+        WebGUI::Paths->defaultCreateSQL;
+    } : File::Spec->catfile( $wgd->root, 'docs', 'create.sql' );
     open my $out, q{>}, $db_file
-        or WGDev::X::IO::Write->throw( path => 'docs/create.sql' );
+        or WGDev::X::IO::Write->throw( path => $db_file );
 
     $self->write_db_header($out);
     $self->write_db_structure($out);
@@ -61,7 +65,7 @@ sub create_db_script {
     $self->write_db_footer($out);
 
     close $out
-        or WGDev::X::IO::Write->throw( path => 'docs/create.sql' );
+        or WGDev::X::IO::Write->throw( path => $db_file );
     $self->report("Done.\n");
     return 1;
 }

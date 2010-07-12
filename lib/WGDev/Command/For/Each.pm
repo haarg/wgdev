@@ -116,6 +116,7 @@ sub process {
     SITES: for my $config ( $self->wgd->list_site_configs ) {
         my $wgd = eval { WGDev->new( $root, $config ) };
         if ( $wgd ) {
+            local $self->{wgd} = $wgd;
             COMMANDS: for (my $i = 0; $i <= $#commands; $i += 2) {
                 my $command = $commands[$i];
                 my @params = @{ $commands[$i + 1] };
@@ -169,16 +170,30 @@ the names of the config files will be output.
 
 Continue processing config files if there is an error
 
-=item C<--print0>
+=item C<-0> C<--print0[=format]>
 
-Prints the config file names followed by an ASCII NUL character
+Prints the config file name followed by an ASCII NUL character
 instead of a carriage return.
 
-=item C<--exec=>
+An optional printf formatting string can be specified.
+
+=item C<-p> C<--print[=format]>
+
+Prints the config file name.  This is the default option if no other
+options are specified.
+
+An optional printf formatting string can be specified.
+
+
+=item C<-e> C<--exec=>
 
 Runs the given command using the shell for each config file.  The
 WEBGUI_ROOT and WEBGUI_CONFIG environment variables will be set
-while this command is run, so wgd can be run as a bare command.
+while this command is run.
+
+=item C<-w> C<-c> C<--wgd=>
+
+Runs the given WGDev command for each config file.
 
 =back
 

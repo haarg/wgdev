@@ -1,5 +1,23 @@
 Change log for WGDev
 
+0.7.0 - Jul 12 2010
+ - Fixed for-each command
+ - Fixed documentation for Util command
+ - Fixed exception used when database script unreadable
+ - Follow WebGUI 8 API for database script location
+ - Add self-upgrade command for single-file install
+
+0.6.0 - Jun 02 2010
+ - Reset command will use reasonable permissions for uploads directory if it doesn't exist
+ - Ensure errors get output properly
+ - Build will enforce utf8 on tables in create.sql
+ - Added rudimentary support for WebGUI 8
+ - Generate single file dist in a safer and better way
+ - Move test modules to build_requires
+ - set_environment method now has an option to not save the env in case you want to localize it yourself
+ - note that required version of File::Temp is 0.19
+ - Added for-each command to run operations for each available config file
+
 0.5.0 - Feb 26 2010
  - Fix misc small documentation issues
  - Fix some typos in WGDev::Command
