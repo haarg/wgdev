@@ -28,8 +28,18 @@ sub process {
     if ( $self->arguments ) {
         my $package_dir = $self->option('to') || q{.};
         if ( $self->option('upgrade') ) {
-            $package_dir = File::Spec->catdir( $wgd->root, 'docs', 'upgrades',
-                'packages-' . $wgd->version->module );
+            my $version = $wgd->version->module;
+            my $wg8 = $version =~ /^8\./;
+            if ($wg8) {
+                require WebGUI::Paths;
+                my $old_version = $wgd->version->db_script;
+                $package_dir = File::Spec->catdir( WebGUI::Paths->upgrades,
+                    $old_version . '-' . $version );
+            }
+            else {
+                $package_dir = File::Spec->catdir( $wgd->root, 'docs', 'upgrades',
+                    'packages-' . $wgd->version->module );
+            }
             if ( !-d $package_dir ) {
                 mkdir $package_dir;
             }
