@@ -1,5 +1,12 @@
 Change log for WGDev
 
+0.7.0 - Jul 12 2010
+ - Fixed for-each command
+ - Fixed documentation for Util command
+ - Fixed exception used when database script unreadable
+ - Follow WebGUI 8 API for database script location
+ - Add self-upgrade command for single-file install
+
 0.6.0 - Jun 02 2010
  - Reset command will use reasonable permissions for uploads directory if it doesn't exist
  - Ensure errors get output properly

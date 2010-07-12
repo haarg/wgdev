@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.6.0';
+our $VERSION = '0.7.0';
 
 use WGDev::X ();
 
