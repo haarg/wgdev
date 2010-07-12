@@ -69,15 +69,24 @@ WGDev::Command::Util - Run a utility script
 
 =head1 SYNOPSIS
 
-    wgd util <command>
+    wgd util [-q] <command>
 
 =head1 DESCRIPTION
 
-Runs a utility script.
+Runs a utility script.  The script will be run from WebGUI's sbin
+directory, and will be passed a --configFile option.
 
 =head1 OPTIONS
 
-Has no options of its own.  All options are passed on to specified command.
+Any options not handled by this command are passed to the utility script.
+
+=over 8
+
+=item C<-q> C<--quiet>
+
+If specified, will silence all output from the utility script.
+
+=back
 
 =head1 AUTHOR
 
