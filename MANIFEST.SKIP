@@ -55,3 +55,5 @@
 \bWGDev-v?[\d\.\_]+
 \bwgd-v?[\d\.\_]+
 
+^lib/WebGUI/Command/Upgrade\.pm$
+
