@@ -1,4 +1,4 @@
-package WGDev::Command::Upgrade;
+package WGDev::Command::Self::Upgrade;
 use strict;
 use warnings;
 use 5.008008;
@@ -56,7 +56,7 @@ __DATA__
 
 =head1 NAME
 
-WGDev::Command::Upgrade - Upgrade WGDev script
+WGDev::Command::Self::Upgrade - Upgrade WGDev script
 
 =head1 SYNOPSIS
 
