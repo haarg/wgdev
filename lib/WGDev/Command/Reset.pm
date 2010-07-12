@@ -330,17 +330,23 @@ sub import_db_script {
     $self->report('Clearing old database information... ');
     $wgd->db->clear;
     $self->report("Done.\n");
+    my $wg8 = $self->wgd->version->module =~ /^8\./;
 
     $self->report('Importing clean database dump... ');
 
     my $db_file = $self->option('import');
     if ( defined $db_file && $db_file eq q{} ) {
-
-        # If we aren't upgrading, we're using the current DB version
-        $db_file
-            = File::Spec->catfile( $wgd->root, 'docs',
-            $self->option('upgrade') ? 'previousVersion.sql' : 'create.sql',
-            );
+        if ($wg8) {
+            require WebGUI::Paths;
+            $db_file = WebGUI::Paths->defaultCreateSQL;
+        }
+        else {
+            # If we aren't upgrading, we're using the current DB version
+            $db_file
+                = File::Spec->catfile( $wgd->root, 'docs',
+                $self->option('upgrade') ? 'previousVersion.sql' : 'create.sql',
+                );
+        }
     }
     $wgd->db->load($db_file);
     $self->report("Done.\n");

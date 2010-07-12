@@ -42,10 +42,16 @@ sub module {
 sub db_script { goto &database_script }
 
 sub database_script {
-    my $dir = ${ +shift };
+    my $self = shift;
+    my $dir = $$self;
+    my $wg8 = $self->module =~ /^8\./;
     my $version;
-    open my $fh, '<', File::Spec->catfile( $dir, 'docs', 'create.sql' )
-        or WGDev::X::IO::Read->throw( path => 'create.sql' );
+    my $db_file = $wg8 ? do {
+        require WebGUI::Paths;
+        WebGUI::Paths->defaultCreateSQL;
+    } : File::Spec->catfile( $dir, 'docs', 'create.sql' );
+    open my $fh, '<', $db_file
+        or WGDev::X::IO::Read->throw( path => $db_file );
     while ( my $line = <$fh> ) {
         if (
             $line =~ m{
@@ -62,7 +68,7 @@ sub database_script {
         }
     }
     close $fh
-        or WGDev::X::IO::Read->throw( path => 'create.sql' );
+        or WGDev::X::IO::Read->throw( path => $db_file );
     return $version;
 }
 
