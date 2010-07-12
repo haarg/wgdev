@@ -157,6 +157,16 @@ sub _asset_properties {
         $asset = $class;
         $class = ref $asset;
     }
+    @_ = ($self, $class, $asset, $properties);
+    if ($class->can('definition')) {
+        goto &_asset_properties_definition;
+    }
+    goto &_asset_properties_meta;
+}
+
+sub _asset_properties_definition {
+    my $self = shift;
+    my ($class, $asset, $properties) = @_;
 
     my $definition = $class->definition( $self->{session} );
     my %text;
@@ -176,29 +186,70 @@ sub _asset_properties {
                     = $self->_get_property_default($property_def);
             }
 
-            my $field_type = ucfirst ( $property_def->{fieldType} || '' );
-            if (   $property eq 'title'
-                || $property eq 'menuTitle'
-                || $property eq 'url' )
-            {
-                next;
-            }
-            elsif ($field_type eq 'HTMLArea'
-                || $field_type eq 'Textarea'
-                || $field_type eq 'Codearea' )
-            {
-                $text{$property} = $asset_properties->{$property};
-            }
-            elsif ( $field_type eq 'Hidden' ) {
-                next;
-            }
-            else {
-                $meta{ $property_def->{tab} || 'properties' }{$property}
-                    = $asset_properties->{$property};
-            }
+            $self->_filter_property(
+                $property,
+                $asset_properties->{$property},
+                ucfirst ( $property_def->{fieldType} || '' ),
+                $property_def->{tab},
+                \%text,
+                \%meta,
+            );
         }
     }
     return ( $asset_properties, \%meta, \%text );
+}
+
+sub _asset_properties_meta {
+    my $self = shift;
+    my ($class, $asset, $properties) = @_;
+
+    my %text;
+    my %meta;
+
+    my $asset_properties
+        = { $asset ? %{ $asset->get } : (), $properties ? %{$properties} : (),
+        };
+
+    for my $property ( $class->meta->get_all_property_list ) {
+        my $attr = $class->meta->find_attribute_by_name($property);
+        if (  !defined $asset_properties->{$property} ) {
+            $asset_properties->{$property} = $attr->default;
+        }
+        my $field_type = ucfirst $attr->fieldType;
+        $self->_filter_property(
+            $property,
+            $asset_properties->{$property},
+            ucfirst $attr->fieldType,
+            $attr->form->{tab},
+            \%text,
+            \%meta,
+        );
+    }
+    return ( $asset_properties, \%meta, \%text );
+}
+
+sub _filter_property {
+    my $self = shift;
+    my ( $property, $value, $field_type, $tab, $text, $meta ) = @_;
+    if (   $property eq 'title'
+        || $property eq 'menuTitle'
+        || $property eq 'url' )
+    {
+        return;
+    }
+    elsif ($field_type eq 'HTMLArea'
+        || $field_type eq 'Textarea'
+        || $field_type eq 'Codearea' )
+    {
+        $text->{$property} = $value;
+    }
+    elsif ( $field_type eq 'Hidden' ) {
+        return;
+    }
+    else {
+        $meta->{ $tab || 'properties' }{$property} = $value;
+    }
+    return;
 }
 
 my %basic_translation = (
