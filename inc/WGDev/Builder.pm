@@ -95,6 +95,8 @@ END_HEADER
     open my $fh, '-|', 'fatpack', 'file'
         or die "Can't run fatpack: $!";
     while ( my $line = <$fh> ) {
+        # hack so we can extract the list later
+        $line =~ s/\bmy %fatpacked\b/our %fatpacked/;
         print { $out_fh } $line;
     }
     close $fh;

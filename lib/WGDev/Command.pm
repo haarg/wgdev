@@ -323,7 +323,7 @@ sub command_list {
         File::Find::find( { no_chdir => 1, wanted => $find_callback },
             $command_root );
     }
-    for my $module ( grep {m{^$fn_prefix/}msx} keys %INC ) {
+    for my $module ( grep {m{^\Q$fn_prefix\E/}msx} ( keys %INC, keys %main::fatpacked ) ) {
         $lib_check{$module} = 1;
     }
     for my $module ( keys %lib_check ) {
