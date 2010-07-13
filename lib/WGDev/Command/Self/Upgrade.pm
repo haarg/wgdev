@@ -11,6 +11,7 @@ use WGDev::X;
 use WGDev::Command;
 use File::Temp ();
 
+sub needs_root { return }
 sub config_options { () }
 
 sub process {
