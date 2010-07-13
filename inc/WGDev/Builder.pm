@@ -82,7 +82,7 @@ sub ACTION_tidy {
 sub ACTION_distexec {
     my $self = shift;
 
-    my $dist_script = 'wgd-' . $self->dist_version;
+    my $dist_script = 'wgd';
     unlink $dist_script;
     open my $out_fh, '>', $dist_script;
 

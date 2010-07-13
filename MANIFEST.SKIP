@@ -54,6 +54,8 @@
 # Avoid archives of this distribution
 \bWGDev-v?[\d\.\_]+
 \bwgd-v?[\d\.\_]+
+\bwgd$
 
+# Don't include upgrade command in dist
 ^lib/WebGUI/Command/Self/Upgrade\.pm$
 
