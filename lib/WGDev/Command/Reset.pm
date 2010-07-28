@@ -231,6 +231,12 @@ sub clear_cache {
             $dsn->do('DELETE FROM cache');
         }
     }
+    elsif ( $cache_type && $cache_type eq 'WebGUI::Cache::CHI' ) {
+        if ( my $cache_dir = $wgd->config->get('cache/root_dir') ) {
+            require File::Path;
+            File::Path::rmtree( $cache_dir );
+        }
+    }
     else {
 
         # Can't clear a cache we don't know anything about

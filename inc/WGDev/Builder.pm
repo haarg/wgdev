@@ -82,7 +82,7 @@ sub ACTION_tidy {
 sub ACTION_distexec {
     my $self = shift;
 
-    my $dist_script = 'wgd-' . $self->dist_version;
+    my $dist_script = 'wgd';
     unlink $dist_script;
     open my $out_fh, '>', $dist_script;
 
@@ -95,6 +95,8 @@ END_HEADER
     open my $fh, '-|', 'fatpack', 'file'
         or die "Can't run fatpack: $!";
     while ( my $line = <$fh> ) {
+        # hack so we can extract the list later
+        $line =~ s/\bmy %fatpacked\b/our %fatpacked/;
         print { $out_fh } $line;
     }
     close $fh;

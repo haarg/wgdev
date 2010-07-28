@@ -11,6 +11,7 @@ use WGDev::X;
 use WGDev::Command;
 use File::Temp ();
 
+sub needs_root { return }
 sub config_options { () }
 
 sub process {
@@ -38,7 +39,7 @@ sub process {
         my ($script_version) = ($output =~ /(\d[\d.]+)/);
         $script_version;
     };
-    print "New version $new_version\n";
+    print "New version: $new_version\n";
     if ($our_version eq $new_version) {
         print "Already up to date.\n";
         return 1;
@@ -60,7 +61,7 @@ WGDev::Command::Self::Upgrade - Upgrade WGDev script
 
 =head1 SYNOPSIS
 
-    wgd upgrade
+    wgd self-upgrade
 
 =head1 DESCRIPTION
 
