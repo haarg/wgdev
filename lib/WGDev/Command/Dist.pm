@@ -171,6 +171,42 @@ sub install_language {
     );
     $self->copy_deeply( File::Spec->catdir( $lang_dir, $language ), File::Spec->catdir( $to_root, qw/lib WebGUI i18n/, $language ) );
 }
+<<<<<<< HEAD
+=======
+
+sub copy_deeply {
+    my $self     = shift;
+    my $from     = shift;
+    my $to       = shift;
+    my $copy_files_cb = sub {
+        no warnings 'once';
+        my $site_path = $File::Find::name;
+        my ( undef, undef, $filename ) = File::Spec->splitpath($site_path);
+        if ( $filename eq '.svn' || $filename eq 'temp' ) {
+            $File::Find::prune = 1;
+            return;
+        }
+        return
+            if -d $site_path;
+        my $rel_path = File::Spec->abs2rel( $site_path, $from );
+        my $wg_path  = File::Spec->rel2abs( $rel_path,  $to );
+
+        # stat[7] is file size
+        ##no critic (ProhibitMagicNumbers)
+        return
+            if -e $wg_path && ( stat _ )[7] == ( stat $site_path )[7];
+        my $wg_dir = File::Spec->catpath(
+            ( File::Spec->splitpath($wg_path) )[ 0, 1 ] );
+        File::Path::mkpath($wg_dir);
+        File::Copy::copy( $site_path, $wg_path );
+    };
+    File::Find::find( { no_chdir => 1, wanted => $copy_files_cb }, $from );
+}
+
+1;
+
+__DATA__
+>>>>>>> fa459b3... Have Dist import languages into the core distribution.
 
 sub copy_deeply {
     my $self     = shift;
@@ -235,6 +271,14 @@ is specified, it will create a temp file.
 Source directory for languages.  Defaults to the location of the master WebGUI translation server.
 
 =item C<-lang>
+<<<<<<< HEAD
+=======
+
+A language to install into the build directory.  Multiple languages can be chosen by using the
+option several times.  Defaults to --lang=Dutch --lang=German --lang=Spanish.
+
+=back
+>>>>>>> fa459b3... Have Dist import languages into the core distribution.
 
 A language to install into the build directory.  Multiple languages can be chosen by using the
 option several times.  Defaults to --lang=Dutch --lang=German --lang=Spanish.
