@@ -3,8 +3,6 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.2.0';
-
 use WGDev::Command::Base::Verbosity;
 BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
 

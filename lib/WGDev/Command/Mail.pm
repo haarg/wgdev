@@ -4,8 +4,6 @@ use warnings;
 use 5.008008;
 use Carp;
 
-our $VERSION = '0.2.0';
-
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 

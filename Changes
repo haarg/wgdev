@@ -1,5 +1,7 @@
 Change log for WGDev
 
+{{$NEXT}}
+
 0.8.0 - Sep 01 2010
  - self-upgrade no longer needs a WebGUI root
  - Fix edit command for WebGUI 8

@@ -3,8 +3,6 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.8.0';
-
 use Getopt::Long ();
 use File::Spec   ();
 use Cwd          ();

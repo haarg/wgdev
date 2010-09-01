@@ -3,8 +3,6 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.1.0';
-
 use File::Spec;
 use WGDev::X ();
 

@@ -1,9 +1,8 @@
 package WGDev;
+# ABSTRACT: WebGUI Developer Utilities
 use strict;
 use warnings;
 use 5.008008;
-
-our $VERSION = '0.8.0';
 
 use File::Spec ();
 use Cwd        ();

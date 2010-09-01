@@ -3,8 +3,6 @@ use strict;
 use warnings;
 use 5.008008;
 
-our $VERSION = '0.0.1';
-
 use constant OPTION_INDENT      => 4;
 use constant OPTION_TEXT_INDENT => 24;
 
