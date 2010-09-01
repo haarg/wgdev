@@ -97,7 +97,7 @@ $wgda = Test::MockObject::Extends->new($wgda);
     };
     is $wgda->by_id('asset-id'), 'magic',
         'by_id method returns WebGUI::Asset->new';
-    is_deeply \@params, [ 'WebGUI::Asset', $session, 'asset-id' ],
+    is_deeply [@params[0..2]], [ 'WebGUI::Asset', $session, 'asset-id' ],
         '... passing in session and asset ID';
 }
 
