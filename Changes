@@ -1,5 +1,14 @@
 Change log for WGDev
 
+0.8.0 - Sep 01 2010
+ - self-upgrade no longer needs a WebGUI root
+ - Fix edit command for WebGUI 8
+ - Fix placement of packages when using -u flag in WebGUI 8
+ - Fix command list for single file dist
+ - Return an error code from ls if asset not found
+ - Fix purging old revisions in WebGUI 8
+ - Show better error messages when edit command fails
+
 0.7.0 - Jul 12 2010
  - Fixed for-each command
  - Fixed documentation for Util command
