@@ -515,14 +515,10 @@ END_SQL
         if ( !defined $current_revision || $current_revision == $revision ) {
             next;
         }
-        my $asset;
-        if ( $wgd->version->module =~ /^8\./ ) {
-            $asset = WebGUI::Asset->newById( $wgd->session, $id, $revision );
-        }
-        else {
-            $asset = WebGUI::Asset->new( $wgd->session, $id, $class, $revision );
-        }
-        next unless $asset;
+        my $asset = eval { $wgd->asset->by_id($id, $revision) };
+        next
+            unless $asset;
+
         if ( $asset->getRevisionCount('approved') > 1 ) {
             $self->report( 2, sprintf "\tPurging %-35s %s '%s'\n",
                 $asset->getName, $revision, $asset->get('title') );
