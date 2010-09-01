@@ -208,7 +208,9 @@ sub WGDev::X::IO::full_message {
 sub WGDev::X::AssetNotFound::full_message {
     my $self = shift;
     my $message = $self->SUPER::full_message;
-    $message .= ' - ' . $self->asset;
+    if ( $self->asset ) {
+        $message .= ' - ' . $self->asset;
+    }
     return $message;
 }
 
