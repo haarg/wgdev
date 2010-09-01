@@ -9,6 +9,7 @@ use constant LINE_LENGTH => 78;
 
 use WGDev;
 use WGDev::X;
+use Try::Tiny;
 
 sub new {
     my $class   = shift;
@@ -37,31 +38,55 @@ sub home {
 
 sub by_url {
     my $self = shift;
-    return WebGUI::Asset->newByUrl( $self->{session}, @_ );
+    my $asset = WebGUI::Asset->newByUrl( $self->{session}, @_ );
+    if (! defined $asset) {
+        WGDev::X::AssetNotFound->throw(asset => $_[0]);
+    }
+    return $asset;
 }
 
 sub by_id {
     my $self = shift;
+    my ($asset_id, $revision) = @_;
+    my $asset;
     if (WebGUI::Asset->can('newById')) {
-        return WebGUI::Asset->newById( $self->{session}, @_ );
+        $asset = WebGUI::Asset->newById( $self->{session}, $asset_id, $revision );
     }
     else {
-        return WebGUI::Asset->new( $self->{session}, @_ );
+        $asset = WebGUI::Asset->new( $self->{session}, $asset_id, undef, $revision );
     }
+    if (! defined $asset) {
+        WGDev::X::AssetNotFound->throw(asset => $_[0]);
+    }
+    return $asset;
 }
 
 sub find {
     my ( $self, $asset_spec ) = @_;
     my $session = $self->{session};
     my $asset;
+    my $e;
     if ( $session->id->valid($asset_spec) ) {
-        $asset = $self->by_id($asset_spec);
+        try {
+            $asset = $self->by_id($asset_spec);
+        }
+        catch {
+            $e = $_;
+        };
     }
     if ( !$asset ) {
-        $asset = WebGUI::Asset->newByUrl( $session, $asset_spec );
+        try {
+            $asset = WebGUI::Asset->newByUrl( $session, $asset_spec );
+        }
+        catch {
+            $e ||= $_;
+        };
     }
     if ( $asset && ref $asset && $asset->isa('WebGUI::Asset') ) {
         return $asset;
+    }
+    if ($e) {
+        WGDev::X->inflate($e);
     }
     WGDev::X::AssetNotFound->throw( asset => $asset_spec );
 }
