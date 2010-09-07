@@ -67,6 +67,19 @@ use Exception::Class (
         description => 'Bad asset class specified',
         fields      => ['class']
     },
+    'WGDev::X::Module' => {
+        isa         => 'WGDev::X',
+        description => 'Error loading module',
+        fields      => ['module', 'using_module']
+    },
+    'WGDev::X::Module::Find' => {
+        isa         => 'WGDev::X::Module',
+        description => q{Can't find module},
+    },
+    'WGDev::X::Module::Parse' => {
+        isa         => 'WGDev::X::Module',
+        description => q{Error compiling module},
+    },
 );
 
 BEGIN {
@@ -92,11 +105,42 @@ BEGIN {
 
 ##no critic (ProhibitQualifiedSubDeclarations)
 
+sub _format_file_as_module {
+    my $file = shift;
+    if ($file =~ s/\.pm$//msx) {
+        $file =~ s{/}{::}msxg;
+    }
+    return $file;
+}
+
 sub WGDev::X::inflate {
     my $class = shift;
-    my $proto = shift;
     if (@_ == 1 && ref $_[0] && $_[0]->can('throw')) {
         $_[0]->throw;
+    }
+    if (@_ == 1 && !ref $_[0]) {
+        my $e = shift;
+        if ($e =~ m{
+            \ACan't[ ]locate[ ](.*?)[ ]in[ ]\@INC[ ]
+            .*[ ]at[ ](.*?)[ ]line[ ]\d+\.
+        }msx) {
+            my $module = $1;
+            my $using_module = $2;
+            $module = _format_file_as_module($module);
+            $using_module = _format_file_as_module($using_module);
+            WGDev::X::Module::Find->throw(message => $e, module => $module, using_module => $using_module);
+        }
+        elsif ( $e =~ s{
+            (at[ ](.*?)\.pm[ ]line[ ]\d+\.)
+            \s+Compilation[ ]failed[ ]in[ ]require[ ]at[ ]
+            (.*?)[ ]line[ ]\d+\..*?\z
+        }{$1}msx ) {
+            my $module = $2;
+            my $using_module = $3;
+            $module = _format_file_as_module($module);
+            $using_module = _format_file_as_module($using_module);
+            WGDev::X::Module::Parse->throw(message => $e, module => $module, using_module => $using_module);
+        }
     }
     $class->throw(@_);
 }
@@ -111,11 +155,11 @@ sub WGDev::X::CommandLine::full_message {
     my $message = $self->message;
     if ( defined $self->usage ) {
         if ($message) {
-            $message =~ s/\n+\z/\n\n/msx;
+            $message =~ s/[\n\r]*\z/\n\n/msx;
         }
         $message .= $self->usage;
     }
-    $message =~ s/\n+\z/\n\n/msx;
+    $message =~ s/[\n\r]*\z/\n\n/msx;
     return $message;
 }
 
@@ -128,7 +172,7 @@ sub WGDev::X::CommandLine::BadCommand::full_message {
     if ( defined $self->usage ) {
         $message .= "\n" . $self->usage;
     }
-    $message =~ s/\n+\z/\n\n/msx;
+    $message =~ s/[\n\r]*\z/\n\n/msx;
     $message
         .= "Try the running 'wgd commands' for a list of available commands.\n\n";
     return $message;
@@ -158,6 +202,31 @@ sub WGDev::X::IO::full_message {
         $message .= ' Path: ' . $self->path;
     }
     $message .= ' - ' . $self->errno_string;
+    return $message;
+}
+
+sub WGDev::X::AssetNotFound::full_message {
+    my $self = shift;
+    my $message = $self->SUPER::full_message;
+    if ( $self->asset ) {
+        $message .= ' - ' . $self->asset;
+    }
+    return $message;
+}
+
+sub WGDev::X::Module::full_message {
+    my $self = shift;
+    my $message = $self->description . q{ } . $self->module
+        . q{ for } . $self->using_module . ":\n" . $self->SUPER::message;
+    $message =~ s/[\n\r]*\z/\n\n/msx;
+    return $message;
+}
+
+sub WGDev::X::Module::Find::full_message {
+    my $self = shift;
+    my $message = $self->description . q{ } . $self->module
+        . q{ for } . $self->using_module;
+    $message =~ s/[\n\r]*\z/\n\n/msx;
     return $message;
 }
 

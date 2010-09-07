@@ -33,6 +33,7 @@ my $build = WGDev::Builder->new(
         'Text::ParseWords' => 0,
         'version'          => 0,
         'Exception::Class' => 0,
+        'Try::Tiny'        => 0,
     },
 
     build_requires => {

@@ -101,7 +101,7 @@ sub export_asset_data {
     for my $asset_spec ( $self->arguments ) {
         my $file_data = eval { $self->write_temp($asset_spec) };
         if ( !$file_data ) {
-            warn "$asset_spec is not a valid asset!\n";
+            warn $@;
             next;
         }
         push @files, $file_data;

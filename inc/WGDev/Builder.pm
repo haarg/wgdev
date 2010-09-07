@@ -10,6 +10,8 @@ BEGIN { our @ISA = qw(Module::Build) }
 
 use File::Spec ();
 use File::Temp ();
+use File::Path ();
+use File::Find ();
 ##no critic (ProhibitMagicNumbers Capitalization)
 
 sub new {
@@ -82,6 +84,8 @@ sub ACTION_tidy {
 sub ACTION_distexec {
     my $self = shift;
 
+    $self->regenerate_fatlib;
+
     my $dist_script = 'wgd';
     unlink $dist_script;
     open my $out_fh, '>', $dist_script;
@@ -91,7 +95,6 @@ sub ACTION_distexec {
 
 END_HEADER
 
-    mkdir 'fatlib';
     open my $fh, '-|', 'fatpack', 'file'
         or die "Can't run fatpack: $!";
     while ( my $line = <$fh> ) {
@@ -100,7 +103,6 @@ END_HEADER
         print { $out_fh } $line;
     }
     close $fh;
-    rmdir 'fatlib';
     open $fh, '<', 'bin/wgd';
     while ( my $line = <$fh> ) {
         print { $out_fh } $line;
@@ -108,6 +110,123 @@ END_HEADER
     close $fh;
     close $out_fh;
     chmod oct(755), $dist_script;
+    File::Path::remove_tree('fatlib');
+}
+
+my %wg_deps = map { $_ => 1 } qw(
+    Apache2::Request
+    Archive::Tar
+    Archive::Zip
+    Class::InsideOut
+    Color::Calc
+    Compress::Zlib
+    Config::JSON
+    DBD::mysql
+    DBI
+    Data::Structure::Util
+    DateTime
+    DateTime::Format::Mail
+    DateTime::Format::Strptime
+    Digest::MD5
+    Finance::Quote
+    HTML::Highlight
+    HTML::Parser
+    HTML::TagCloud
+    HTML::TagFilter
+    HTML::Template
+    HTML::Template::Expr
+    HTTP::Headers
+    HTTP::Request
+    IO::Zlib
+    Image::Magick
+    JSON
+    LWP
+    List::Util
+    Locale::US
+    Log::Log4perl
+    MIME::Tools
+    Net::LDAP
+    Net::POP3
+    Net::SMTP
+    Net::Subnets
+    POE
+    POE::Component::Client::HTTP
+    POE::Component::IKC::Server
+    POSIX
+    Parse::PlainConfig
+    Pod::Coverage
+    SOAP::Lite
+    Test::Deep
+    Test::MockObject
+    Test::More
+    Text::Aspell
+    Text::Balanced
+    Text::CSV_XS
+    Tie::CPHash
+    Tie::IxHash
+    Time::HiRes
+    URI::Escape
+    Weather::Com::Finder
+    XML::RSSLite
+    XML::Simple
+);
+
+sub regenerate_fatlib {
+    my $self = shift;
+
+    File::Path::remove_tree('fatlib');
+    my $temp_script = File::Temp->new(UNLINK => 0);
+    my %deps = %{ $self->requires };
+    for my $module ( keys %deps ) {
+        if ($module eq 'perl') {
+            print {$temp_script} "use $deps{$module};\n";
+        }
+        elsif ( $wg_deps{$module} ) {
+        }
+        else {
+            print {$temp_script} "use $module ();\n";
+        }
+    }
+    $temp_script->flush;
+    my (undef, $trace_file) = do { local $^W; File::Temp::tempfile(OPEN => 0) };
+    open my $oldout, '>&', \*STDOUT;
+    open my $olderr, '>&', \*STDERR;
+    open STDOUT, '>', File::Spec->devnull;
+    open STDERR, '>', File::Spec->devnull;
+    system 'fatpack', 'trace', '--to=' . $trace_file, $temp_script;
+    open STDOUT, '>&=', $oldout;
+    open STDERR, '>&=', $olderr;
+    open my $trace_fh, '<', $trace_file;
+    my @modules = <$trace_fh>;
+    close $trace_fh;
+    unlink $trace_file;
+    chomp @modules;
+    @modules = grep { /\.pm$/ } @modules;
+    open my $pack_fh, '-|', 'fatpack', 'packlists-for', @modules;
+    my @packlists = <$pack_fh>;
+    chomp @packlists;
+    system 'fatpack', 'tree', @packlists;
+    require Config;
+    File::Path::remove_tree(File::Spec->catdir('fatlib', $Config::Config{archname}));
+    File::Find::find({
+        no_chdir => 1,
+        wanted => sub {
+            if ( -f ) {
+                if ( /\.pm$/ ) {
+                    open my $fh, '+<', $_;
+                    seek $fh, -1, 2;
+                    read $fh, my $last_char, 1;
+                    if ($last_char !~ /\n/) {
+                        print {$fh} "\n";
+                    }
+                    close $fh;
+                }
+                else {
+                    unlink $_;
+                }
+            }
+        },
+    }, 'fatlib');
 }
 
 1;

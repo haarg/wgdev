@@ -67,11 +67,13 @@ sub process {
     my $limit                = $self->option('limit');
     my $isa                  = $self->option('isa');
 
+    my $error;
     PARENT:
     while ( my $parent = shift @parents ) {
         my $asset;
         if ( !eval { $asset = $wgd->asset->find($parent) } ) {
             warn "wgd ls: $parent: No such asset\n";
+            $error++;
             next;
         }
         if ($show_header) {
@@ -106,7 +108,7 @@ sub process {
             print "\n";
         }
     }
-    return 1;
+    return (! $error);
 }
 
 sub pass_filter {
