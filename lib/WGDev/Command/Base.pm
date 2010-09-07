@@ -1,4 +1,5 @@
 package WGDev::Command::Base;
+# ABSTRACT: Super-class for implementing WGDev commands
 use strict;
 use warnings;
 use 5.008008;
@@ -155,12 +156,6 @@ sub needs_config {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command::Base - Super-class for implementing WGDev commands
-
 =head1 SYNOPSIS
 
     package WGDev::Command::Mine;
@@ -182,31 +177,29 @@ Pod::Usage.
 While using WGDev::Command::Base is not required to write a command module,
 it is the recommended way to do so.
 
-=head1 METHODS
-
-=head2 C<is_runnable>
+=method C<is_runnable>
 
 This is a class method that must be implemented and return true for all
 command modules.  This method will return true for any subclass that
 implements the C<process> method.
 
-=head2 C<new ( $wgd )>
+=method C<new ( $wgd )>
 
 Instantiate a new command object.  Requires a L<WGDev> object as the first
 parameter.
 
-=head2 C<wgd>
+=method C<wgd>
 
 Returns the L<WGDev> object used to instantiate the object.
 
-=head2 C<config_parse_options>
+=method C<config_parse_options>
 
 Returns an array of parameters used to configure command line parsing.  These
 options are passed directly to L<Getopt::Long>.  See
 L<Getopt::Long/Configuring_Getopt::Long> for details on the available options.
 By default, returns C<gnu_getopt> and can be overridden to return others.
 
-=head2 C<config_options>
+=method C<config_options>
 
 Returns an array of command line options to be parsed.  Should be overridden
 to set which options will be parsed.  Should be specified in the syntax
@@ -215,56 +208,56 @@ group of word characters in the option definition.  Alternately, if a method
 with the name C<< option_<name> >> exists, it will be called to set the
 option instead.
 
-=head2 C<option ( $option [, $value] )>
+=method C<option ( $option [, $value] )>
 
 Sets or returns a command line option.  Accepts the option name as the first
 parameter.  If specified, the option will be set the the value of the second
 parameter.
 
-=head2 C<argument ( $argument )>
+=method C<argument ( $argument )>
 
 Adds an argument to the argument list.  Any parameters specified will be added
 to the argument list.  Can be overridden to provide alternate behavior.
 
-=head2 C<arguments ( [ \@arguments ] )>
+=method C<arguments ( [ \@arguments ] )>
 
 Sets or returns the arguments list.  If specified, the first parameter
 must be an array reference whose values will be set as the arguments list.
 
-=head2 C<parse_params ( @parameters )>
+=method C<parse_params ( @parameters )>
 
 Sets options based on an array of command line parameters.
 
-=head2 C<parse_params_string ( $parameters )>
+=method C<parse_params_string ( $parameters )>
 
 Sets options based on a string of command line parameters.  The string will be
 processed with L<Text::ParseWords> C<shellwords> sub then passed on to
 C<parse_params>.
 
-=head2 C<set_option_default ( $option, $value )>
+=method C<set_option_default ( $option, $value )>
 
 Sets an option only if it is not currently defined.  First parameter is the
 option to set, second parameter is the value to set it to.
 
-=head2 C<needs_root>
+=method C<needs_root>
 
 Should be overridden in subclasses to set whether a command needs a WebGUI root directory to run.  Returns true if not overridden.
 
-=head2 C<needs_config>
+=method C<needs_config>
 
 Should be overridden in subclasses to set whether a command needs a WebGUI config file directory to run.  Returns the same value as L</needs_root> if not overridden.
 
-=head2 C<usage ( [ $verbosity ] )>
+=method C<usage ( [ $verbosity ] )>
 
 Returns the usage information for the command.  The optional first parameter
 is the verbosity to use.
 
-=head2 C<help>
+=method C<help>
 
 Display help information for this command using L<perldoc>.  Excludes AUTHOR
 and LICENSE sections.
 
-=head2 C<run ( @arguments )>
+=method C<run ( @arguments )>
 
 Runs the command.  Parameters should be the command line parameters
 to use for running the command.  This sub should return a true value
@@ -274,23 +267,11 @@ parameters, call C<usage> if there was a problem with parsing the
 parameters, or call C<process> if there was not.  It will return
 C<process>'s return value to the caller.
 
-=head2 C<process>
+=method C<process>
 
 Needs to be subclasses to provide the main functionality of the command.  This
 method will be called as part of the run method.  Should return a true value
 on success.
-
-=head1 AUTHOR
-
-Graham Knop <haarg@haarg.org>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =cut
 

@@ -1,4 +1,5 @@
 package WGDev::Command::Dist;
+# ABSTRACT: Create a distribution file for WebGUI
 use strict;
 use warnings;
 use 5.008008;
@@ -141,12 +142,6 @@ sub generate_docs {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command::Dist - Create a distribution file for WebGUI
-
 =head1 SYNOPSIS
 
     wgd dist [-c] [-d] [-b /data/builds]
@@ -176,29 +171,15 @@ is specified, it will create a temp file.
 
 =back
 
-=head1 METHODS
-
-=head2 C<export_files ( $directory )>
+=method C<export_files ( $directory )>
 
 Exports the WebGUI root directory, excluding common site specific files, to
 the specified directory.
 
-=head2 C<generate_docs ( $directory )>
+=method C<generate_docs ( $directory )>
 
 Generate API documentation for WebGUI using Pod::Html in the specified
 directory.
-
-=head1 AUTHOR
-
-Graham Knop <haarg@haarg.org>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =cut
 

@@ -1,4 +1,5 @@
 package WGDev::Command::Version;
+# ABSTRACT: Reports and updates version numbers
 use strict;
 use warnings;
 use 5.008008;
@@ -170,13 +171,6 @@ sub _colored {
 
 1;
 
-__DATA__
-
-
-=head1 NAME
-
-WGDev::Command::Version - Reports and updates version numbers
-
 =head1 SYNOPSIS
 
     wgd version [-b | -c | -d] [<version>]
@@ -213,26 +207,12 @@ The version number to compare against or create
 
 =back
 
-=head1 METHODS
-
-=head2 C<update_version ( $new_version )>
+=method C<update_version ( $new_version )>
 
 Updates WebGUI's version number to the specified version.  If not provided,
 the patch level of the version number is incremented.  The version number in
 F<WebGUI.pm> is changed, a new upgrade script is created, and a heading is
 added to the change log.
-
-=head1 AUTHOR
-
-Graham Knop <haarg@haarg.org>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =cut
 

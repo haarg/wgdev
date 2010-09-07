@@ -1,4 +1,5 @@
 package WGDev::Command::Import;
+# ABSTRACT: Import assets from files
 use strict;
 use warnings;
 use 5.008008;
@@ -57,12 +58,6 @@ sub process {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command::Import - Import assets from files
-
 =head1 SYNOPSIS
 
     wgd import <asset file> [<asset file> ...]
@@ -80,18 +75,6 @@ Imports asset from files.
 File to import.
 
 =back
-
-=head1 AUTHOR
-
-Graham Knop <haarg@haarg.org>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =cut
 

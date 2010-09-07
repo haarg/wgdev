@@ -6,6 +6,7 @@ with 'Dist::Zilla::Role::FileMunger';
 use Path::Class::Dir ();
 use Path::Class::File ();
 use File::Temp ();
+use File::Copy qw(copy);
 use File::Copy::Recursive qw(dircopy);
 use File::Spec::Functions qw(catdir);
 use Cwd qw(cwd);
@@ -13,9 +14,25 @@ use Cwd qw(cwd);
 sub munge_file {
     my $self = shift;
     my $file = shift;
-    if ( $file->content !~ /\n$/ ) {
-        $file->content($file->content . "\n");
+    # can't be modified
+    if ($file->isa('Dist::Zilla::File::FromCode')) {
+        return;
     }
+    my $content = $file->content;
+    # make sure there is a newline at the end so fatpacker works
+    if ( $content !~ /\n$/ ) {
+        $content .= "\n";
+    }
+    # horrible hack to work with other horrible hacks.  with fatpacker
+    # we can't get access to the actual files, so we need to use
+    # __DATA__ sections.  PodWeaver refuses to modify __DATA__ sections,
+    # but will place the POD into a __END__ section instead.  We convert this
+    # to __DATA__ so we can use it elsewhere.  If it didn't add an __END__
+    # block, add __DATA__ before the =pod header.
+    if (! ( $content =~ s/^__END__$/__DATA__/msx ) ) {
+        $content =~ s/(^=pod$)/__DATA__\n\n$1/msx;
+    }
+    $file->content($content);
 }
 
 sub before_archive {
@@ -180,6 +197,7 @@ sub regenerate_fatlib {
 }
 
 __PACKAGE__->meta->make_immutable;
+
 package inc::Dist::Zilla::Plugin::WGDev;
 use Moose;
 extends 'Dist::Zilla::Plugin::WGDev';

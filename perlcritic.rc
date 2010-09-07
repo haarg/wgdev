@@ -23,10 +23,10 @@ theme       = core || strictersubs || pulp || more
 [-Subroutines::RequireFinalReturn]
 
 [CodeLayout::RequireTidyCode]
-perltidyrc = .perltidyrc
+perltidyrc = perltidy.rc
 
 [Documentation::PodSpelling]
-stop_words_file = .stop_words.txt
+stop_words_file = stop_words.txt
 
 [Documentation::RequirePodSections]
 lib_sections = NAME | SYNOPSIS | DESCRIPTION | AUTHOR | LICENSE

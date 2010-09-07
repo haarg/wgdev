@@ -1,4 +1,5 @@
 package WGDev::Command::Setting;
+# ABSTRACT: Returns WebGUI settings from the database.
 use strict;
 use warnings;
 use 5.008008;
@@ -45,12 +46,6 @@ sub process {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command::Setting - Returns WebGUI settings from the database.
-
 =head1 SYNOPSIS
 
     wgd setting <setting>[=<value>] [<setting> ...]
@@ -76,22 +71,6 @@ The value to set the setting to.  If specified, the old value and
 new value will be included in the output.
 
 =back
-
-=head1 METHODS
-
-No methods
-
-=head1 AUTHOR
-
-Colin Kuskie <colink@perldreamer.com>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =cut
 

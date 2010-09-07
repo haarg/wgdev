@@ -1,33 +1,3 @@
-# Avoid version control files.
-\bRCS\b
-\bCVS\b
-\bSCCS\b
-,v$
-\B\.svn\b
-\B\.git\b
-\B\.cvsignore\b
-\B\.gitignore\b
-\b_darcs\b
-
-# Avoid Makemaker generated and utility files.
-^MYMETA\.yml$
-^MANIFEST\.SKIP$
-^MANIFEST\.bak$
-^Makefile$
-^blib/
-^MakeMaker-\d
-^pm_to_blib\.ts$
-^pm_to_blib$
-^blibdirs\.ts$
-
-# Avoid Module::Build generated and utility files.
-^Build$
-^Build\.bat$
-^_build
-^Build\.COM$
-^BUILD\.COM$
-^build\.com$
-
 # Avoid temp and backup files.
 ~$
 \#$
@@ -45,17 +15,9 @@
 \bnytprof\.out
 \bnytprof\b
 
-# Avoid OS-specific files/dirs
-#   Mac OSX metadata
-\B\.DS_Store
-#   Mac OSX SMB mount metadata files
-\B\._
+^dist\.ini$
+^weaver\.ini$
+^inc/
 
-# Avoid archives of this distribution
-\bWGDev-v?[\d\.\_]+
-\bwgd-v?[\d\.\_]+
 ^wgd$
-
-# Don't include upgrade command in dist
-^lib/WebGUI/Command/Self/Upgrade\.pm$
 

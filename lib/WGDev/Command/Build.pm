@@ -1,4 +1,5 @@
 package WGDev::Command::Build;
+# ABSTRACT: Builds an SQL script and uploads for site creation
 use strict;
 use warnings;
 use 5.008008;
@@ -249,12 +250,6 @@ sub update_local_uploads {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command::Build - Builds an SQL script and uploads for site creation
-
 =head1 SYNOPSIS
 
     wgd build [-s] [-u]
@@ -279,29 +274,15 @@ Make uploads based on current site's uploads
 
 =back
 
-=head1 METHODS
-
-=head2 C<create_db_script>
+=method C<create_db_script>
 
 Builds the F<create.sql> database script.  This is done as a dump of the current
 database structure and data, excluding the data from some tables.
 
-=head2 C<update_local_uploads>
+=method C<update_local_uploads>
 
 Updates the working directory's uploads from the current site.  Files will be
 deleted or created so the two match.
-
-=head1 AUTHOR
-
-Graham Knop <haarg@haarg.org>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =cut
 

@@ -1,4 +1,5 @@
 package WGDev::Command::User;
+# ABSTRACT: Utilities for manipulating WebGUI Users
 use strict;
 use warnings;
 use 5.008008;
@@ -87,12 +88,6 @@ sub find_by_dictionary {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command::User - Utilities for manipulating WebGUI Users
-
 =head1 SYNOPSIS
 
     wgd user [--findByPassword <password>] [--findByDictionary <dictionary>]
@@ -119,31 +114,18 @@ file in C</usr/share/dict/> or C</var/lib/dict/>
 
 =back
 
-=head1 METHODS
-
-=head2 find_by_password
+=method find_by_password
 
 Hashes the given password and sees if any user IDs in the C<authentication> table
 match. This check will become less efficient once WebGUI implements password salting.
 
-=head2 find_by_dictionary
+=method find_by_dictionary
 
 Search through the given dictionary file, hashing words one by one and
 checking them against all known hashed passwords.
 
 Does not try to be efficient or clever - for common dictionary files it's
 plenty fast enough.
-
-=head1 AUTHOR
-
-Patrick Donelan <pat@patspam.com>
-
-=head1 LICENSE
-
-Copyright (c) Patrick Donelan.  All rights reserved.
-
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
 
 =cut
 

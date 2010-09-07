@@ -1,4 +1,5 @@
 package WGDev::Command::Help;
+# ABSTRACT: Displays perldoc help for WGDev command
 use strict;
 use warnings;
 use 5.008008;
@@ -57,12 +58,6 @@ sub process {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command::Help - Displays C<perldoc> help for WGDev command
-
 =head1 SYNOPSIS
 
     wgd help <command>
@@ -86,21 +81,6 @@ Except that the help message is displayed via Pod::Perldoc
 The sub-command to display help information about.
 
 =back
-
-=head1 METHODS
-
-None.
-
-=head1 AUTHOR
-
-Patrick Donelan <pat@patspam.com>
-
-=head1 LICENSE
-
-Copyright (c) Patrick Donelan.  All rights reserved.
-
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
 
 =cut
 

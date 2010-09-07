@@ -1,4 +1,5 @@
 package WGDev::Help;
+# ABSTRACT: Generate help text for WGDev
 use strict;
 use warnings;
 use 5.008008;
@@ -27,14 +28,17 @@ sub package_perldoc {
     File::Temp->VERSION(0.19);
     require File::Path;
     my $pod = package_pod( $package, $sections );
-    my $tmpdir = File::Temp::tempdir( TMPDIR => 1, CLEANUP => 1 );
+
+    # Make a path that plays nice with Perldoc internals.  Will format nicer.
+    my $tmpdir = File::Temp->newdir( TMPDIR => 1 );
 
     # perldoc may try to drop privs and the dir will be
     # readable by current user only
-    chmod oct(755), $tmpdir;
+    chmod oct(744), $tmpdir->dirname;
+
     my @path_parts = split /::/msx, $package;
     my $filename   = pop @path_parts;
-    my $path       = File::Spec->catdir( $tmpdir, 'perl', @path_parts );
+    my $path       = File::Spec->catdir( $tmpdir->dirname, 'perl', @path_parts );
     File::Path::mkpath($path);
     my $out_file = File::Spec->catfile( $path, $filename );
     open my $out, '>', $out_file
@@ -42,9 +46,21 @@ sub package_perldoc {
     print {$out} $pod;
     close $out or return q{};
 
+    my @extra_args;
+    if ($^O eq 'darwin') {
+        if (`stty -a` =~ /(\d+) columns;/) {
+            my $cols = $1;
+            my $c = $cols * 39 / 40;
+            $cols = $c > $cols - 2 ? $c : $cols -2;
+            if ( $cols > 80 ) {
+                push @extra_args, '-n', 'nroff -rLL=' . (int $c) . 'n';
+            }
+        }
+    }
+
     my $pid = fork;
     if ( !$pid ) {
-        local @ARGV = ( '-w', 'section:3', '-F', $out_file );
+        local @ARGV = ( @extra_args, '-w', 'section:3', '-F', $out_file );
         exit Pod::Perldoc->run;
     }
     waitpid $pid, 0;
@@ -99,12 +115,6 @@ sub package_pod {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Help - Generate help text for WGDev
-
 =head1 SYNOPSIS
 
     use WGDev::Help;
@@ -116,41 +126,28 @@ WGDev::Help - Generate help text for WGDev
 Reads help information from modules but filters to only pick relevant
 sections when multiple POD documents exist in a single file.
 
-=head1 SUBROUTINES
-
-=head2 C<package_usage ( $package [, $verbosity] )>
+=func C<package_usage ( $package [, $verbosity] )>
 
 Returns usage information for a package, using L<Pod::Usage>.  Can be used on
 packages that have been combined into a single file.
 
-=head2 C<package_perldoc ( $package [, $sections] )>
+=func C<package_perldoc ( $package [, $sections] )>
 
 Displays documentation for a package using L<Pod::Perldoc>.  Can be used on
 packages that have been combined into a single file.
 
-=head3 C<$sections>
-
+=for :list
+= C<$sections>
 Passed on to L</package_pod> to limit the sections output.
 
-=head2 C<package_pod ( $package [, $sections] )>
+=func C<package_pod ( $package [, $sections] )>
 
 Filters out the POD for a specific package from the module file for the package.
 
-=head3 C<$sections>
+=for :list
+= C<$sections>
 
 Limits sections to include based on L<Pod::Select/SECTION SPECIFICATIONS|Pod::Select's rules>.
 Can be either a scalar value or an array reference.
-
-=head1 AUTHOR
-
-Graham Knop <haarg@haarg.org>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =cut

@@ -1,4 +1,5 @@
 package WGDev::Database;
+# ABSTRACT: Database connectivity and DSN parsing for WGDev
 use strict;
 use warnings;
 use 5.008008;
@@ -119,12 +120,6 @@ sub dump {    ## no critic (ProhibitBuiltinHomonyms)
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Database - Database connectivity and DSN parsing for WGDev
-
 =head1 SYNOPSIS
 
     my $dsn = $wgd->database->connect;
@@ -136,107 +131,93 @@ Has methods to access various parts of the DSN that can be used for other
 programs such as command line C<mysql>.  Also has methods to easily connect
 and reuse a database connection.
 
-=head1 METHODS
-
-=head2 C<new ( $wgd )>
+=method C<new ( $wgd )>
 
 Creates a new WGDev::Database object.
 
-=head3 C<$wgd>
-
+=for :list
+= C<$wgd>
 An instantiated WGDev object.
 
-=head2 C<dsn>
+=method C<dsn>
 
 Returns the DSN for the database.
 
-=head2 C<database>
+=method C<database>
 
 Returns the name of the database.
 
-=head2 C<name>
+=method C<name>
 
 Alias for the L</database> method.
 
-=head2 C<hostname>
+=method C<hostname>
 
 Returns the host name for the database connection.
 
-=head2 C<host>
+=method C<host>
 
 Alias for the L</hostname> method.
 
-=head2 C<password>
+=method C<password>
 
 Returns the password for the database connection.
 
-=head2 C<pass>
+=method C<pass>
 
 Alias for the L</password> method.
 
-=head2 C<port>
+=method C<port>
 
 Returns the port for the database connection.
 
-=head2 C<username>
+=method C<username>
 
 Returns the user name for the database connection.
 
-=head2 C<user>
+=method C<user>
 
 Alias for the L</username> method.
 
-=head2 C<command_line>
+=method C<command_line>
 
 Returns command line options suitable for passing to the F<mysql>
 or F<mysqldump> command line programs to connect to the database.
 
-=head2 C<connect>
+=method C<connect>
 
 Connects to the database if it hasn't been connected to yet and
 returns the database handle for the connection.
 
-=head2 C<open>
+=method C<open>
 
 Alias for the L</connect> method.
 
-=head2 C<dbh>
+=method C<dbh>
 
 Returns the database handle of the current connection, or C<undef> if
 there is no active connection.
 
-=head2 C<disconnect>
+=method C<disconnect>
 
 Closes the active database connection.  If there is no active
 connection, does nothing.
 
-=head2 C<close>
+=method C<close>
 
 Alias for the L</disconnect> method.
 
-=head2 C<clear>
+=method C<clear>
 
 Removes all tables from the database, leaving it empty.
 
-=head2 C<dump ( $dumpfile )>
+=method C<dump ( $dumpfile )>
 
 Dumps the database content to the specified file.
 
-=head2 C<load ( $dumpfile )>
+=method C<load ( $dumpfile )>
 
 Loads the specified database script into the database.
-
-=head1 AUTHOR
-
-Graham Knop <haarg@haarg.org>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =cut
 

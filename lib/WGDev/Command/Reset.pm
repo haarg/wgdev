@@ -1,4 +1,5 @@
 package WGDev::Command::Reset;
+# ABSTRACT: Reset a site to defaults
 use strict;
 use warnings;
 use 5.008008;
@@ -841,12 +842,6 @@ sub _run_script {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command::Reset - Reset a site to defaults
-
 =head1 SYNOPSIS
 
     wgd reset [-v] [-q] [-f] [-d | -b | -t]
@@ -1011,9 +1006,7 @@ configured list, a set of parameters is always copied:
     sitename
     spectreIp   spectrePort     spectreSubnets
 
-=head1 METHODS
-
-=head2 C<option_build>
+=method C<option_build>
 
 Enables options for creating a release build.  Equivalent to
 
@@ -1030,7 +1023,7 @@ Enables options for creating a release build.  Equivalent to
     $reset->option( index      => 1 );
     $reset->option( runwf      => 1 );
 
-=head2 C<option_dev>
+=method C<option_dev>
 
 Enables options for doing development work.  Equivalent to
 
@@ -1042,7 +1035,7 @@ Enables options for doing development work.  Equivalent to
     $reset->option( debug   => 1 );
     $reset->option( clear   => 1 );
 
-=head2 C<option_fast>
+=method C<option_fast>
 
 Enables options for doing a faster reset, usually used along with
 other group options or profiles.  Equivalent to
@@ -1055,107 +1048,95 @@ other group options or profiles.  Equivalent to
     $reset->option( index     => 0 );
     $reset->option( runwf     => 0 );
 
-=head2 C<option_profile>
+=method C<option_profile>
 
 Reads a profile from the config section C<command.reset.profiles>
 and processes it as a string of command line options.
 
-=head2 C<clear_cache>
+=method C<clear_cache>
 
 Clears the site's cache.
 
-=head2 C<backup>
+=method C<backup>
 
 Creates a backup of the site database in the system's temp directory.
 
-=head2 C<reset_uploads>
+=method C<reset_uploads>
 
 Clears and recreates the uploads location for a site.
 
-=head2 C<import_db_script>
+=method C<import_db_script>
 
 Imports a base database script for the site.  If
 C<< $reset->option('upgrade') >> is set, F<previousVersion.sql> is
 used.  Otherwise, F<create.sql> is used.
 
-=head2 C<upgrade>
+=method C<upgrade>
 
 Performs an upgrade on the site
 
-=head2 C<set_settings>
+=method C<set_settings>
 
 Enabled/disables debug mode and extended/standard session timeout
 based on C<< $reset->option('debug') >> and enables/disables the
 site starter based on C<< $reset->option('starter') >>.
 
-=head2 C<reset_config>
+=method C<reset_config>
 
 Resets the site's config file based on the rules listed in
 L</WebGUI Config File Reset>.
 
-=head2 C<empty_trash>
+=method C<empty_trash>
 
 Purges all items from the trash.
 
-=head2 C<purge_old_revisions>
+=method C<purge_old_revisions>
 
 Purges all asset revisions aside from the most recent.
 
-=head2 C<clean_version_tags>
+=method C<clean_version_tags>
 
 Collapses all version tags into a single tag labeled based on the
 current WebGUI version.
 
-=head2 C<clear_default_content>
+=method C<clear_default_content>
 
 Removes all content descending from the default asset, excluding
 Page Layout assets.
 
-=head2 C<delete_users>
+=method C<delete_users>
 
 Removes all users from the site, excepting the default users of
 Admin and Visitor.
 
-=head2 C<rebuild_index>
+=method C<rebuild_index>
 
 Rebuilds the search index of the site using the F<search.pl> script.
 
-=head2 C<rebuild_lineage>
+=method C<rebuild_lineage>
 
 Rebuilds the lineage of the site using the F<rebuildLineage.pl> script.
 
-=head2 C<run_all_workflows>
+=method C<run_all_workflows>
 
 Attempts to finish processing all active workflows.  Waiting workflows
 will be run up to 10 times to complete them.
 
-=head2 C<autologon>
+=method C<autologon>
 
 Attempts to create sessions on the site matching browser cookies.
 
-=head2 C<get_firefox_sessions>
+=method C<get_firefox_sessions>
 
 Returns a list of session IDs that Firefox has set in cookies for the site.
 
-=head2 C<get_firefox_cookiedb>
+=method C<get_firefox_cookiedb>
 
 Returns the name of a copy of Firefox's cookie database.
 
-=head2 C<get_safari_sessions>
+=method C<get_safari_sessions>
 
 Returns a list of session IDs that Safari has set in cookies for the site.
-
-=head1 AUTHOR
-
-Graham Knop <haarg@haarg.org>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =cut
 

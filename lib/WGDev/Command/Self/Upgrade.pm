@@ -1,4 +1,5 @@
 package WGDev::Command::Self::Upgrade;
+# ABSTRACT: Upgrade WGDev script
 use strict;
 use warnings;
 use 5.008008;
@@ -11,6 +12,10 @@ use File::Temp ();
 
 sub needs_root { return }
 sub config_options { () }
+
+sub is_runnable {
+    return scalar keys %::fatpacker;
+}
 
 sub process {
     my $self = shift;
@@ -51,12 +56,6 @@ sub process {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command::Self::Upgrade - Upgrade WGDev script
-
 =head1 SYNOPSIS
 
     wgd self-upgrade
@@ -64,18 +63,6 @@ WGDev::Command::Self::Upgrade - Upgrade WGDev script
 =head1 DESCRIPTION
 
 Upgrades the WGDev script.
-
-=head1 AUTHOR
-
-Graham Knop <haarg@haarg.org>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =cut
 

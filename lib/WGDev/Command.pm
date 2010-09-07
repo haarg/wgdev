@@ -1,4 +1,5 @@
 package WGDev::Command;
+# ABSTRACT: Run WGDev commands
 use strict;
 use warnings;
 use 5.008008;
@@ -357,12 +358,6 @@ sub command_list {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command - Run WGDev commands
-
 =head1 SYNOPSIS
 
     wgd [arguments] <subcommand> [subcommand arguments]
@@ -414,44 +409,42 @@ The sub-command to run or get help for.
 
 =back
 
-=head1 METHODS
-
-=head2 C<run ( @arguments )>
+=method C<run ( @arguments )>
 
 Runs C<wgd>, processing the arguments specified and running a sub-command if possible.
 
-=head2 C<usage ( [$verbosity] )>
+=method C<usage ( [$verbosity] )>
 
 Returns usage information for C<wgd>.  The verbosity level is passed on
 to L<WGDev::Help::package_usage|WGDev::Help/package_usage>.
 
-=head2 C<command_list>
+=method C<command_list>
 
 Searches for available sub-commands and returns them as an array.
 This list includes available Perl modules that pass the
 L</get_command_module> check and executable files beginning with
 F<wgd->.
 
-=head2 C<command_to_module ( $command )>
+=method C<command_to_module ( $command )>
 
 Converts a command into the module that would implement it.  Returns
 that module name.
 
-=head2 C<get_command_module ( $command )>
+=method C<get_command_module ( $command )>
 
 Converts the command to a module, then attempts to load that module.
 If the module loads successfully, implements the C<run> and
 C<is_runnable> methods, and C<is_runnable> returns true, returns
 the module.  If not, returns C<undef>.
 
-=head2 C<< get_params_or_defaults ( wgd => $wgd, %params ) >>
+=method C<< get_params_or_defaults ( wgd => $wgd, %params ) >>
 
 Finds the specified WebGUI root, config file, and C<sitename>.  Uses
 environment variables and configuration file if not specified
 directly.  Returns C<%params> with C<root>, C<config_file>, and
 C<sitename> options updated.
 
-=head2 C<< guess_webgui_paths ( wgd => $wgd, [root => $webgui_root], [config_file => $webgui_config] ) >>
+=method C<< guess_webgui_paths ( wgd => $wgd, [root => $webgui_root], [config_file => $webgui_config] ) >>
 
 Attempts to detect the paths to use for the WebGUI root and config
 file.  Initializes the specified C<$wgd> object.  If specified, attempts
@@ -462,14 +455,14 @@ WebGUI root.  If a WebGUI root has been found but not a config file,
 checks for available config files.  If only one is available, it
 is used as the config file.
 
-=head2 C<set_root_relative ( $wgd )>
+=method C<set_root_relative ( $wgd )>
 
 Attempts to set the root WebGUI directory based on the current
 directory.  Searches upward from the current path for a valid WebGUI
 root directory, and sets it in the C<$wgd> object if found.  If no
 valid root is found, throws an error.
 
-=head2 C<set_config_by_input ( $wgd, $config )>
+=method C<set_config_by_input ( $wgd, $config )>
 
 Sets the config file in the C<$wgd> object based on the specified
 WebGUI config file.  If the specified file isn't found, but a file
@@ -477,36 +470,24 @@ with the same name with the C<.conf> extension added to it does
 exist, that file will be used.  If a config file can't be found,
 throws an error.
 
-=head2 C<set_config_by_sitename ( $wgd, $sitename )>
+=method C<set_config_by_sitename ( $wgd, $sitename )>
 
 Sets the config file in the C<$wgd> object based on the specified
 site name.  All of the available config files will be checked and
 if one of the sites lists the site name, its config file will be
 used.
 
-=head2 C<report_help ( [$command, $module] )>
+=method C<report_help ( [$command, $module] )>
 
 Shows help information for C<wgd> or a sub-command.  If a command
 and module is specified, attempts to call C<usage> on the module
 or displays an error.  Otherwise, displays help information for
 C<wgd>.
 
-=head2 C<report_version ( [$command, $module] )>
+=method C<report_version ( [$command, $module] )>
 
 Reports version information about C<wgd>.  If specified, also
 includes version information about a sub-command.
-
-=head1 AUTHOR
-
-Graham Knop <haarg@haarg.org>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =cut
 

@@ -1,4 +1,5 @@
 package WGDev::Command::Base::Verbosity;
+# ABSTRACT: Super-class for implementing WGDev commands with verbosity levels
 use strict;
 use warnings;
 use 5.008008;
@@ -65,12 +66,6 @@ sub tab_level {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command::Base::Verbosity - Super-class for implementing WGDev commands with verbosity levels
-
 =head1 SYNOPSIS
 
     package WGDev::Command::Mine;
@@ -88,30 +83,16 @@ WGDev::Command::Base::Verbosity - Super-class for implementing WGDev commands wi
 A super-class useful for implementing WGDev command modules.  Parses the
 C<--verbose> and C<--quiet> command line options.
 
-=head1 METHODS
-
-=head2 C<verbosity ( [ $verbosity ] )>
+=method C<verbosity ( [ $verbosity ] )>
 
 Sets or returns the verbosity.  This is modified when parsing parameters.  Defaults to 1.
 
-=head2 C<report ( [ $verbosity, ] $message )>
+=method C<report ( [ $verbosity, ] $message )>
 
 Prints messages based on the current verbosity level.  If given two
 parameters, the first must be the verbosity level to start printing the
 message at.  The second parameter is the message to print.  Will also accept
 a single parameter of a message to print starting at verbosity level 1.
-
-=head1 AUTHOR
-
-Graham Knop <haarg@haarg.org>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =cut
 

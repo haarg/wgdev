@@ -1,4 +1,7 @@
 #!perl
+package
+    wgd;
+# ABSTRACT: WebGUI Developer Utilities
 use strict;
 use warnings;
 use 5.008008;

@@ -1,4 +1,5 @@
 package WGDev::Command::Package;
+# ABSTRACT: Export assets for upgrade
 use strict;
 use warnings;
 use 5.008008;
@@ -90,12 +91,6 @@ sub process {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command::Package - Export assets for upgrade
-
 =head1 SYNOPSIS
 
     wgd package [--to=<dir>] [--upgrade] [<asset> ...]
@@ -136,18 +131,6 @@ or C<--to> is specified, packages will be output to the current directory.
 Either an asset ID or an asset URL to specify an asset.
 
 =back
-
-=head1 AUTHOR
-
-Graham Knop <haarg@haarg.org>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =cut
 

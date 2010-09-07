@@ -1,4 +1,5 @@
 package WGDev::Pod::Usage;
+# ABSTRACT: Produce usage documentation for WGDev commands
 use strict;
 use warnings;
 use 5.008008;
@@ -137,12 +138,6 @@ sub parse_from_string {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Pod::Usage - Produce usage documentation for WGDev commands
-
 =head1 SYNOPSIS
 
     use WGDev::Pod::Usage;
@@ -153,18 +148,6 @@ WGDev::Pod::Usage - Produce usage documentation for WGDev commands
 
 Formats POD documentation into a format suitable for showing as
 usage text.  WGDev::Pod::Usage is a subclass of L<Pod::Select>.
-
-=head1 AUTHOR
-
-Graham Knop <haarg@haarg.org>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =for Pod::Coverage
     cmd_head1

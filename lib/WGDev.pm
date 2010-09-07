@@ -477,12 +477,6 @@ sub DESTROY {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev - WebGUI Developer Utilities
-
 =head1 SYNOPSIS
 
     use WGDev;
@@ -497,30 +491,26 @@ WGDev - WebGUI Developer Utilities
 Performs common actions needed by WebGUI developers, such as recreating their
 site from defaults, checking version numbers, exporting packages, and more.
 
-=head1 SUBROUTINES
-
-=head2 C<yaml_encode ( $structure )>
+=func C<yaml_encode ( $structure )>
 
 Loads a YAML module if needed and encodes a data structure with it.
 
-=head2 C<yaml_decode ( $yaml_string )>
+=func C<yaml_decode ( $yaml_string )>
 
 Loads a YAML module if needed and decodes a data structure with it.
 
-=head1 METHODS
-
-=head2 C<new ( [ $root ], [ $config ] )>
+=method C<new ( [ $root ], [ $config ] )>
 
 Creates a new WGDev object.  Optionally accepts a WebGUI root path and config
 file.  These will be passed on to the C<root> and C<config_file> methods.
 
-=head2 C<root ( [ $webgui_root ] )>
+=method C<root ( [ $webgui_root ] )>
 
 Sets or returns the WebGUI root path the object will be interacting with.  If
 the path can't be recognized as a WebGUI root, an error will be thrown.  The
 return value will always be an absolute path to the WebGUI root.
 
-=head2 C<config_file ( [ $webgui_config ] )>
+=method C<config_file ( [ $webgui_config ] )>
 
 Sets or returns the site config file path.  The given path can be relative to
 the current directory or to the etc directory in the WebGUI root.  If the
@@ -528,99 +518,87 @@ config file is found and the WebGUI root is not yet set, it will set the root
 based on the config file path.  If the specified config file can't be found,
 an error will be thrown.
 
-=head2 C<config_file_relative>
+=method C<config_file_relative>
 
 Returns the config file path relative to the WebGUI config directory.  Useful
 for initializing WebGUI sessions, which require the config path to be relative
 to that directory.
 
-=head2 C<lib>
+=method C<lib>
 
 In scalar context, returns the WebGUI library path based on the WebGUI root.
 In array context, it also includes the library paths specified in the
 F<preload.custom> file.
 
-=head2 C<list_site_configs>
+=method C<list_site_configs>
 
 Returns a list of the available site configuration files in the
 C<etc> directory of the specified WebGUI root path.  The returned
 paths will include the full file path.
 
-=head2 C<config>
+=method C<config>
 
 Returns a Config::JSON object based on the file set using C<config_file>.
 
-=head2 C<session>
+=method C<session>
 
 Returns a WebGUI session initialized using the WebGUI root and config file.
 
-=head2 C<asset>
+=method C<asset>
 
 Returns a L<WGDev::Asset> object for simple asset operations.
 
-=head2 C<db>
+=method C<db>
 
 Returns a L<WGDev::Database> object for database interaction without starting
 a WebGUI session.
 
-=head2 C<version>
+=method C<version>
 
 Returns a L<WGDev::Version> object for checking the WebGUI version number in
 several different places.
 
-=head2 C<close_config>
+=method C<close_config>
 
 Closes the link to the WebGUI config file.  Future calls to C<config> will
 load a new object based on the file.
 
-=head2 C<close_session>
+=method C<close_session>
 
 Closes the WebGUI session.  If the session object has expired or is no longer
 valid, it will first be re-opened, then closed properly.
 
-=head2 C<set_environment>
+=method C<set_environment>
 
 Sets the C<WEBGUI_ROOT>, C<WEBGUI_CONFIG>, and C<PERL5LIB> environment variables
 based on C<root>, C<config_file>, and C<lib>.
 
-=head2 C<reset_environment>
+=method C<reset_environment>
 
 Resets the C<WEBGUI_ROOT>, C<WEBGUI_CONFIG>, and C<PERL5LIB> based to what they
 were prior to set_environment being called.
 
-=head2 C<wgd_config ( [ $config_param [, $value ] ] )>
+=method C<wgd_config ( [ $config_param [, $value ] ] )>
 
 Get or set WGDev config file parameters.  Accepts two parameters, the config
 directive and optionally the value to set it to.  The config directive is the
 path in a data structure specified either as an array reference of keys or a
 period separated string of keys.
 
-=head2 C<my_config ( [ $config_param [, $value ] ] )>
+=method C<my_config ( [ $config_param [, $value ] ] )>
 
 Similar to wgd_config, but prefixes the specified path with keys based on the
 caller's package.  For example, a package of C<WGDev::Command::Reset> becomes
 C<command.reset>.
 
-=head2 C<read_wgd_config>
+=method C<read_wgd_config>
 
 Reads and parses the WGDev config file into memory.  Will be automatically
 called by C<wgd_config> as needed.
 
-=head2 C<write_wgd_config>
+=method C<write_wgd_config>
 
 Saves the current configuration back to the WGDev config file.
-
-=head1 AUTHOR
-
-Graham Knop <haarg@haarg.org>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =cut
 

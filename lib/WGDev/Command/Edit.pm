@@ -1,4 +1,5 @@
 package WGDev::Command::Edit;
+# ABSTRACT: Edits assets by URL
 use strict;
 use warnings;
 use 5.008008;
@@ -171,12 +172,6 @@ sub write_temp {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command::Edit - Edits assets by URL
-
 =head1 SYNOPSIS
 
     wgd edit [--command=<command>] <asset> [<asset> ...]
@@ -215,30 +210,16 @@ Can be specified as a full (C<WebGUI::Asset::Template>) or abbreviated
 
 =back
 
-=head1 METHODS
-
-=head2 C<export_asset_data>
+=method C<export_asset_data>
 
 For each item in C<arguments>, exports the asset serialized to text to a
 temporary file.  Also follows the C<--tree> option.  Returns an array of
 hash references with information about the assets and exported files.
 
-=head2 C<write_temp ( $asset_or_class )>
+=method C<write_temp ( $asset_or_class )>
 
 Accepts an asset or a class name and exports it serialized as a text file.
 Returns a hash reference of information about the file ans asset.
-
-=head1 AUTHOR
-
-Graham Knop <haarg@haarg.org>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =cut
 

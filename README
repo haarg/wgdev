@@ -1,5 +1,3 @@
-WGDev is Copyright (c) 2009, Graham Knop.
-
 DESCRIPTION
     Performs common actions needed by WebGUI developers such as recreating
     their site from defaults, checking version numbers, exporting packages,
@@ -8,10 +6,10 @@ DESCRIPTION
 INSTALLATION
     To install this module, run the following commands:
 
-        perl Build.PL
-        ./Build
-        ./Build test
-        ./Build install
+        perl Makefile.PL
+        make
+        make test
+        make install
 
     Alternatively, have the CPAN client install it:
 
@@ -34,7 +32,7 @@ SUPPORT AND DOCUMENTATION
         http://github.com/haarg/wgdev/issues
 
 CONTRIBUTORS
-    Graham Knop <graham@plainblack.com>
+    Graham Knop <haarg@haarg.org>
     Patrick Donelan <pat@patspam.com>
     Doug Bell <doug@plainblack.com>
     Colin Kuskie <colink@perldreamer.com>

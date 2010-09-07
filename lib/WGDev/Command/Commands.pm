@@ -1,4 +1,5 @@
 package WGDev::Command::Commands;
+# ABSTRACT: List WGDev sub-commands
 use strict;
 use warnings;
 use 5.008008;
@@ -72,12 +73,6 @@ sub command_abstracts {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command::Commands - List WGDev sub-commands
-
 =head1 SYNOPSIS
 
     wgd commands
@@ -90,24 +85,10 @@ Provides an overview of the available WGDev commands.
 
 None
 
-=head1 METHODS
-
-=head2 C<command_abstracts>
+=method C<command_abstracts>
 
 A class method which returns a hash with keys of the available
 commands and values of the module abstract extracted from POD.
-
-=head1 AUTHOR
-
-Graham Knop <haarg@haarg.org>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =cut
 

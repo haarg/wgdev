@@ -1,4 +1,5 @@
 package WGDev::Command::Ls;
+# ABSTRACT: List WebGUI assets
 use strict;
 use warnings;
 use 5.008008;
@@ -152,12 +153,6 @@ sub format_output {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command::Ls - List WebGUI assets
-
 =head1 SYNOPSIS
 
     wgd ls [-l] [--format=<format>] [-r] <asset> [<asset> ...]
@@ -213,32 +208,18 @@ C</(?i:partial_match)/> or a string such as C<my_exact_match>.
 
 =back
 
-=head1 METHODS
-
-=head2 C<format_output ( $format, $asset )>
+=method C<format_output ( $format, $asset )>
 
 Returns the formatted information about an asset.  C<$format> is
 the format to output as specified in the L<format option|/-f>.
 
-=head2 C<option_filter ( $filter )>
+=method C<option_filter ( $filter )>
 
 Takes a filter specification, verifies that it is specified properly, and saves it.
 
-=head2 C<pass_filter ( $asset )>
+=method C<pass_filter ( $asset )>
 
 Checks if a given asset passes the saved filter.  Returns true or false.
-
-=head1 AUTHOR
-
-Graham Knop <haarg@haarg.org>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =cut
 

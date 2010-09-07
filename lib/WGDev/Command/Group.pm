@@ -1,4 +1,5 @@
 package WGDev::Command::Group;
+# ABSTRACT: Utilities for manipulating WebGUI Groups
 use strict;
 use warnings;
 use 5.008008;
@@ -73,12 +74,6 @@ sub format_output {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command::Group - Utilities for manipulating WebGUI Groups
-
 =head1 SYNOPSIS
 
     wgd group [--list [--long] [--hidden]]
@@ -112,23 +107,10 @@ Include groups that are normally hidden from WebGUI forms.
 
 =back
 
-=head1 METHODS
-
-=head2 C<format_output ( $format, $group )>
+=method C<format_output ( $format, $group )>
 
 Returns the formatted information about a group.  C<$format> is
 the format to output as specified in the L<format option|/-f>.
-
-=head1 AUTHOR
-
-Patrick Donelan <pat@patspam.com>
-
-=head1 LICENSE
-
-Copyright (c) Patrick Donelan.  All rights reserved.
-
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
 
 =cut
 

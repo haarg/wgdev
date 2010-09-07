@@ -1,4 +1,5 @@
 package WGDev::Command::Run;
+# ABSTRACT: Run arbitrary shell command
 use strict;
 use warnings;
 use 5.008008;
@@ -23,12 +24,6 @@ sub parse_params {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command::Run - Run arbitrary shell command
-
 =head1 SYNOPSIS
 
     wgd run <command>
@@ -41,18 +36,6 @@ C<PERL5LIB> environment variables first.
 =head1 OPTIONS
 
 Has no options of its own.  All options are passed on to specified command.
-
-=head1 AUTHOR
-
-Graham Knop <haarg@haarg.org>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =cut
 

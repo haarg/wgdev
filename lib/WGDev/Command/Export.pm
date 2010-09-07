@@ -1,4 +1,5 @@
 package WGDev::Command::Export;
+# ABSTRACT: Exports assets to files
 use strict;
 use warnings;
 use 5.008008;
@@ -65,12 +66,6 @@ sub export_filename {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command::Export - Exports assets to files
-
 =head1 SYNOPSIS
 
     wgd export [--stdout] <asset> [<asset> ...]
@@ -95,27 +90,13 @@ classes will generate skeletons of export files for the given class.
 
 =back
 
-=head1 METHODS
-
-=head2 C<export_filename ( $asset_or_class )>
+=method C<export_filename ( $asset_or_class )>
 
 Calculates the file name to export an asset as.  Accepts a parameter of the
 asset object or an asset class name.  The file name will be the last portion
 of the asset's URL, with an extension based on the asset's class name.  If
 provided only a class name, the file name will also be based on the class
 name.
-
-=head1 AUTHOR
-
-Graham Knop <haarg@haarg.org>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =cut
 

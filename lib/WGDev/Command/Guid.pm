@@ -1,4 +1,5 @@
 package WGDev::Command::Guid;
+# ABSTRACT: Generates GUIDs via WebGUI's $session->id->generate API
 use strict;
 use warnings;
 use 5.008008;
@@ -43,12 +44,6 @@ sub process {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command::Guid - Generates GUIDs via WebGUI's C<< $session->id->generate >> API
-
 =head1 SYNOPSIS
 
     wgd guid [-n <quantity>] [--no-dashes]
@@ -71,17 +66,6 @@ Number of GUIDs to generate. Defaults to 1.
 Whether or not to filter GUIDs containing dashes (for easy double-click copy/pasting)
 
 =back
-
-=head1 AUTHOR
-
-Patrick Donelan <pat@patspam.com>
-
-=head1 LICENSE
-
-Copyright (c) Patrick Donelan.  All rights reserved.
-
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
 
 =cut
 

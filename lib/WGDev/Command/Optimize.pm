@@ -1,4 +1,5 @@
 package WGDev::Command::Optimize;
+# ABSTRACT: Scans your site and suggests various optimizations
 use strict;
 use warnings;
 use 5.008008;
@@ -153,12 +154,6 @@ END_ADVICE
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command::Optimize - Scans your site and suggests various optimizations
-
 =head1 SYNOPSIS
 
     wgd optimize [--assets] [--macros]
@@ -185,30 +180,17 @@ Suggests database tables that may be able to be adjusted to increase speed.
 
 =back
 
-=head1 METHODS
-
-=head2 C<optimise_assets>
+=method C<optimise_assets>
 
 Suggests Assets that you might be able to disable to reduce memory consumption
 
-=head2 C<optimise_macros>
+=method C<optimise_macros>
 
 Suggests Macros that you might be able to disable to reduce memory consumption
 
-=head2 C<optimise_db>
+=method C<optimise_db>
 
 Suggests database tables that may be able to be adjusted to increase speed.
-
-=head1 AUTHOR
-
-Patrick Donelan <pat@patspam.com>
-
-=head1 LICENSE
-
-Copyright (c) Patrick Donelan.  All rights reserved.
-
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
 
 =cut
 

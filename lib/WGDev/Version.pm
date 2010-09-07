@@ -1,4 +1,5 @@
 package WGDev::Version;
+# ABSTRACT: Extract version information from WebGUI
 use strict;
 use warnings;
 use 5.008008;
@@ -152,12 +153,6 @@ sub upgrade {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Version - Extract version information from WebGUI
-
 =head1 SYNOPSIS
 
     my $wgv = WGDev::Version->new('/data/WebGUI');
@@ -169,31 +164,29 @@ Extracts version information from various places in WebGUI: the change log,
 the upgrade script, the WebGUI module, the database creation script, or a
 live database.
 
-=head1 METHODS
-
-=head2 C<new ( $webgui_root )>
+=method C<new ( $webgui_root )>
 
 Creates a new WGDev::Version object.  Needs a WebGUI directory to be specified.
 
-=head3 C<$webgui_root>
-
+=for :list
+= C<$webgui_root>
 The root of the WebGUI directory to use for finding each file.
 
-=head2 C<module>
+=method C<module>
 
 In scalar context, returns the version number from the F<lib/WebGUI.pm>
 module.  In array context, returns the version number and the status
 (beta/stable).
 
-=head2 C<pm>
+=method C<pm>
 
 An alias for the L</module> method.
 
-=head2 C<changelog>
+=method C<changelog>
 
 Returns the most recent version number noted in the change log.
 
-=head2 C<upgrade>
+=method C<upgrade>
 
     my ($upgrade_file, $from_version, $to_version, $to_version_file) = $wgv->upgrade;
 
@@ -202,34 +195,22 @@ information about it.  The array contains the script's file name,
 the version number it will upgrade from and to based on its file name,
 and the version it will upgrade to noted in the script itself.
 
-=head2 C<database_script>
+=method C<database_script>
 
 Returns the version noted in the F<create.sql> database script.
 
-=head2 C<db_script>
+=method C<db_script>
 
 An alias for the L</database_script> method.
 
-=head2 C<database ( $dbh )>
+=method C<database ( $dbh )>
 
 Accepts a database handle, and returns the latest version from the
 C<webguiVersion> table.
 
-=head2 C<db>
+=method C<db>
 
 An alias for the L</database> method.
-
-=head1 AUTHOR
-
-Graham Knop <haarg@haarg.org>
-
-=head1 LICENSE
-
-Copyright (c) 2009-2010, Graham Knop
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl 5.10.0. For more details, see the
-full text of the licenses in the directory LICENSES.
 
 =cut
 

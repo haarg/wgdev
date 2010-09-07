@@ -1,4 +1,5 @@
 package WGDev::Command::Mail;
+# ABSTRACT: Sends emails via the WebGUI::Mail::Send API
 use strict;
 use warnings;
 use 5.008008;
@@ -121,12 +122,6 @@ sub process {
 
 1;
 
-__DATA__
-
-=head1 NAME
-
-WGDev::Command::Mail - Sends emails via the L<WebGUI::Mail::Send> API
-
 =head1 SYNOPSIS
 
     wgd mail
@@ -169,17 +164,6 @@ Add the message to the queue rather than sending it immediately.
 Short-hand for C<--subject>.
 
 =back
-
-=head1 AUTHOR
-
-Patrick Donelan <pat@patspam.com>
-
-=head1 LICENSE
-
-Copyright (c) Patrick Donelan.  All rights reserved.
-
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
 
 =cut
 
