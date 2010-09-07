@@ -221,7 +221,7 @@ sub clear_cache {
         my $cache_dir = $wgd->config->get('fileCacheRoot')
             || '/tmp/WebGUICache';
         require File::Path;
-        File::Path::rmtree($cache_dir);
+        File::Path::rmtree($cache_dir, { keep_root => 1, });
     }
     elsif ( $cache_type && $cache_type eq 'WebGUI::Cache::Database' ) {
 
@@ -234,7 +234,7 @@ sub clear_cache {
     elsif ( $cache_type && $cache_type eq 'WebGUI::Cache::CHI' ) {
         if ( my $cache_dir = $wgd->config->get('cache/root_dir') ) {
             require File::Path;
-            File::Path::rmtree( $cache_dir );
+            File::Path::rmtree( $cache_dir, { keep_root => 1, } );
         }
     }
     else {
