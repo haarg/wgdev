@@ -220,26 +220,31 @@ sub clear_cache {
         my $cache_dir = $wgd->config->get('fileCacheRoot')
             || '/tmp/WebGUICache';
         require File::Path;
-        File::Path::rmtree($cache_dir);
+        File::Path::rmtree( $cache_dir, { keep_root => 1 } );
     }
     elsif ( $cache_type && $cache_type eq 'WebGUI::Cache::Database' ) {
-
-   # Don't clear the DB cache if we are importing, as that will wipe it anyway
+        # Don't clear the DB cache if we are importing, as that
+        # will wipe it anyway
         if ( !defined $self->option('import') ) {
             my $dsn = $wgd->db->connect;
             $dsn->do('DELETE FROM cache');
         }
     }
-    elsif ( $cache_type && $cache_type eq 'WebGUI::Cache::CHI' ) {
-        if ( my $cache_dir = $wgd->config->get('cache/root_dir') ) {
+    # Assume WebGUI 8 / CHI if no cache type, but with cache config
+    elsif ( ( ! $cache_type || $cache_type eq 'WebGUI::Cache::CHI' )
+        && ( my $cache_config = $wgd->config->get('cache') ) ) {
+        # If there is a root dir, just wipe it so we don't have to load CHI
+        if ( my $cache_dir = $cache_config->{root_dir} ) {
             require File::Path;
-            File::Path::rmtree( $cache_dir );
+            File::Path::rmtree( $cache_dir, { keep_root => 1 } );
+        }
+        else {
+            require CHI;
+            my $cache = CHI->new(%{$cache_config});
+            $cache->clear;
         }
     }
-    else {
-
-        # Can't clear a cache we don't know anything about
-    }
+    # Don't do anything for unknown cache types
     $self->report("Done.\n");
     return 1;
 }
@@ -293,7 +298,7 @@ sub reset_uploads {
     # including sticky bits
     umask( oct(7777) & ~$uploads_mode );
 
-    # set effective UID and GID
+    # set effective UID and GID, fail silently
     local ( $>, $) ) = ( $uploads_uid, $uploads_gid );
 
     File::Path::rmtree( $site_uploads, { keep_root => 1 } );
