@@ -8,24 +8,26 @@ use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 use WGDev::X;
 use WGDev::Command;
-use File::Temp ();
 
 sub needs_root { return }
 sub config_options { () }
 
 sub is_runnable {
-    return scalar keys %::fatpacker;
+    # use the presence of fatpacker to detect single script install
+    # this command is not meant for upgrading module install
+    return scalar keys %::fatpacked;
 }
 
 sub process {
     my $self = shift;
     my $file = $0;
+    require File::Temp;
+    require LWP::UserAgent;
     if (! -w $file) {
         WGDev::X::IO::Write->throw( path => $file );
     }
     my $our_version = WGDev::Command->VERSION;
     print "Current version: $our_version\n";
-    require LWP::UserAgent;
     my $ua = LWP::UserAgent->new;
     my $res = $ua->get('http://haarg.org/wgd');
     if (! $res->is_success) {
