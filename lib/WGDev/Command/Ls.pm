@@ -7,6 +7,8 @@ use 5.008008;
 use WGDev::Command::Base;
 BEGIN { our @ISA = qw(WGDev::Command::Base) }
 
+use Try::Tiny;
+
 sub config_options {
     return qw(
         format|f=s
@@ -17,6 +19,7 @@ sub config_options {
         limit=n
         isa=s
         filter=s
+        tree
     );
 }
 
@@ -65,16 +68,20 @@ sub process {
     my $include_only_classes = $self->option('includeOnlyClass');
     my $limit                = $self->option('limit');
     my $isa                  = $self->option('isa');
+    my $tree                 = $self->option('tree');
 
     my $error;
     PARENT:
     while ( my $parent = shift @parents ) {
         my $asset;
-        if ( !eval { $asset = $wgd->asset->find($parent) } ) {
-            warn "wgd ls: $parent: No such asset\n";
+        try {
+            $asset = $wgd->asset->find($parent);
+        }
+        catch {
+            warn $_;
             $error++;
             next;
-        }
+        };
         if ($show_header) {
             print "$parent:\n";
         }
@@ -90,7 +97,11 @@ sub process {
                     && !defined $self->{filter_match} ? ( limit => $limit )
                 : (),
                 $isa ? ( isa => $isa ) : (),
+                $tree ? ( invertTree => 1 ) : (),
             } );
+        my @lines;
+        my $prefix = '';
+        my $start_len = $asset->getLineageLength;
         while ( my $child = $child_iter->() ) {
             next
                 if !$self->pass_filter($child);
@@ -101,7 +112,23 @@ sub process {
                 if defined $limit && $limit-- <= 0;
 
             my $output = $self->format_output( $format, $child );
-            print $output . "\n";
+            if ( $tree ) {
+                my $len = $child->getLineageLength - $start_len - 1;
+                my $last_len = (length $prefix) / 2;
+                if ($len > $last_len) {
+                    $prefix .= '| ' . ('  ' x ($len - $last_len - 1));
+                }
+                elsif ($len < $last_len) {
+                    substr $prefix, $len * 2, $last_len * 2, '';
+                }
+                unshift @lines, $prefix . '+-' . $output;
+            }
+            else {
+                print $output . "\n";
+            }
+        }
+        for my $line (@lines) {
+            print $line . "\n";
         }
         if (@parents) {
             print "\n";
