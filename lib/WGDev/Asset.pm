@@ -149,11 +149,12 @@ sub serialize {
         } );
 
     # filter out unneeded YAML syntax
-    $basic_yaml =~ s/\A---(?:\Q {}\E)?\n?//msx;
+    $basic_yaml =~ s/\A---(?:\Q {}\E)?\s*//msx;
+    $basic_yaml =~ s/\r?\n/\n/msxg;
+    $basic_yaml =~ s/[ ]+$//msxg;
 
     # line up colons
     $basic_yaml =~ s/^([^:]+):/sprintf("%-12s:", $1)/msxeg;
-    $basic_yaml =~ s/\n?\z/\n/msx;
     my $output = $self->_gen_serialize_header($short_class) . $basic_yaml;
 
     for my $field ( sort keys %{$text} ) {
@@ -166,7 +167,9 @@ sub serialize {
     }
 
     my $meta_yaml = WGDev::yaml_encode($meta);
-    $meta_yaml =~ s/\A---(?:\Q {}\E)?\n?//msx;
+    $meta_yaml =~ s/\A---(?:\Q {}\E)?\s*//msx;
+    $meta_yaml =~ s/\r?\n/\n/msxg;
+    $meta_yaml =~ s/[ ]+$//msxg;
     $output .= $self->_gen_serialize_header('Properties') . $meta_yaml . "\n";
 
     return $output;
