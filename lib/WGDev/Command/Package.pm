@@ -14,6 +14,7 @@ sub config_options {
     return qw(
         import|i=s@
         parent=s
+        overwrite
 
         upgrade|u
         to=s
@@ -78,10 +79,14 @@ sub process {
 
         my $version_tag = WebGUI::VersionTag->getWorking( $wgd->session );
         $version_tag->set( { name => 'WGDev package import' } );
+        my $import_options = {};
+        if ($self->option('overwrite')) {
+            $import_options->{'overwriteLatest'} = 1;
+        }
         for my $package ( @{ $self->option('import') } ) {
             my $storage = WebGUI::Storage->createTemp( $wgd->session );
             $storage->addFileFromFilesystem($package);
-            my $asset = $parent->importPackage($storage);
+            my $asset = $parent->importPackage($storage, $import_options);
             print "Imported '$package' to " . $asset->get('url') . "\n";
         }
         $version_tag->commit;
@@ -111,6 +116,11 @@ Assets specified as standalone arguments are exported as packages.
 
 Package file (or files) to import.  Will be imported to the import node if no
 other parent is specified.
+
+=item C<--overwrite>
+
+Forces the assets in this package to be the lastest version on the site.  This option only works
+in conjunction with C<--import> and requires WebGUI 7.8.1 or higher.
 
 =item C<--parent=>
 
