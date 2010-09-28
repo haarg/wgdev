@@ -203,10 +203,6 @@ sub copy_deeply {
 
 1;
 
-__DATA__
-
-1;
-
 =head1 SYNOPSIS
 
     wgd dist [-c] [-d] [-b /data/builds] [ -l /data/domains/i18n.webgui.org/public/translations ] [--lang=Dutch]
@@ -239,14 +235,6 @@ is specified, it will create a temp file.
 Source directory for languages.  Defaults to the location of the master WebGUI translation server.
 
 =item C<-lang>
-<<<<<<< HEAD
-=======
-
-A language to install into the build directory.  Multiple languages can be chosen by using the
-option several times.  Defaults to --lang=Dutch --lang=German --lang=Spanish.
-
-=back
->>>>>>> fa459b3... Have Dist import languages into the core distribution.
 
 A language to install into the build directory.  Multiple languages can be chosen by using the
 option several times.  Defaults to --lang=Dutch --lang=German --lang=Spanish.
