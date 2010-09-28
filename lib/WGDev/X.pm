@@ -79,6 +79,11 @@ use Exception::Class (
         isa         => 'WGDev::X::Module',
         description => q{Error compiling module},
     },
+    'WGDev::X::BadPackage' => {
+        isa         => 'WGDev::X',
+        description => q{Error importing a package},
+        fields      => ['message', 'package']
+    },
 );
 
 BEGIN {
