@@ -87,6 +87,12 @@ sub process {
             my $storage = WebGUI::Storage->createTemp( $wgd->session );
             $storage->addFileFromFilesystem($package);
             my $asset = $parent->importPackage($storage, $import_options);
+            if (! (blessed $asset && $asset->isa('WebGUI::Asset'))) {
+                WGDev::X::BadPackage->throw(
+                    packageName  => $package,
+                    message      => $asset,
+                );
+            }
             print "Imported '$package' to " . $asset->get('url') . "\n";
         }
         $version_tag->commit;
