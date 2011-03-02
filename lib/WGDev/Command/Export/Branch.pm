@@ -14,7 +14,7 @@ use constant LINEAGE_LEVEL_LENGTH => 6;
 sub config_options {
     return (
         shift->SUPER::config_options, qw(
-            to
+            to|t=s
             hier!
             ) );
 }
