@@ -351,11 +351,13 @@ sub import_db_script {
             $db_file = WebGUI::Paths->defaultCreateSQL;
         }
         else {
-            # If we aren't upgrading, we're using the current DB version
-            $db_file
-                = File::Spec->catfile( $wgd->root, 'docs',
-                $self->option('upgrade') ? 'previousVersion.sql' : 'create.sql',
-                );
+            # Use previousVersion.sql for upgrades if it is available
+            if ($self->option('upgrade')) {
+                $db_file = File::Spec->catfile( $wgd->root, 'docs', 'previousVersion.sql' );
+            }
+            if (! $db_file || ! -f $db_file ) {
+                $db_file = File::Spec->catfile( $wgd->root, 'docs', 'create.sql' );
+            }
         }
     }
     $wgd->db->load($db_file);
