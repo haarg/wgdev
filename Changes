@@ -2,6 +2,11 @@ Change log for WGDev
 
 {{$NEXT}}
 
+0.1104070 - Apr 07 2011
+ - fix -t/--to option on export-branch
+ - initial support for WebGUI::Command
+ - fix reset command support for WebGUI release tarballs
+
 0.1009070 - Sep 07 2010
  - fix tarball distribution
  - fix Reset handling of WebGUI 8 caching
