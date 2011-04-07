@@ -367,6 +367,8 @@ sub import_db_script {
 sub upgrade {
     my $self = shift;
     my $wgd  = $self->wgd;
+    require File::Spec;
+    my $wg8 = $self->wgd->version->module =~ /^8\./;
     $self->report('Running upgrade script... ');
 
     # TODO: only upgrade single site
@@ -385,7 +387,12 @@ sub upgrade {
         if ( $self->verbosity < 2 ) {
             push @args, '--quiet';
         }
-        $self->_run_script( 'upgrade.pl', @args );
+        if ($wg8 && -f File::Spec->catfile($wgd->root, 'sbin', 'webgui.pl')) {
+            $self->_run_script( 'webgui.pl', 'upgrade', @args );
+        }
+        else {
+            $self->_run_script( 'upgrade.pl', @args );
+        }
     }
     waitpid $pid, 0;
 
