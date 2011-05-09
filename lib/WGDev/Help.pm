@@ -29,37 +29,41 @@ sub package_perldoc {
     require File::Path;
     my $pod = package_pod( $package, $sections );
 
-    # Make a path that plays nice with Perldoc internals.  Will format nicer.
-    my $tmpdir = File::Temp->newdir( TMPDIR => 1 );
-
-    # perldoc may try to drop privs and the dir will be
-    # readable by current user only
-    chmod oct(744), $tmpdir->dirname;
-
-    my @path_parts = split /::/msx, $package;
-    my $filename   = pop @path_parts;
-    my $path       = File::Spec->catdir( $tmpdir->dirname, 'perl', @path_parts );
-    File::Path::mkpath($path);
-    my $out_file = File::Spec->catfile( $path, $filename );
-    open my $out, '>', $out_file
-        or WGDev::X::IO->throw('Unable to create temp file');
-    print {$out} $pod;
-    close $out or return q{};
-
-    my @extra_args;
-    if ($^O eq 'darwin') {
-        if (`stty -a` =~ /(\d+) columns;/) {
-            my $cols = $1;
-            my $c = $cols * 39 / 40;
-            $cols = $c > $cols - 2 ? $c : $cols -2;
-            if ( $cols > 80 ) {
-                push @extra_args, '-n', 'nroff -rLL=' . (int $c) . 'n';
-            }
-        }
-    }
-
     my $pid = fork;
     if ( !$pid ) {
+        # perldoc will try to drop privs anyway, so do it ourselves so the
+        # temp file has the correct owner
+        Pod::Perldoc->new->drop_privs_maybe;
+
+        # Make a path that plays nice with Perldoc internals.  Will format nicer.
+        my $tmpdir = File::Temp->newdir( TMPDIR => 1 );
+
+        # construct a path that Perldoc will interperet as a package name
+        my @path_parts = split /::/msx, $package;
+        my $filename   = pop @path_parts;
+        my $path       = File::Spec->catdir( $tmpdir->dirname, 'perl', @path_parts );
+        File::Path::mkpath($path);
+        my $out_file = File::Spec->catfile( $path, $filename );
+
+        open my $out, '>', $out_file
+            or WGDev::X::IO->throw('Unable to create temp file');
+        print {$out} $pod;
+        close $out or return q{};
+
+        # perldoc doesn't understand darwin's stty output.
+        # copy and paste but it seems to work
+        my @extra_args;
+        if ($^O eq 'darwin') {
+            if (`stty -a` =~ /(\d+) columns;/) {
+                my $cols = $1;
+                my $c = $cols * 39 / 40;
+                $cols = $c > $cols - 2 ? $c : $cols -2;
+                if ( $cols > 80 ) {
+                    push @extra_args, '-n', 'nroff -rLL=' . (int $c) . 'n';
+                }
+            }
+        }
+
         local @ARGV = ( @extra_args, '-w', 'section:3', '-F', $out_file );
         exit Pod::Perldoc->run;
     }
