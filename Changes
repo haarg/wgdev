@@ -2,6 +2,9 @@ Change log for WGDev
 
 {{$NEXT}}
 
+0.1105090 - May 09 2011
+ - fix documentation when run as root
+
 0.1104070 - Apr 07 2011
  - fix -t/--to option on export-branch
  - initial support for WebGUI::Command
