@@ -9,6 +9,7 @@ BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
 
 use File::Spec ();
 use WGDev::X   ();
+use WGDev::File;
 
 sub config_options {
     return (
@@ -191,59 +192,13 @@ sub write_db_data {
 sub update_local_uploads {
     my $self = shift;
     my $wgd  = $self->wgd;
-    require File::Find;
-    require File::Path;
-    require File::Copy;
 
     $self->report('Loading uploads from site... ');
-    my $wg_uploads = File::Spec->catdir( $wgd->root, 'www', 'uploads' );
-    File::Path::mkpath($wg_uploads);
-    my $site_uploads    = $wgd->config->get('uploadsPath');
-    my $remove_files_cb = sub {
-        no warnings 'once';
-        my $wg_path = $File::Find::name;
-        my ( undef, undef, $filename ) = File::Spec->splitpath($wg_path);
-        if ( $filename eq '.svn' || $filename eq 'temp' ) {
-            $File::Find::prune = 1;
-            return;
-        }
-        my $rel_path = File::Spec->abs2rel( $wg_path, $wg_uploads );
-        my $site_path = File::Spec->rel2abs( $rel_path, $site_uploads );
-        return
-            if -e $site_path;
-        if ( -d $site_path ) {
-            File::Path::rmtree($wg_path);
-        }
-        else {
-            unlink $wg_path;
-        }
-    };
-    File::Find::find( { no_chdir => 1, wanted => $remove_files_cb },
-        $wg_uploads );
-    my $copy_files_cb = sub {
-        no warnings 'once';
-        my $site_path = $File::Find::name;
-        my ( undef, undef, $filename ) = File::Spec->splitpath($site_path);
-        if ( $filename eq '.svn' || $filename eq 'temp' ) {
-            $File::Find::prune = 1;
-            return;
-        }
-        return
-            if -d $site_path;
-        my $rel_path = File::Spec->abs2rel( $site_path, $site_uploads );
-        my $wg_path = File::Spec->rel2abs( $rel_path, $wg_uploads );
 
-        # stat[7] is file size
-        ##no critic (ProhibitMagicNumbers)
-        return
-            if -e $wg_path && ( stat _ )[7] == ( stat $site_path )[7];
-        my $wg_dir = File::Spec->catpath(
-            ( File::Spec->splitpath($wg_path) )[ 0, 1 ] );
-        File::Path::mkpath($wg_dir);
-        File::Copy::copy( $site_path, $wg_path );
-    };
-    File::Find::find( { no_chdir => 1, wanted => $copy_files_cb },
-        $site_uploads );
+    my $wg_uploads = File::Spec->catdir( $wgd->root, 'www', 'uploads' );
+    my $site_uploads    = $wgd->config->get('uploadsPath');
+    $self->sync_dirs($site_uploads, $wg_uploads);
+
     $self->report("Done\n");
     return 1;
 }
