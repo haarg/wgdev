@@ -83,7 +83,7 @@ Performs common actions on files.
 
 =method C<sync_dirs ( $from_dir, $to_dir )>
 
-Syncronises two directories.  Deletes any additional files in the
+Synchronizes two directories.  Deletes any additional files in the
 destination that don't exist in the source.  Checks for file
 differences by size before copying.
 
@@ -91,7 +91,7 @@ differences by size before copying.
 
 Recurses through C<$from_dir>, calling C<$callback> for each file
 or directory found.  The callback is passed two parameters, the
-file found, and a filename relative to C<$to_dir> based on the found
+file found, and a file name relative to C<$to_dir> based on the found
 file's path relative to C<$from_dir>.
 
 =cut

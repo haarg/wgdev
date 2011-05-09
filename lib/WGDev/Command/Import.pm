@@ -13,7 +13,7 @@ sub process {
     my $wgd_asset = $self->wgd->asset;
     my $version_tag;
     for my $asset_file ( $self->arguments ) {
-        open my $fh, '<:utf8', $asset_file or next;
+        open my $fh, '<:encoding(UTF-8)', $asset_file or next;
         my $asset_text = do { local $/; <$fh> };
         close $fh or next;
         $version_tag ||= do {

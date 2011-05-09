@@ -25,7 +25,7 @@ sub package_perldoc {
     my $sections = shift;
     require Pod::Perldoc;
     require File::Temp;
-    File::Temp->VERSION(0.19);
+    File::Temp->VERSION(0.19); ##no critic (ProhibitMagicNumbers)
     require File::Path;
     my $pod = package_pod( $package, $sections );
 
@@ -54,7 +54,8 @@ sub package_perldoc {
         # copy and paste but it seems to work
         my @extra_args;
         if ($^O eq 'darwin') {
-            if (`stty -a` =~ /(\d+) columns;/) {
+            ##no critic (ProhibitBacktick ProhibitMagicNumbers)
+            if (`stty -a` =~ /(\d+)[ ]columns;/msx) {
                 my $cols = $1;
                 my $c = $cols * 39 / 40;
                 $cols = $c > $cols - 2 ? $c : $cols -2;

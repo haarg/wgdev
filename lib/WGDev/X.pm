@@ -111,7 +111,7 @@ BEGIN {
 
 sub _format_file_as_module {
     my $file = shift;
-    if ($file =~ s/\.pm$//msx) {
+    if ($file =~ s/[.]pm$//msx) {
         $file =~ s{/}{::}msxg;
     }
     return $file;
@@ -124,9 +124,10 @@ sub WGDev::X::inflate {
     }
     if (@_ == 1 && !ref $_[0]) {
         my $e = shift;
+        ##no critic (ProhibitComplexRegexes);
         if ($e =~ m{
-            \ACan't[ ]locate[ ](.*?)[ ]in[ ]\@INC[ ]
-            .*[ ]at[ ](.*?)[ ]line[ ]\d+\.
+            \ACan't[ ]locate[ ](.*?)[ ]in[ ][@]INC[ ]
+            .*[ ]at[ ](.*?)[ ]line[ ]\d+[.]
         }msx) {
             my $module = $1;
             my $using_module = $2;
@@ -135,9 +136,9 @@ sub WGDev::X::inflate {
             WGDev::X::Module::Find->throw(message => $e, module => $module, using_module => $using_module);
         }
         elsif ( $e =~ s{
-            (at[ ](.*?)\.pm[ ]line[ ]\d+\.)
+            (at[ ](.*?)[.]pm[ ]line[ ]\d+[.])
             \s+Compilation[ ]failed[ ]in[ ]require[ ]at[ ]
-            (.*?)[ ]line[ ]\d+\..*?\z
+            (.*?)[ ]line[ ]\d+[.].*?\z
         }{$1}msx ) {
             my $module = $2;
             my $using_module = $3;

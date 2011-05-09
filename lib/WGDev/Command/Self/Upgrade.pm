@@ -15,7 +15,7 @@ sub config_options { () }
 sub is_runnable {
     # use the presence of fatpacker to detect single script install
     # this command is not meant for upgrading module install
-    return scalar keys %::fatpacked;
+    return scalar keys %main::fatpacked;
 }
 
 sub process {
@@ -38,10 +38,12 @@ sub process {
         my $temp_script = File::Temp->new;
         $temp_script->autoflush(1);
         print { $temp_script } $content;
-        open my $fh, '-|', $^X, '--', $temp_script->filename, '-V';
+        open my $fh, q{-|}, $^X, q{--}, $temp_script->filename, '-V'
+            or WGDev::X::IO->throw;
         my $output = do { local $/; <$fh> };
-        close $fh;
-        my ($script_version) = ($output =~ /(\d[\d.]+)/);
+        close $fh
+            or WGDev::X::IO->throw;
+        my ($script_version) = ($output =~ /(\d[\d.]+)/msx);
         $script_version;
     };
     print "New version: $new_version\n";
@@ -50,9 +52,11 @@ sub process {
         return 1;
     }
     print "Upgrading.\n";
-    open my $fh, '>', $file;
+    open my $fh, '>', $file
+        or WGDev::X::IO->throw;
     print { $fh } $content;
-    close $fh;
+    close $fh
+        or WGDev::X::IO->throw;
     exec $^X, $file, '-V';
 }
 

@@ -1,5 +1,5 @@
 package WGDev::Command::Help;
-# ABSTRACT: Displays perldoc help for WGDev command
+# ABSTRACT: Displays C<perldoc> help for WGDev command
 use strict;
 use warnings;
 use 5.008008;

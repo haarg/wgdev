@@ -283,20 +283,20 @@ sub reset_uploads {
     my $wg_uploads = File::Spec->catdir( $wgd->root, 'www', 'uploads' );
     my $site_uploads = $wgd->config->get('uploadsPath');
 
-    my $initial_umask = umask;
     my ( $uploads_mode, $uploads_uid, $uploads_gid )
         = ( stat $site_uploads )[ STAT_MODE, STAT_UID, STAT_GID ];
 
     # if uploads doesn't exist, use reasonable defaults
     if ( ! defined $uploads_mode ) {
-        $uploads_mode = oct(755);
+        $uploads_mode = oct 755;
         $uploads_uid = $>;
         $uploads_gid = $);
     }
 
     # make umask as permissive as required to match existing uploads folder
     # including sticky bits
-    umask( oct(7777) & ~$uploads_mode );
+    my $permissive_umask = oct 7777 & ~$uploads_mode;
+    my $initial_umask = umask $permissive_umask;
 
     # set effective UID and GID, fail silently
     local ( $>, $) ) = ( $uploads_uid, $uploads_gid );
@@ -340,7 +340,7 @@ sub import_db_script {
     $self->report('Clearing old database information... ');
     $wgd->db->clear;
     $self->report("Done.\n");
-    my $wg8 = $self->wgd->version->module =~ /^8\./;
+    my $wg8 = $self->wgd->version->module =~ /^8[.]/msx;
 
     $self->report('Importing clean database dump... ');
 
@@ -370,7 +370,7 @@ sub upgrade {
     my $self = shift;
     my $wgd  = $self->wgd;
     require File::Spec;
-    my $wg8 = $self->wgd->version->module =~ /^8\./;
+    my $wg8 = $self->wgd->version->module =~ /^8[.]/msx;
     $self->report('Running upgrade script... ');
 
     # TODO: only upgrade single site
@@ -762,7 +762,7 @@ sub get_firefox_cookiedb {
     require File::HomeDir;
     require Config::INI::Reader;
     require File::Temp;
-    File::Temp->VERSION(0.19);
+    File::Temp->VERSION(0.19); ##no critic (ProhibitMagicNumbers)
     require File::Copy;
 
     my $firefox_subdir
@@ -847,7 +847,8 @@ sub _run_script {
     local @ARGV = @args;
     local $0    = q{./} . $script;
 
-    package main;    ##no critic (ProhibitMultiplePackages)
+    ##no critic (ProhibitMultiplePackages)
+    package main;
     do $0;
     die $@
         if $@;

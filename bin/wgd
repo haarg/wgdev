@@ -1,6 +1,6 @@
 #!perl
 package
-    wgd;
+    App::WGDev;
 # ABSTRACT: WebGUI Developer Utilities
 use strict;
 use warnings;

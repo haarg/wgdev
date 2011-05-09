@@ -216,7 +216,7 @@ sub _asset_properties_definition {
             $self->_filter_property(
                 $property,
                 $asset_properties->{$property},
-                ucfirst ( $property_def->{fieldType} || '' ),
+                ucfirst ( $property_def->{fieldType} || q{} ),
                 $property_def->{tab},
                 \%text,
                 \%meta,
@@ -255,7 +255,7 @@ sub _asset_properties_meta {
     return ( $asset_properties, \%meta, \%text );
 }
 
-sub _filter_property {
+sub _filter_property { ##no critic (ProhibitManyArgs)
     my $self = shift;
     my ( $property, $value, $field_type, $tab, $text, $meta ) = @_;
     if (   $property eq 'title'

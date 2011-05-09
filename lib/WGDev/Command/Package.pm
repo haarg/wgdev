@@ -29,12 +29,12 @@ sub process {
         my $package_dir = $self->option('to') || q{.};
         if ( $self->option('upgrade') ) {
             my $version = $wgd->version->module;
-            my $wg8 = $version =~ /^8\./;
+            my $wg8 = $version =~ /^8[.]/msx;
             if ($wg8) {
                 require WebGUI::Paths;
                 my $old_version = $wgd->version->db_script;
                 $package_dir = File::Spec->catdir( WebGUI::Paths->upgrades,
-                    $old_version . '-' . $version );
+                    $old_version . q{-} . $version );
             }
             else {
                 $package_dir = File::Spec->catdir( $wgd->root, 'docs', 'upgrades',
@@ -134,8 +134,9 @@ other parent is specified.
 
 =item C<--overwrite>
 
-Forces the assets in this package to be the lastest version on the site.  This option only works
-in conjunction with C<--import> and requires WebGUI 7.8.1 or higher.
+Forces the assets in this package to be the latest version on the
+site.  This option only works in conjunction with C<--import> and
+requires WebGUI 7.8.1 or higher.
 
 =item C<--parent=>
 

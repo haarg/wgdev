@@ -66,8 +66,8 @@ sub process {
 
 =head1 DESCRIPTION
 
-Runs a utility script.  The script will be run from WebGUI's sbin
-directory, and will be passed a --configFile option.
+Runs a utility script.  The script will be run from WebGUI's F<sbin>
+directory, and will be passed a C<--configFile> option.
 
 =head1 OPTIONS
 

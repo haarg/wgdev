@@ -51,7 +51,7 @@ sub create_db_script {
     $self->report("WebGUI version: $version\n");
 
     $self->report('Creating database dump... ');
-    my $wg8 = $wgd->version->module =~ /^8\./;
+    my $wg8 = $wgd->version->module =~ /^8[.]/msx;
     my $db_file = $wg8 ? do {
         require WebGUI::Paths;
         WebGUI::Paths->defaultCreateSQL;
@@ -127,12 +127,12 @@ sub write_db_structure {
         next
             if $line =~ /\bSET[^=]+=\s*[@][@]character_set_client;/msxi
                 || $line =~ /\bSET\s+character_set_client\b/msxi;
-        if ( !$statement && $line =~ /^(CREATE TABLE)/ ) {
+        if ( !$statement && $line =~ /\A(CREATE[ ]TABLE)/msx ) {
             $statement = $1;
         }
-        if ( $statement && $line =~ /;$/ ) {
+        if ( $statement && $line =~ /;\z/msx ) {
             if ( $statement eq 'CREATE TABLE' ) {
-                $line =~ s/;$/ CHARSET=utf8;/;
+                $line =~ s/;\z/ CHARSET=utf8;/msx;
             }
             undef $statement;
         }
