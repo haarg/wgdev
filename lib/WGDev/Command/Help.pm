@@ -44,16 +44,9 @@ sub process {
     }
 
     require WGDev::Help;
-    if (
-        eval {
-            WGDev::Help::package_perldoc( $command_module,
-                '!AUTHOR|LICENSE|METHODS|SUBROUTINES' );
-            1;
-        } )
-    {
-        return 1;
-    }
-    return;
+    WGDev::Help::package_perldoc( $command_module,
+        '!AUTHOR|LICENSE|METHODS|SUBROUTINES' );
+    return 1;
 }
 
 1;

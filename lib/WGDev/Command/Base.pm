@@ -134,15 +134,9 @@ sub help {
         $class = ref $class;
     }
     require WGDev::Help;
-    if (
-        eval {
-            WGDev::Help::package_perldoc( $class, '!AUTHOR|LICENSE|METHODS' );
-            1;
-        } )
-    {
-        return 1;
-    }
-    return;
+    WGDev::Help::package_perldoc( $class,
+        '!AUTHOR|LICENSE|METHODS|SUBROUTINES' );
+    return 1;
 }
 
 sub needs_root {
