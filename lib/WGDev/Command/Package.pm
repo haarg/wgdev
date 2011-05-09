@@ -87,10 +87,19 @@ sub process {
             my $storage = WebGUI::Storage->createTemp( $wgd->session );
             $storage->addFileFromFilesystem($package);
             my $asset = $parent->importPackage($storage, $import_options);
-            if (! (blessed $asset && $asset->isa('WebGUI::Asset'))) {
+            if ( ! ref $asset ) {
+                # importPackage returns a string for errors (ugh)
                 WGDev::X::BadPackage->throw(
-                    packageName  => $package,
-                    message      => $asset,
+                    package => $package,
+                    message => $asset,
+                );
+            }
+            elsif ( ! eval { $asset->isa('WebGUI::Asset') } ) {
+                # not an asset or an error?  this shouldn't ever happen.
+                WGDev::X::BadPackage->throw(
+                    package => $package,
+                    message => 'Strange result from package import: '
+                        . ref($asset),
                 );
             }
             print "Imported '$package' to " . $asset->get('url') . "\n";
