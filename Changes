@@ -2,6 +2,13 @@ Change log for WGDev
 
 {{$NEXT}}
 
+0.1105190 - May 19 2011
+ - add missing Try::Tiny prereq
+ - fix to directory copy code
+ - add overwrite option to package importing
+ - improve package importing error reporting
+ - improve script packing
+
 0.1105090 - May 09 2011
  - fix documentation when run as root
 
