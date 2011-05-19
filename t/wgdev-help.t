@@ -38,7 +38,7 @@ is WGDev::Help::package_pod('WGDev::PackageWithPod', [qw(NAME SYNOPSIS DESCRIPTI
     $fatpacked{"WGDev/PackedPackage.pm"} = <<'WGDEV_PACKEDPACKAGE';
   package WGDev::PackedPackage;
   1;
-  __DATA__
+  __END__
   
   =head1 NAME
   

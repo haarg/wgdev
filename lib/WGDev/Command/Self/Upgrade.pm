@@ -15,7 +15,7 @@ sub config_options { () }
 sub is_runnable {
     # use the presence of fatpacker to detect single script install
     # this command is not meant for upgrading module install
-    return scalar keys %main::fatpacked;
+    return $App::WGDev::PACKED;
 }
 
 sub process {

@@ -5,11 +5,15 @@ package
 use strict;
 use warnings;
 use 5.008008;
+
 use WGDev::Command;
+
+our $PACKED;
+our @PACKED;
+
 my $return = eval { WGDev::Command->run(@ARGV) };
 if ( my $message = $@ ) {
     $message =~ s/\n?\z/\n/msx;
     die $message;
 }
 exit( $return ? 0 : 1 );
-

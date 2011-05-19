@@ -2,81 +2,108 @@ package Dist::Zilla::Plugin::WGDev;
 use Moose;
 use namespace::autoclean;
 with 'Dist::Zilla::Role::BeforeArchive';
-with 'Dist::Zilla::Role::FileMunger';
+
 use Path::Class::Dir ();
-use Path::Class::File ();
 use File::Temp ();
 use File::Copy qw(copy);
 use File::Copy::Recursive qw(dircopy);
-use File::Spec::Functions qw(catdir);
 use Cwd qw(cwd);
-
-sub munge_file {
-    my $self = shift;
-    my $file = shift;
-    # can't be modified
-    if ($file->isa('Dist::Zilla::File::FromCode')) {
-        return;
-    }
-    my $content = $file->content;
-    # make sure there is a newline at the end so fatpacker works
-    if ( $content !~ /\n$/ ) {
-        $content .= "\n";
-    }
-    # horrible hack to work with other horrible hacks.  with fatpacker
-    # we can't get access to the actual files, so we need to use
-    # __DATA__ sections.  PodWeaver refuses to modify __DATA__ sections,
-    # but will place the POD into a __END__ section instead.  We convert this
-    # to __DATA__ so we can use it elsewhere.  If it didn't add an __END__
-    # block, add __DATA__ before the =pod header.
-    if (! ( $content =~ s/^__END__$/__DATA__/msx ) ) {
-        $content =~ s/(^=pod$)/__DATA__\n\n$1/msx;
-    }
-    $file->content($content);
-}
+use Capture::Tiny qw(capture);
+use Config ();
+use App::FatPacker ();
+use Module::CoreList;
 
 sub before_archive {
     my $self = shift;
     my $build_root = $self->zilla->ensure_built;
 
-    my $pack_temp = File::Temp->newdir;
-    my $pack_root = Path::Class::Dir->new($pack_temp->dirname);
+    $self->generate_fatlib;
+    $self->generate_fatscript;
+    $build_root->subdir('fatlib')->rmtree;
+}
 
-    dircopy(
-        $build_root->subdir('lib')->stringify,
-        $pack_root->subdir('lib')->stringify,
-    );
-
-    $self->regenerate_fatlib($pack_root);
-
-    my $dist_script = $self->zilla->root->file('wgd');
-    $dist_script->remove;
-    my $out_fh = $dist_script->openw;
-
-    print { $out_fh } <<'END_HEADER';
-#!/usr/bin/env perl
-
-END_HEADER
+sub generate_fatscript {
+    my $self = shift;
+    my $pack_root = $self->zilla->ensure_built;
 
     my $cwd = cwd;
     chdir $pack_root;
 
-    open my $fh, '-|', 'fatpack', 'file'
-        or die "Can't run fatpack: $!";
-    while ( my $line = <$fh> ) {
-        # hack so we can extract the list later
-        $line =~ s/\bmy %fatpacked\b/our %fatpacked/;
-        print { $out_fh } $line;
-    }
-    close $fh;
+    my $fat = capture {
+        App::FatPacker->new->run_script(['file']);
+    };
+
     chdir $cwd;
-    $fh = $build_root->file('bin', 'wgd')->openr;
-    while ( my $line = <$fh> ) {
-        print { $out_fh } $line;
+
+    my @libs =
+        grep { /\.pm$/ }
+        grep { m{^lib/} }
+        map { $_->name }
+        @{ $self->zilla->files };
+    for (@libs) {
+        s{^lib/}{};
     }
-    close $fh;
+    my $packed = join "\n", q{}, @libs, q{};
+
+    my $script = $self->zilla->ensure_built->file('bin', 'wgd')->slurp;
+    $script =~ s/^our\s+\$PACKED\b.*?;/our \$PACKED = 1;/m;
+    $script =~ s/^our\s+\@PACKED\b.*?;/our \@PACKED = qw($packed);/m;
+
+    my $dist_script = $self->zilla->root->file('wgd');
+    $dist_script->remove;
+    my $out_fh = $dist_script->openw;
+    print { $out_fh } <<"END_SCRIPT";
+#!/usr/bin/env perl
+
+$fat
+$script
+END_SCRIPT
+
     close $out_fh;
     chmod oct(755), $dist_script;
+}
+
+sub generate_fatlib {
+    my $self = shift;
+    my $pack_root = $self->zilla->ensure_built;
+
+    $pack_root->subdir('fatlib')->rmtree;
+
+    my $temp_script = File::Temp->new;
+    for my $module ( $self->calculate_prereqs ) {
+        print {$temp_script} "use $module ();\n";
+    }
+    $temp_script->flush;
+    my (undef, $trace) = capture {
+        App::FatPacker->new->run_script(['trace', '--to-stderr', $temp_script]);
+    };
+    my @modules;
+    for my $module ( split /[\r\n]+/, $trace ) {
+        ( my $package = $module ) =~ s{/}{::}g;
+        $package =~ s/\.pm$//
+            or next;
+        if ( ! $Module::CoreList::version{5.008008}{$package} ) {
+            push @modules, $module;
+        }
+    }
+
+    my $packlists = capture {
+        App::FatPacker->new->run_script(['packlists-for', @modules]);
+    };
+    my @packlists = split /[\r\n]+/, $packlists;
+
+    my $cwd = cwd;
+    chdir $pack_root;
+    App::FatPacker->new->run_script(['tree', @packlists]);
+    chdir $cwd;
+
+    $pack_root->subdir('fatlib', $Config::Config{archname})->rmtree;
+    $pack_root->subdir('fatlib')->recurse( callback => sub {
+        my $item = shift;
+        if (! $item->is_dir && $item !~ /\.pm$/ ) {
+            $item->remove;
+        }
+    });
 }
 
 my %wg_deps = map { $_ => 1 } qw(
@@ -137,63 +164,15 @@ my %wg_deps = map { $_ => 1 } qw(
     XML::Simple
 );
 
-sub regenerate_fatlib {
+sub calculate_prereqs {
     my $self = shift;
-    my $pack_root = shift;
-
-    $pack_root->subdir('fatlib')->rmtree;
-    my $temp_script = File::Temp->new(UNLINK => 0);
     my @deps = $self->zilla->prereqs->requirements_for('runtime', 'requires')->required_modules;
-    for my $module ( @deps ) {
-        if ($module eq 'perl') {
-        }
-        elsif ( $wg_deps{$module} ) {
-        }
-        else {
-            print {$temp_script} "use $module ();\n";
-        }
-    }
-    $temp_script->flush;
-    my (undef, $trace_file) = do { local $^W; File::Temp::tempfile(OPEN => 0) };
-    open my $oldout, '>&', \*STDOUT;
-    open my $olderr, '>&', \*STDERR;
-    open STDOUT, '>', File::Spec->devnull;
-    open STDERR, '>', File::Spec->devnull;
-    system 'fatpack', 'trace', '--to=' . $trace_file, $temp_script;
-    open STDOUT, '>&=', $oldout;
-    open STDERR, '>&=', $olderr;
-    open my $trace_fh, '<', $trace_file;
-    my @modules = <$trace_fh>;
-    close $trace_fh;
-    unlink $trace_file;
-    chomp @modules;
-    @modules = grep { /\.pm$/ } @modules;
-    open my $pack_fh, '-|', 'fatpack', 'packlists-for', @modules;
-    my @packlists = <$pack_fh>;
-    chomp @packlists;
-    my $cwd = cwd;
-    chdir $pack_root;
-    system 'fatpack', 'tree', @packlists;
-    chdir $cwd;
-    require Config;
-    $pack_root->subdir('fatlib', $Config::Config{archname})->rmtree;
-    $pack_root->subdir('fatlib')->recurse( callback => sub {
-        my $item = shift;
-        if (! $item->is_dir) {
-            if ( $item =~ /\.pm$/ ) {
-                my $fh = $item->open('+<');
-                seek $fh, -1, 2;
-                read $fh, my $last_char, 1;
-                if ($last_char !~ /\n/) {
-                    print {$fh} "\n";
-                }
-                close $fh;
-            }
-            else {
-                $item->remove;
-            }
-        }
-    });
+    @deps = grep {
+        $_ ne 'perl' and
+        !$wg_deps{$_} and
+        !$Module::CoreList::version{5.008008}{$_}
+    } @deps;
+    return @deps;
 }
 
 __PACKAGE__->meta->make_immutable;
@@ -204,4 +183,3 @@ extends 'Dist::Zilla::Plugin::WGDev';
 __PACKAGE__->meta->make_immutable;
 
 1;
-
