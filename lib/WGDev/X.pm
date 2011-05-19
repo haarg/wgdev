@@ -95,6 +95,7 @@ BEGIN {
 
         # work around bad behavior of Exception::Class < 1.27
         # where it defaults the message to $!
+        no warnings 'once';
         *WGDev::X::new = sub {
             my $errno = qq{$!};
             my $class = shift;
