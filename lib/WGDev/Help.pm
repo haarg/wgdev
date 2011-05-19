@@ -6,6 +6,7 @@ use 5.008008;
 
 use WGDev::X   ();
 use File::Spec ();
+use Try::Tiny;
 
 sub package_usage {
     my $package   = shift;
@@ -84,17 +85,7 @@ sub package_pod {
     my $sections = shift;
     my $raw_pod = $pod{$package};
     if ( !$raw_pod ) {
-        ( my $file = $package . '.pm' ) =~ s{::}{/}msxg;
-        require $file;
-        my $fh = do {
-            no strict 'refs';
-            \*{$package . '::DATA'};
-        };
-        if ( eof $fh ) {
-            open $fh, '<', $INC{$file}
-                or WGDev::X::IO->throw;
-        }
-        $raw_pod = do { local $/; <$fh> };
+        $raw_pod = read_lib($package);
         $pod{$package} = $raw_pod;
     }
 
@@ -116,6 +107,67 @@ sub package_pod {
     close $pod_in
         or WGDev::X::IO->throw;
     return $pod;
+}
+
+sub read_lib {
+    my $module = shift;
+    if ($module =~ /\A\w+(?:::\w+)*\z/msx) {
+        $module .= '.pm';
+        $module =~ s{::}{/}g;
+    }
+    my $data;
+    if ($INC{$module}) {
+        $data = _read_file($module, $INC{$module});
+    }
+    else {
+        for my $inc (@INC) {
+            if (! ref $inc) {
+                my $filename = $inc . q{/} . $module;
+                if (-f $filename) {
+                    $data = _read_file($module, $filename);
+                }
+            }
+            else {
+                $data = _read_file($module, $inc);
+            }
+            last
+                if defined $data;
+        }
+    }
+    return $data;
+}
+
+sub _read_file {
+    my ($module, $inc) = @_;
+    my ($fh, $cb, $state);
+    if (! ref $inc) {
+        open $fh, '<', $inc;
+    }
+    elsif (ref $inc eq 'CODE') {
+        ($fh, $cb, $state) = $inc->($inc, $module);
+    }
+    elsif (ref $inc eq 'ARRAY') {
+        ($fh, $cb, $state) = $inc->[0]->($inc, $module);
+    }
+    elsif ($inc->can('INC')) {
+        ($fh, $cb, $state) = $inc->INC($module);
+    }
+    my $data;
+    if ($cb || $fh) {
+        local $_;
+        $data = '';
+        while (1) {
+            last
+                if ($fh && !defined ($_ = <$fh>));
+            last
+                if ($cb && !$cb->($cb, $state));
+            $data .= $_;
+        }
+        if ($fh) {
+            close $fh;
+        }
+    }
+    return $data;
 }
 
 1;
