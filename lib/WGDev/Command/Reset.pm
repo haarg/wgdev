@@ -373,7 +373,6 @@ sub upgrade {
     my $wg8 = $self->wgd->version->module =~ /^8[.]/msx;
     $self->report('Running upgrade script... ');
 
-    # TODO: only upgrade single site
     my $pid = fork;
     if ( !$pid ) {
 
