@@ -5,6 +5,7 @@ theme       = core || strictersubs || pulp || more
 [-ClassHierarchies::ProhibitExplicitISA]
 [-Compatibility::PerlMinimumVersionAndWhy]
 [-Documentation::ProhibitBadAproposMarkup]
+[-Documentation::RequirePodLinksIncludeText]
 [-Editor::RequireEmacsFileVariables]
 [-ErrorHandling::RequireCarping]
 [-ErrorHandling::RequireUseOfExceptions]
@@ -37,7 +38,7 @@ theme       = core || strictersubs || pulp || more
 stop_words_file = stop_words.txt
 
 [Documentation::RequirePodSections]
-lib_sections = NAME | SYNOPSIS | DESCRIPTION | AUTHOR | LICENSE
+lib_sections = NAME | SYNOPSIS | DESCRIPTION | AUTHOR | COPYRIGHT AND LICENSE
 
 [InputOutput::RequireCheckedSyscalls]
 functions = opendir read readline readdir closedir

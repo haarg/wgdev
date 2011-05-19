@@ -113,7 +113,7 @@ sub read_lib {
     my $module = shift;
     if ($module =~ /\A\w+(?:::\w+)*\z/msx) {
         $module .= '.pm';
-        $module =~ s{::}{/}g;
+        $module =~ s{::}{/}msxg;
     }
     my $data;
     if ($INC{$module}) {
@@ -140,8 +140,10 @@ sub read_lib {
 sub _read_file {
     my ($module, $inc) = @_;
     my ($fh, $cb, $state);
+    ##no critic (ProhibitCascadingIfElse)
     if (! ref $inc) {
-        open $fh, '<', $inc;
+        open $fh, '<', $inc
+            or return;
     }
     elsif (ref $inc eq 'CODE') {
         ($fh, $cb, $state) = $inc->($inc, $module);
@@ -155,7 +157,7 @@ sub _read_file {
     my $data;
     if ($cb || $fh) {
         local $_;
-        $data = '';
+        $data = q{};
         while (1) {
             last
                 if ($fh && !defined ($_ = <$fh>));
@@ -164,7 +166,8 @@ sub _read_file {
             $data .= $_;
         }
         if ($fh) {
-            close $fh;
+            close $fh
+                or WGDev::X::IO->throw;
         }
     }
     return $data;
