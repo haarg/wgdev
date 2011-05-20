@@ -73,7 +73,7 @@ sub root {
         }
         else {
             WGDev::X::BadParameter->throw(
-                'parameter' => 'WebGUI root directory',
+                'parameter' => "WebGUI root directory $path doesn't exist or doesn't contain etc/WebGUI.conf.original.",
                 'value'     => $path
             );
         }
