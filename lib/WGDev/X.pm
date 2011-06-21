@@ -169,6 +169,18 @@ sub WGDev::X::CommandLine::full_message {
     return $message;
 }
 
+sub WGDev::X::BadParameter::full_message {
+    my $self = shift;
+    my $message = $self->SUPER::message || $self->description;
+    if ( $self->parameter ) {
+        $message .= q{ } . $self->parameter;
+    }
+    if ( $self->value ) {
+        $message .= q{: } . $self->value;
+    }
+    return $message;
+}
+
 sub WGDev::X::CommandLine::BadCommand::full_message {
     my $self = shift;
     my $message
