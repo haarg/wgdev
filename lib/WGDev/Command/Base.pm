@@ -153,8 +153,7 @@ sub needs_config {
 =head1 SYNOPSIS
 
     package WGDev::Command::Mine;
-    use WGDev::Command::Base;
-    BEGIN { @ISA = qw(WGDev::Command::Base) }
+    use parent qw(WGDev::Command::Base);
 
     sub process {
         my $self = shift;
