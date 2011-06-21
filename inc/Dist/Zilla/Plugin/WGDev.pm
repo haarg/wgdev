@@ -29,6 +29,7 @@ sub generate_fatscript {
     my $cwd = cwd;
     chdir $pack_root;
 
+    $self->log('building fatpacked script wgd');
     my $fat = capture {
         App::FatPacker->new->run_script(['file']);
     };
@@ -69,6 +70,7 @@ sub generate_fatlib {
 
     $pack_root->subdir('fatlib')->rmtree;
 
+    $self->log('tracing dependencies for fatpack');
     my $temp_script = File::Temp->new;
     for my $module ( $self->calculate_prereqs ) {
         print {$temp_script} "use $module ();\n";
@@ -92,6 +94,7 @@ sub generate_fatlib {
     };
     my @packlists = split /[\r\n]+/, $packlists;
 
+    $self->log('bundling dependencies for fatpack');
     my $cwd = cwd;
     chdir $pack_root;
     App::FatPacker->new->run_script(['tree', @packlists]);
