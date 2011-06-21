@@ -67,7 +67,7 @@ sub find_by_dictionary {
     open my $d, '<', $dict
         or WGDev::X::IO::Read->throw(
         path    => $dict,
-        message => 'Unable to open dictionary file'
+        message => 'Unable to open dictionary file',
         );
     while ( my $word = <$d> ) {
         chomp $word;
@@ -80,7 +80,7 @@ sub find_by_dictionary {
     close $d
         or WGDev::X::IO::Read->throw(
         path    => $dict,
-        message => 'Unable to open dictionary file'
+        message => 'Unable to open dictionary file',
         );
     return;
 }

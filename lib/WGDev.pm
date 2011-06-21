@@ -74,7 +74,7 @@ sub root {
         else {
             WGDev::X::BadParameter->throw(
                 'parameter' => 'WebGUI root directory',
-                'value'     => $path
+                'value'     => $path,
             );
         }
     }
@@ -99,7 +99,7 @@ sub config_file {
         else {
             WGDev::X::BadParameter->throw(
                 'parameter' => 'WebGUI config file',
-                'value'     => $path
+                'value'     => $path,
             );
         }
         if ( !$self->root ) {
@@ -116,7 +116,7 @@ sub config_file {
         if ( ! try { $config = Config::JSON->new($path_abs) } ) {
             WGDev::X::BadParameter->throw(
                 'parameter' => 'WebGUI config file',
-                'value'     => $path
+                'value'     => $path,
             );
         }
         $self->close_session;

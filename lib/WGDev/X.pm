@@ -59,17 +59,17 @@ use Exception::Class (
     'WGDev::X::AssetNotFound' => {
         isa         => 'WGDev::X',
         description => 'Specified asset not found',
-        fields      => ['asset']
+        fields      => ['asset'],
     },
     'WGDev::X::BadAssetClass' => {
         isa         => 'WGDev::X',
         description => 'Bad asset class specified',
-        fields      => ['class']
+        fields      => ['class'],
     },
     'WGDev::X::Module' => {
         isa         => 'WGDev::X',
         description => 'Error loading module',
-        fields      => ['module', 'using_module']
+        fields      => ['module', 'using_module'],
     },
     'WGDev::X::Module::Find' => {
         isa         => 'WGDev::X::Module',
@@ -82,7 +82,7 @@ use Exception::Class (
     'WGDev::X::BadPackage' => {
         isa         => 'WGDev::X',
         description => q{Error importing a package},
-        fields      => ['message', 'package']
+        fields      => ['message', 'package'],
     },
 );
 
