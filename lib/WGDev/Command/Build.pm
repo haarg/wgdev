@@ -5,7 +5,7 @@ use warnings;
 use 5.008008;
 
 use WGDev::Command::Base::Verbosity;
-BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity WGDev::File) }
+BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
 
 use File::Spec ();
 use WGDev::X   ();
@@ -197,7 +197,7 @@ sub update_local_uploads {
 
     my $wg_uploads = File::Spec->catdir( $wgd->root, 'www', 'uploads' );
     my $site_uploads    = $wgd->config->get('uploadsPath');
-    $self->sync_dirs($site_uploads, $wg_uploads);
+    WGDev::File->sync_dirs($site_uploads, $wg_uploads);
 
     $self->report("Done\n");
     return 1;
