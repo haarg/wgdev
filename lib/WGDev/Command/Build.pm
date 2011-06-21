@@ -5,7 +5,7 @@ use warnings;
 use 5.008008;
 
 use WGDev::Command::Base::Verbosity;
-BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
+BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity WGDev::File) }
 
 use File::Spec ();
 use WGDev::X   ();
