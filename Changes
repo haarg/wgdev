@@ -2,6 +2,12 @@ Change log for WGDev
 
 {{$NEXT}}
 
+0.1106210 - Jun 21 2011
+ - improved error messages for bad parameters
+ - detect WebGUI root based on lib/WebGUI.pm instead of
+    etc/WebGUI.conf.original
+ - fixed build command
+
 0.1105190 - May 19 2011
  - add missing Try::Tiny prereq
  - fix to directory copy code
