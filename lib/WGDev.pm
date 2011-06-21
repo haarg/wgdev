@@ -64,7 +64,7 @@ sub root {
     if (@_) {
         my $path = shift;
         if (   -d $path
-            && -e File::Spec->catfile( $path, 'etc', 'WebGUI.conf.original' )
+            && -e File::Spec->catfile( $path, 'lib', 'WebGUI.pm' )
             )
         {
             $self->{root} = File::Spec->rel2abs($path);

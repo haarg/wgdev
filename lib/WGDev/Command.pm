@@ -164,7 +164,7 @@ sub set_root_relative {
     my ( $class, $wgd ) = @_;
     my $dir = Cwd::getcwd();
     while (1) {
-        if ( -e File::Spec->catfile( $dir, 'etc', 'WebGUI.conf.original' ) ) {
+        if ( -e File::Spec->catfile( $dir, 'lib', 'WebGUI.pm' ) ) {
             $wgd->root($dir);
             last;
         }
