@@ -5,6 +5,7 @@ theme       = core || strictersubs || pulp || more
 [-ClassHierarchies::ProhibitExplicitISA]
 [-Compatibility::PerlMinimumVersionAndWhy]
 [-Documentation::ProhibitBadAproposMarkup]
+[-Documentation::RequirePodLinksIncludeText]
 [-Editor::RequireEmacsFileVariables]
 [-ErrorHandling::RequireCarping]
 [-ErrorHandling::RequireUseOfExceptions]
@@ -13,7 +14,9 @@ theme       = core || strictersubs || pulp || more
 [-Miscellanea::RequireRcsKeywords]
 [-Subroutines::ProhibitCallsToUnexportedSubs]
 [-Subroutines::RequireArgUnpacking]
+[-TestingAndDebugging::ProhibitNoStrict]
 [-ValuesAndExpressions::ProhibitConstantPragma]
+[-ValuesAndExpressions::ProhibitFiletest_f]
 [-Variables::ProhibitPunctuationVars]
 [-Variables::RequireInitializationForLocalVars]
 
@@ -22,20 +25,32 @@ theme       = core || strictersubs || pulp || more
 [-Modules::RequireExplicitInclusion]
 [-Subroutines::RequireFinalReturn]
 
-[CodeLayout::RequireTidyCode]
-perltidyrc = perltidy.rc
+# don't play nice with Dist::Zilla
+[-TestingAndDebugging::RequireUseStrict]
+[-TestingAndDebugging::RequireUseWarnings]
+[-CodeLayout::RequireTidyCode]
+# perltidyrc = perltidy.rc
+
+# Dist::Zilla makes this redundant
+[-Modules::RequireVersionVar]
 
 [Documentation::PodSpelling]
 stop_words_file = stop_words.txt
 
 [Documentation::RequirePodSections]
-lib_sections = NAME | SYNOPSIS | DESCRIPTION | AUTHOR | LICENSE
+lib_sections = NAME | SYNOPSIS | DESCRIPTION | AUTHOR | COPYRIGHT AND LICENSE
 
 [InputOutput::RequireCheckedSyscalls]
 functions = opendir read readline readdir closedir
 
+[Modules::PerlMinimumVersion]
+version = 5.008008
+
 [RegularExpressions::RequireExtendedFormatting]
 minimum_regex_length_to_complain_about = 5
+
+[Subroutines::ProhibitCallsToUndeclaredSubs]
+exempt_subs = Try::Tiny::try Try::Tiny::catch Try::Tiny::finally
 
 [TestingAndDebugging::ProhibitNoWarnings]
 allow_with_category_restriction = 1
@@ -44,5 +59,5 @@ allow_with_category_restriction = 1
 allowed_values = -1 0 1 2 24 60 365 755 777 7777
 
 [Variables::ProhibitPackageVars]
-packages = File::Find Data::Dumper Config
+packages = File::Find Data::Dumper Config main
 

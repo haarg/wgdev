@@ -71,7 +71,7 @@ sub connect {    ## no critic (ProhibitBuiltinHomonyms)
             RaiseError        => 1,
             PrintWarn         => 0,
             PrintError        => 0,
-            mysql_enable_utf8 => 1
+            mysql_enable_utf8 => 1,
         } );
 }
 sub dbh  { return shift->{dbh} }

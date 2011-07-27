@@ -6,6 +6,7 @@ use 5.008008;
 
 use WGDev::X   ();
 use File::Spec ();
+use Try::Tiny;
 
 sub package_usage {
     my $package   = shift;
@@ -25,41 +26,46 @@ sub package_perldoc {
     my $sections = shift;
     require Pod::Perldoc;
     require File::Temp;
-    File::Temp->VERSION(0.19);
+    File::Temp->VERSION(0.19); ##no critic (ProhibitMagicNumbers)
     require File::Path;
     my $pod = package_pod( $package, $sections );
 
-    # Make a path that plays nice with Perldoc internals.  Will format nicer.
-    my $tmpdir = File::Temp->newdir( TMPDIR => 1 );
-
-    # perldoc may try to drop privs and the dir will be
-    # readable by current user only
-    chmod oct(744), $tmpdir->dirname;
-
-    my @path_parts = split /::/msx, $package;
-    my $filename   = pop @path_parts;
-    my $path       = File::Spec->catdir( $tmpdir->dirname, 'perl', @path_parts );
-    File::Path::mkpath($path);
-    my $out_file = File::Spec->catfile( $path, $filename );
-    open my $out, '>', $out_file
-        or WGDev::X::IO->throw('Unable to create temp file');
-    print {$out} $pod;
-    close $out or return q{};
-
-    my @extra_args;
-    if ($^O eq 'darwin') {
-        if (`stty -a` =~ /(\d+) columns;/) {
-            my $cols = $1;
-            my $c = $cols * 39 / 40;
-            $cols = $c > $cols - 2 ? $c : $cols -2;
-            if ( $cols > 80 ) {
-                push @extra_args, '-n', 'nroff -rLL=' . (int $c) . 'n';
-            }
-        }
-    }
-
     my $pid = fork;
     if ( !$pid ) {
+        # perldoc will try to drop privs anyway, so do it ourselves so the
+        # temp file has the correct owner
+        Pod::Perldoc->new->drop_privs_maybe;
+
+        # Make a path that plays nice with Perldoc internals.  Will format nicer.
+        my $tmpdir = File::Temp->newdir( TMPDIR => 1 );
+
+        # construct a path that Perldoc will interperet as a package name
+        my @path_parts = split /::/msx, $package;
+        my $filename   = pop @path_parts;
+        my $path       = File::Spec->catdir( $tmpdir->dirname, 'perl', @path_parts );
+        File::Path::mkpath($path);
+        my $out_file = File::Spec->catfile( $path, $filename );
+
+        open my $out, '>', $out_file
+            or WGDev::X::IO->throw('Unable to create temp file');
+        print {$out} $pod;
+        close $out or return q{};
+
+        # perldoc doesn't understand darwin's stty output.
+        # copy and paste but it seems to work
+        my @extra_args;
+        if ($^O eq 'darwin') {
+            ##no critic (ProhibitBacktick ProhibitMagicNumbers)
+            if (`stty -a` =~ /(\d+)[ ]columns;/msx) {
+                my $cols = $1;
+                my $c = $cols * 39 / 40;
+                $cols = $c > $cols - 2 ? $c : $cols -2;
+                if ( $cols > 80 ) {
+                    push @extra_args, '-n', 'nroff -rLL=' . (int $c) . 'n';
+                }
+            }
+        }
+
         local @ARGV = ( @extra_args, '-w', 'section:3', '-F', $out_file );
         exit Pod::Perldoc->run;
     }
@@ -79,17 +85,7 @@ sub package_pod {
     my $sections = shift;
     my $raw_pod = $pod{$package};
     if ( !$raw_pod ) {
-        ( my $file = $package . '.pm' ) =~ s{::}{/}msxg;
-        require $file;
-        my $fh = do {
-            no strict 'refs';
-            \*{$package . '::DATA'};
-        };
-        if ( eof $fh ) {
-            open $fh, '<', $INC{$file}
-                or WGDev::X::IO->throw;
-        }
-        $raw_pod = do { local $/; <$fh> };
+        $raw_pod = read_lib($package);
         $pod{$package} = $raw_pod;
     }
 
@@ -111,6 +107,70 @@ sub package_pod {
     close $pod_in
         or WGDev::X::IO->throw;
     return $pod;
+}
+
+sub read_lib {
+    my $module = shift;
+    if ($module =~ /\A\w+(?:::\w+)*\z/msx) {
+        $module .= '.pm';
+        $module =~ s{::}{/}msxg;
+    }
+    my $data;
+    if ($INC{$module}) {
+        $data = _read_file($module, $INC{$module});
+    }
+    else {
+        for my $inc (@INC) {
+            if (! ref $inc) {
+                my $filename = $inc . q{/} . $module;
+                if (-f $filename) {
+                    $data = _read_file($module, $filename);
+                }
+            }
+            else {
+                $data = _read_file($module, $inc);
+            }
+            last
+                if defined $data;
+        }
+    }
+    return $data;
+}
+
+sub _read_file {
+    my ($module, $inc) = @_;
+    my ($fh, $cb, $state);
+    ##no critic (ProhibitCascadingIfElse)
+    if (! ref $inc) {
+        open $fh, '<', $inc
+            or return;
+    }
+    elsif (ref $inc eq 'CODE') {
+        ($fh, $cb, $state) = $inc->($inc, $module);
+    }
+    elsif (ref $inc eq 'ARRAY') {
+        ($fh, $cb, $state) = $inc->[0]->($inc, $module);
+    }
+    elsif ($inc->can('INC')) {
+        ($fh, $cb, $state) = $inc->INC($module);
+    }
+    my $data;
+    if ($cb || $fh) {
+        local $_;
+        $data = q{};
+        while (1) {
+            last
+                if ($fh && !defined ($_ = <$fh>));
+            last
+                if ($cb && !$cb->($cb, $state));
+            $data .= $_;
+        }
+        if ($fh) {
+            close $fh
+                or WGDev::X::IO->throw;
+        }
+    }
+    return $data;
 }
 
 1;

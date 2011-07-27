@@ -4,8 +4,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-use WGDev::Command::Base;
-BEGIN { our @ISA = qw(WGDev::Command::Base) }
+use parent qw(WGDev::Command::Base);
 
 use File::Spec ();
 use WGDev::X   ();
@@ -29,12 +28,12 @@ sub process {
         my $package_dir = $self->option('to') || q{.};
         if ( $self->option('upgrade') ) {
             my $version = $wgd->version->module;
-            my $wg8 = $version =~ /^8\./;
+            my $wg8 = $version =~ /^8[.]/msx;
             if ($wg8) {
                 require WebGUI::Paths;
                 my $old_version = $wgd->version->db_script;
                 $package_dir = File::Spec->catdir( WebGUI::Paths->upgrades,
-                    $old_version . '-' . $version );
+                    $old_version . q{-} . $version );
             }
             else {
                 $package_dir = File::Spec->catdir( $wgd->root, 'docs', 'upgrades',
@@ -87,10 +86,19 @@ sub process {
             my $storage = WebGUI::Storage->createTemp( $wgd->session );
             $storage->addFileFromFilesystem($package);
             my $asset = $parent->importPackage($storage, $import_options);
-            if (! (blessed $asset && $asset->isa('WebGUI::Asset'))) {
+            if ( ! ref $asset ) {
+                # importPackage returns a string for errors (ugh)
                 WGDev::X::BadPackage->throw(
-                    packageName  => $package,
-                    message      => $asset,
+                    package => $package,
+                    message => $asset,
+                );
+            }
+            elsif ( ! eval { $asset->isa('WebGUI::Asset') } ) {
+                # not an asset or an error?  this shouldn't ever happen.
+                WGDev::X::BadPackage->throw(
+                    package => $package,
+                    message => 'Strange result from package import: '
+                        . ref($asset),
                 );
             }
             print "Imported '$package' to " . $asset->get('url') . "\n";
@@ -125,8 +133,14 @@ other parent is specified.
 
 =item C<--overwrite>
 
+<<<<<<< HEAD
 Forces the assets in this package to be the lastest version on the site.  This option only works
 in conjunction with C<--import> and requires WebGUI 7.8.1 or higher.
+=======
+Forces the assets in this package to be the latest version on the
+site.  This option only works in conjunction with C<--import> and
+requires WebGUI 7.8.1 or higher.
+>>>>>>> haarg
 
 =item C<--parent=>
 

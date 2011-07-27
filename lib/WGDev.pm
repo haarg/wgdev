@@ -7,6 +7,7 @@ use 5.008008;
 use File::Spec ();
 use Cwd        ();
 use WGDev::X   ();
+use Try::Tiny;
 
 sub new {
     my $class = shift;
@@ -63,7 +64,7 @@ sub root {
     if (@_) {
         my $path = shift;
         if (   -d $path
-            && -e File::Spec->catfile( $path, 'etc', 'WebGUI.conf.original' )
+            && -e File::Spec->catfile( $path, 'lib', 'WebGUI.pm' )
             )
         {
             $self->{root} = File::Spec->rel2abs($path);
@@ -73,7 +74,7 @@ sub root {
         else {
             WGDev::X::BadParameter->throw(
                 'parameter' => 'WebGUI root directory',
-                'value'     => $path
+                'value'     => $path,
             );
         }
     }
@@ -98,12 +99,11 @@ sub config_file {
         else {
             WGDev::X::BadParameter->throw(
                 'parameter' => 'WebGUI config file',
-                'value'     => $path
+                'value'     => $path,
             );
         }
         if ( !$self->root ) {
-            ##no critic (RequireCheckingReturnValueOfEval)
-            eval {
+            try {
                 $self->root(
                     File::Spec->catpath(
                         ( File::Spec->splitpath($path) )[ 0, 1 ],
@@ -113,10 +113,10 @@ sub config_file {
         }
         my $path_abs = File::Spec->rel2abs($path);
         my $config;
-        if ( !eval { $config = Config::JSON->new($path_abs); 1 } ) {
+        if ( ! try { $config = Config::JSON->new($path_abs) } ) {
             WGDev::X::BadParameter->throw(
                 'parameter' => 'WebGUI config file',
-                'value'     => $path
+                'value'     => $path,
             );
         }
         $self->close_session;
@@ -221,7 +221,7 @@ sub create_session {
     my $self = shift;
     my $session_id = shift;
     my $session;
-    if ( $self->version->module =~ /^8\./ ) {
+    if ( $self->version->module =~ /^8[.]/msx ) {
         $session
             = WebGUI::Session->open( $self->config_file,
             undef, undef, $session_id );
@@ -371,9 +371,7 @@ sub read_wgd_config {
                     $json->canonical;
                     $json->pretty;
                 }
-                eval { $config = $json->decode($content); } || do {
-                    $config = {};
-                };
+                $config = try { $json->decode($content) } || {};
             }
             return $self->{wgd_config} = $config;
         }
@@ -442,19 +440,19 @@ sub yaml_encode {
 sub _load_yaml_lib {
     ## no critic (ProhibitCascadingIfElse)
     no warnings 'redefine';
-    if ( eval { require YAML::XS } ) {
+    if ( try { require YAML::XS } ) {
         *yaml_encode = \&YAML::XS::Dump;
         *yaml_decode = \&YAML::XS::Load;
     }
-    elsif ( eval { require YAML::Syck } ) {
+    elsif ( try { require YAML::Syck } ) {
         *yaml_encode = \&YAML::Syck::Dump;
         *yaml_decode = \&YAML::Syck::Load;
     }
-    elsif ( eval { require YAML } ) {
+    elsif ( try { require YAML } ) {
         *yaml_encode = \&YAML::Dump;
         *yaml_decode = \&YAML::Load;
     }
-    elsif ( eval { require YAML::Tiny } ) {
+    elsif ( try { require YAML::Tiny } ) {
         *yaml_encode = \&YAML::Tiny::Dump;
         *yaml_decode = \&YAML::Tiny::Load;
     }
@@ -469,7 +467,7 @@ sub _load_yaml_lib {
 sub DESTROY {
     my $self = shift;
     local $@;
-    eval {
+    try {
         $self->close_session;
     };
     return;

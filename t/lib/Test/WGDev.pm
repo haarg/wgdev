@@ -5,8 +5,7 @@ use 5.008008;
 
 our $VERSION = '0.0.1';
 
-use Test::Builder::Module ();
-BEGIN { our @ISA = qw(Test::Builder::Module) }
+use parent qw(Test::Builder::Module);
 use Scope::Guard ();
 use Cwd          ();
 

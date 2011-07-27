@@ -134,15 +134,9 @@ sub help {
         $class = ref $class;
     }
     require WGDev::Help;
-    if (
-        eval {
-            WGDev::Help::package_perldoc( $class, '!AUTHOR|LICENSE|METHODS' );
-            1;
-        } )
-    {
-        return 1;
-    }
-    return;
+    WGDev::Help::package_perldoc( $class,
+        '!AUTHOR|LICENSE|METHODS|SUBROUTINES' );
+    return 1;
 }
 
 sub needs_root {
@@ -159,8 +153,7 @@ sub needs_config {
 =head1 SYNOPSIS
 
     package WGDev::Command::Mine;
-    use WGDev::Command::Base;
-    BEGIN { @ISA = qw(WGDev::Command::Base) }
+    use parent qw(WGDev::Command::Base);
 
     sub process {
         my $self = shift;

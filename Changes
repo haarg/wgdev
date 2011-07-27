@@ -2,6 +2,27 @@ Change log for WGDev
 
 {{$NEXT}}
 
+0.1106210 - Jun 21 2011
+ - improved error messages for bad parameters
+ - detect WebGUI root based on lib/WebGUI.pm instead of
+    etc/WebGUI.conf.original
+ - fixed build command
+
+0.1105190 - May 19 2011
+ - add missing Try::Tiny prereq
+ - fix to directory copy code
+ - add overwrite option to package importing
+ - improve package importing error reporting
+ - improve script packing
+
+0.1105090 - May 09 2011
+ - fix documentation when run as root
+
+0.1104070 - Apr 07 2011
+ - fix -t/--to option on export-branch
+ - initial support for WebGUI::Command
+ - fix reset command support for WebGUI release tarballs
+
 0.1009070 - Sep 07 2010
  - fix tarball distribution
  - fix Reset handling of WebGUI 8 caching

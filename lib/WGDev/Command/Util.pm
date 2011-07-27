@@ -4,8 +4,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-use WGDev::Command::Base::Verbosity;
-BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
+use parent qw(WGDev::Command::Base);
 
 use File::Spec ();
 
@@ -66,8 +65,8 @@ sub process {
 
 =head1 DESCRIPTION
 
-Runs a utility script.  The script will be run from WebGUI's sbin
-directory, and will be passed a --configFile option.
+Runs a utility script.  The script will be run from WebGUI's F<sbin>
+directory, and will be passed a C<--configFile> option.
 
 =head1 OPTIONS
 

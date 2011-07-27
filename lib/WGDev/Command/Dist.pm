@@ -4,8 +4,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-use WGDev::Command::Base;
-BEGIN { our @ISA = qw(WGDev::Command::Base) }
+use parent qw(WGDev::Command::Base);
 
 use File::Spec ();
 use File::Find ();
@@ -29,7 +28,7 @@ sub process {
     my $self = shift;
     my $wgd  = $self->wgd;
     require File::Temp;
-    File::Temp->VERSION(0.19);
+    File::Temp->VERSION(0.19); ##no critic (ProhibitMagicNumbers)
     require File::Copy;
     require Cwd;
 
@@ -120,7 +119,7 @@ sub generate_docs {
     require File::Path;
     require Pod::Html;
     require File::Temp;
-    File::Temp->VERSION(0.19);
+    File::Temp->VERSION(0.19); ##no critic (ProhibitMagicNumbers)
     my $code_dir = File::Spec->catdir( $from, 'lib', 'WebGUI' );
     my $temp_dir = File::Temp->newdir;
     File::Find::find( {

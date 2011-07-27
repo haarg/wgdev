@@ -59,17 +59,17 @@ use Exception::Class (
     'WGDev::X::AssetNotFound' => {
         isa         => 'WGDev::X',
         description => 'Specified asset not found',
-        fields      => ['asset']
+        fields      => ['asset'],
     },
     'WGDev::X::BadAssetClass' => {
         isa         => 'WGDev::X',
         description => 'Bad asset class specified',
-        fields      => ['class']
+        fields      => ['class'],
     },
     'WGDev::X::Module' => {
         isa         => 'WGDev::X',
         description => 'Error loading module',
-        fields      => ['module', 'using_module']
+        fields      => ['module', 'using_module'],
     },
     'WGDev::X::Module::Find' => {
         isa         => 'WGDev::X::Module',
@@ -82,7 +82,7 @@ use Exception::Class (
     'WGDev::X::BadPackage' => {
         isa         => 'WGDev::X',
         description => q{Error importing a package},
-        fields      => ['message', 'package']
+        fields      => ['message', 'package'],
     },
 );
 
@@ -95,6 +95,7 @@ BEGIN {
 
         # work around bad behavior of Exception::Class < 1.27
         # where it defaults the message to $!
+        no warnings 'once';
         *WGDev::X::new = sub {
             my $errno = qq{$!};
             my $class = shift;
@@ -111,7 +112,7 @@ BEGIN {
 
 sub _format_file_as_module {
     my $file = shift;
-    if ($file =~ s/\.pm$//msx) {
+    if ($file =~ s/[.]pm$//msx) {
         $file =~ s{/}{::}msxg;
     }
     return $file;
@@ -124,9 +125,10 @@ sub WGDev::X::inflate {
     }
     if (@_ == 1 && !ref $_[0]) {
         my $e = shift;
+        ##no critic (ProhibitComplexRegexes);
         if ($e =~ m{
-            \ACan't[ ]locate[ ](.*?)[ ]in[ ]\@INC[ ]
-            .*[ ]at[ ](.*?)[ ]line[ ]\d+\.
+            \ACan't[ ]locate[ ](.*?)[ ]in[ ][@]INC[ ]
+            .*[ ]at[ ](.*?)[ ]line[ ]\d+[.]
         }msx) {
             my $module = $1;
             my $using_module = $2;
@@ -135,9 +137,9 @@ sub WGDev::X::inflate {
             WGDev::X::Module::Find->throw(message => $e, module => $module, using_module => $using_module);
         }
         elsif ( $e =~ s{
-            (at[ ](.*?)\.pm[ ]line[ ]\d+\.)
+            (at[ ](.*?)[.]pm[ ]line[ ]\d+[.])
             \s+Compilation[ ]failed[ ]in[ ]require[ ]at[ ]
-            (.*?)[ ]line[ ]\d+\..*?\z
+            (.*?)[ ]line[ ]\d+[.].*?\z
         }{$1}msx ) {
             my $module = $2;
             my $using_module = $3;
@@ -164,6 +166,18 @@ sub WGDev::X::CommandLine::full_message {
         $message .= $self->usage;
     }
     $message =~ s/[\n\r]*\z/\n\n/msx;
+    return $message;
+}
+
+sub WGDev::X::BadParameter::full_message {
+    my $self = shift;
+    my $message = $self->SUPER::message || $self->description;
+    if ( $self->parameter ) {
+        $message .= q{ } . $self->parameter;
+    }
+    if ( $self->value ) {
+        $message .= q{: } . $self->value;
+    }
     return $message;
 }
 

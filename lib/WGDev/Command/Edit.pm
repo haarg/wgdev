@@ -4,8 +4,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-use WGDev::Command::Base;
-BEGIN { our @ISA = qw(WGDev::Command::Base) }
+use parent qw(WGDev::Command::Base);
 
 use WGDev ();
 
@@ -35,7 +34,7 @@ sub process {
 
     my $version_tag;
     for my $file (@files) {
-        open my $fh, '<:utf8', $file->{filename} or next;
+        open my $fh, '<:encoding(UTF-8)', $file->{filename} or next;
         my $asset_text = do { local $/; <$fh> };
         close $fh or next;
         unlink $file->{filename};
@@ -151,7 +150,7 @@ sub write_temp {
     $short_class =~ s/^WebGUI::Asset:://msx;
 
     my ( $fh, $filename ) = File::Temp::tempfile();
-    binmode $fh, ':utf8';
+    binmode $fh, ':encoding(UTF-8)';
     my $asset_text = $self->wgd->asset->serialize($asset);
 
     print {$fh} $asset_text;

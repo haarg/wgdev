@@ -1,11 +1,10 @@
 package WGDev::Command::Help;
-# ABSTRACT: Displays perldoc help for WGDev command
+# ABSTRACT: Displays C<perldoc> help for WGDev command
 use strict;
 use warnings;
 use 5.008008;
 
-use WGDev::Command::Base ();
-BEGIN { our @ISA = qw(WGDev::Command::Base) }
+use parent qw(WGDev::Command::Base);
 
 use WGDev::Command ();
 use WGDev::X       ();
@@ -44,16 +43,9 @@ sub process {
     }
 
     require WGDev::Help;
-    if (
-        eval {
-            WGDev::Help::package_perldoc( $command_module,
-                '!AUTHOR|LICENSE|METHODS|SUBROUTINES' );
-            1;
-        } )
-    {
-        return 1;
-    }
-    return;
+    WGDev::Help::package_perldoc( $command_module,
+        '!AUTHOR|LICENSE|METHODS|SUBROUTINES' );
+    return 1;
 }
 
 1;

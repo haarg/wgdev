@@ -42,8 +42,8 @@ sub db_script { goto &database_script }
 
 sub database_script {
     my $self = shift;
-    my $dir = $$self;
-    my $wg8 = $self->module =~ /^8\./;
+    my $dir = ${ $self };
+    my $wg8 = $self->module =~ /^8[.]/msx;
     my $version;
     my $db_file = $wg8 ? do {
         require WebGUI::Paths;
@@ -53,15 +53,15 @@ sub database_script {
         or WGDev::X::IO::Read->throw( path => $db_file );
     while ( my $line = <$fh> ) {
         if (
+            ##no critic (ProhibitComplexRegexes);
             $line =~ m{
-            (?:(?i)\QINSERT INTO\E) \s+
-            (`?)webguiVersion\1     \s+
-            .+?                     \s+?
-            (?i)VALUES              \s+
-            \Q('\E ( [^']+ )        [']
+                (?:(?i)\QINSERT INTO\E) \s+
+                (`?)webguiVersion\1     \s+
+                .+?                     \s+?
+                (?i)VALUES              \s+
+                \Q('\E ( [^']+ )        [']
             }msx
-            )
-        {
+        ) {
             $version = $2;
             last;
         }
@@ -108,7 +108,7 @@ sub changelog {
         File::Spec->catfile( $dir, 'docs', 'changelog', $latest->[0] )
         or WGDev::X::IO::Read->throw( path => "docs/changelog/$latest->[0]" );
     while ( my $line = <$fh> ) {
-        if ( $line =~ /^(\d+\.\d+\.\d+)$/msx ) {
+        if ( $line =~ /^(\d+[.]\d+[.]\d+)$/msx ) {
             $latest->[1] = $1;
             last;
         }

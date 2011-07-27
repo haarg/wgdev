@@ -4,8 +4,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-use WGDev::Command::Base;
-BEGIN { our @ISA = qw(WGDev::Command::Base) }
+use parent qw(WGDev::Command::Base);
 
 use WGDev::X ();
 
@@ -68,7 +67,7 @@ sub find_by_dictionary {
     open my $d, '<', $dict
         or WGDev::X::IO::Read->throw(
         path    => $dict,
-        message => 'Unable to open dictionary file'
+        message => 'Unable to open dictionary file',
         );
     while ( my $word = <$d> ) {
         chomp $word;
@@ -81,7 +80,7 @@ sub find_by_dictionary {
     close $d
         or WGDev::X::IO::Read->throw(
         path    => $dict,
-        message => 'Unable to open dictionary file'
+        message => 'Unable to open dictionary file',
         );
     return;
 }

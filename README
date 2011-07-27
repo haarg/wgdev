@@ -4,7 +4,13 @@ DESCRIPTION
     and more.
 
 INSTALLATION
-    To install this module, run the following commands:
+    The recommended way to install WGDev is to download the self contained
+    script.
+
+        curl -O http://haarg.org/wgd
+        chmod +x wgd
+
+    To install this from a release tarball, run the following commands:
 
         perl Makefile.PL
         make
@@ -14,6 +20,18 @@ INSTALLATION
     Alternatively, have the CPAN client install it:
 
         cpan .
+
+BUILDING FROM SOURCE
+    To build WGDev from the source repository, install you will
+    need to install the Dist::Zilla module, as well as some plugins
+    for it:
+
+        cpan Dist::Zilla
+        cpan `dzil authordeps`
+
+    It can then be built with the command:
+
+        dzil build
 
 
 SUPPORT AND DOCUMENTATION

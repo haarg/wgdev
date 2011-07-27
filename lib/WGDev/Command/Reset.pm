@@ -4,8 +4,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-use WGDev::Command::Base::Verbosity;
-BEGIN { our @ISA = qw(WGDev::Command::Base::Verbosity) }
+use parent qw(WGDev::Command::Base::Verbosity);
 
 use WGDev::X   ();
 use File::Spec ();
@@ -283,20 +282,20 @@ sub reset_uploads {
     my $wg_uploads = File::Spec->catdir( $wgd->root, 'www', 'uploads' );
     my $site_uploads = $wgd->config->get('uploadsPath');
 
-    my $initial_umask = umask;
     my ( $uploads_mode, $uploads_uid, $uploads_gid )
         = ( stat $site_uploads )[ STAT_MODE, STAT_UID, STAT_GID ];
 
     # if uploads doesn't exist, use reasonable defaults
     if ( ! defined $uploads_mode ) {
-        $uploads_mode = oct(755);
+        $uploads_mode = oct 755;
         $uploads_uid = $>;
         $uploads_gid = $);
     }
 
     # make umask as permissive as required to match existing uploads folder
     # including sticky bits
-    umask( oct(7777) & ~$uploads_mode );
+    my $permissive_umask = oct 7777 & ~$uploads_mode;
+    my $initial_umask = umask $permissive_umask;
 
     # set effective UID and GID, fail silently
     local ( $>, $) ) = ( $uploads_uid, $uploads_gid );
@@ -340,7 +339,7 @@ sub import_db_script {
     $self->report('Clearing old database information... ');
     $wgd->db->clear;
     $self->report("Done.\n");
-    my $wg8 = $self->wgd->version->module =~ /^8\./;
+    my $wg8 = $self->wgd->version->module =~ /^8[.]/msx;
 
     $self->report('Importing clean database dump... ');
 
@@ -351,11 +350,13 @@ sub import_db_script {
             $db_file = WebGUI::Paths->defaultCreateSQL;
         }
         else {
-            # If we aren't upgrading, we're using the current DB version
-            $db_file
-                = File::Spec->catfile( $wgd->root, 'docs',
-                $self->option('upgrade') ? 'previousVersion.sql' : 'create.sql',
-                );
+            # Use previousVersion.sql for upgrades if it is available
+            if ($self->option('upgrade')) {
+                $db_file = File::Spec->catfile( $wgd->root, 'docs', 'previousVersion.sql' );
+            }
+            if (! $db_file || ! -f $db_file ) {
+                $db_file = File::Spec->catfile( $wgd->root, 'docs', 'create.sql' );
+            }
         }
     }
     $wgd->db->load($db_file);
@@ -367,9 +368,10 @@ sub import_db_script {
 sub upgrade {
     my $self = shift;
     my $wgd  = $self->wgd;
+    require File::Spec;
+    my $wg8 = $self->wgd->version->module =~ /^8[.]/msx;
     $self->report('Running upgrade script... ');
 
-    # TODO: only upgrade single site
     my $pid = fork;
     if ( !$pid ) {
 
@@ -385,7 +387,12 @@ sub upgrade {
         if ( $self->verbosity < 2 ) {
             push @args, '--quiet';
         }
-        $self->_run_script( 'upgrade.pl', @args );
+        if ($wg8 && -f File::Spec->catfile($wgd->root, 'sbin', 'webgui.pl')) {
+            $self->_run_script( 'webgui.pl', 'upgrade', @args );
+        }
+        else {
+            $self->_run_script( 'upgrade.pl', @args );
+        }
     }
     waitpid $pid, 0;
 
@@ -753,7 +760,7 @@ sub get_firefox_cookiedb {
     require File::HomeDir;
     require Config::INI::Reader;
     require File::Temp;
-    File::Temp->VERSION(0.19);
+    File::Temp->VERSION(0.19); ##no critic (ProhibitMagicNumbers)
     require File::Copy;
 
     my $firefox_subdir
@@ -838,7 +845,8 @@ sub _run_script {
     local @ARGV = @args;
     local $0    = q{./} . $script;
 
-    package main;    ##no critic (ProhibitMultiplePackages)
+    ##no critic (ProhibitMultiplePackages)
+    package main;
     do $0;
     die $@
         if $@;

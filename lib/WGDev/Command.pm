@@ -164,7 +164,7 @@ sub set_root_relative {
     my ( $class, $wgd ) = @_;
     my $dir = Cwd::getcwd();
     while (1) {
-        if ( -e File::Spec->catfile( $dir, 'etc', 'WebGUI.conf.original' ) ) {
+        if ( -e File::Spec->catfile( $dir, 'lib', 'WebGUI.pm' ) ) {
             $wgd->root($dir);
             last;
         }
@@ -322,25 +322,26 @@ sub command_list {
         File::Find::find( { no_chdir => 1, wanted => $find_callback },
             $command_root );
     }
-    for my $module ( grep {m{^\Q$fn_prefix\E/}msx} ( keys %INC, keys %main::fatpacked ) ) {
+    no warnings 'once';
+    for my $module ( grep {m{^\Q$fn_prefix\E/}msx} ( keys %INC, @App::WGDev::PACKED ) ) {
         $lib_check{$module} = 1;
     }
     for my $module ( keys %lib_check ) {
         my $package = $module;
         $package =~ s/\Q.pm\E$//msx;
         $package = join q{::}, File::Spec->splitdir($package);
-        if (
-            eval {
-                require $module;
-                $package->can('run')
-                    && $package->can('is_runnable')
-                    && $package->is_runnable;
-            } )
-        {
-            ( my $command = $package ) =~ s/^\Q$class\E:://msx;
-            $command = join q{-}, map {lcfirst} split m{::}msx, $command;
-            $commands{$command} = 1;
-        }
+        ##no critic (RequireCheckingReturnValueOfEval)
+        eval {
+            require $module;
+            if ( $package->can('run')
+                && $package->can('is_runnable')
+                && $package->is_runnable
+            ) {
+                ( my $command = $package ) =~ s/^\Q$class\E:://msx;
+                $command = join q{-}, map {lcfirst} split m{::}msx, $command;
+                $commands{$command} = 1;
+            }
+        };
     }
 
     for my $command ( map { glob File::Spec->catfile( $_, 'wgd-*' ) }

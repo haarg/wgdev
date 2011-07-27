@@ -7,12 +7,7 @@ use 5.008008;
 use constant OPTION_INDENT      => 4;
 use constant OPTION_TEXT_INDENT => 24;
 
-use Pod::PlainText ();
-use Pod::Select    ();
-
-BEGIN {
-    our @ISA = qw(Pod::PlainText Pod::Select);
-}
+use parent qw(Pod::PlainText Pod::Select);
 
 use WGDev::X ();
 

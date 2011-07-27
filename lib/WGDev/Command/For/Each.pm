@@ -4,8 +4,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-use WGDev::Command::Base;
-BEGIN { our @ISA = qw(WGDev::Command::Base) }
+use parent qw(WGDev::Command::Base);
 
 sub new {
     my $class = shift;
@@ -115,6 +114,7 @@ sub process {
     SITES: for my $config ( $self->wgd->list_site_configs ) {
         my $wgd = eval { WGDev->new( $root, $config ) };
         if ( $wgd ) {
+            ##no critic (ProhibitCStyleForLoops ProhibitLocalVars)
             local $self->{wgd} = $wgd;
             COMMANDS: for (my $i = 0; $i <= $#commands; $i += 2) {
                 my $command = $commands[$i];
@@ -165,18 +165,17 @@ Continue processing config files if there is an error
 
 =item C<-0> C<--print0[=format]>
 
-Prints the config file name followed by an ASCII NUL character
+Prints the config file name followed by an ASCII C<NUL> character
 instead of a carriage return.
 
-An optional printf formatting string can be specified.
+An optional L<perlfunc/sprintf> formatting string can be specified.
 
 =item C<-p> C<--print[=format]>
 
 Prints the config file name.  This is the default option if no other
 options are specified.
 
-An optional printf formatting string can be specified.
-
+An optional L<perlfunc/sprintf> formatting string can be specified.
 
 =item C<-e> C<--exec=>
 
