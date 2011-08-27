@@ -5,6 +5,10 @@ use strict;
 use warnings;
 use 5.008008;
 use Time::HiRes;
+use Exception::Class;
+
+use constant HEADER_FORMAT = "%-22s\t%12s\t%s\n";
+use constant ASSET_FORMAT  = "%22s\t%12.4f\t%s\n";
 
 use parent qw(WGDev::Command::Base);
 
@@ -20,13 +24,12 @@ sub process {
     open( my $null, ">:utf8", "/dev/null" );
     $session->output->setHandle($null);
 
-    my $error;
     my @parents = $self->arguments;
     PARENT:
     while ( my $parent = shift @parents ) {
         my $asset;
         if ( !eval { $asset = $wgd->asset->find($parent) } ) {
-            warn "wgd ls: $parent: No such asset\n";
+            warn "wgd page-load: $parent: No such asset\n";
             $error++;
             next;
         }
@@ -34,7 +37,7 @@ sub process {
         if ( $asset->get('assetsToHide') ) {
             %hidden = map { $_ => 1 } split "\n", $asset->get('assetsToHide');
         }
-        printf "%-22s\t%12s\t%s\n", 'Asset ID', 'Render Time', 'URL';
+        printf HEADER_FORMAT, 'Asset ID', 'Render Time', 'URL';
         my $child_iter = $asset->getLineageIterator(
             ['children'],
             {
@@ -45,16 +48,20 @@ sub process {
         my $children_time = 0;
         $session->asset($asset);
         CHILD:
-        while ( my $child = $child_iter->() ) {
-            if ( !defined $child || $@ ) {
-                print "\tbad asset: $@ \n";
+        while ( 1 ) {
+            my $child = eval { $child_iter->(); };
+            if ( my $e = Exception::Class->caught() ) {
+                print "\tbad asset: ".$e->full_message ."\n";
                 next CHILD;
+            }
+            if (! defined $child) {
+                last CHILD;
             }
             next CHILD if $hidden{ $child->getId };
             my $t = [Time::HiRes::gettimeofday];
             eval { my $junk = $child->view };
             my $rendering = Time::HiRes::tv_interval($t);
-            printf "%22s\t%12.4f\t%s\n", $child->getId, $rendering,
+            printf ASSET_FORMAT, $child->getId, $rendering,
                 $child->get('url');
             $children_time += $rendering;
         }
