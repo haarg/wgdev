@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use 5.008008;
 
-use parent qw(WGDev::Command::Base);
+use parent qw(WGDev::Command::Base::Verbosity);
 
 use File::Spec ();
 
