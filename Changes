@@ -2,6 +2,9 @@ Change log for WGDev
 
 {{$NEXT}}
 
+0.1110040 - Oct 04 2011
+ - fix util command
+
 0.1106210 - Jun 21 2011
  - improved error messages for bad parameters
  - detect WebGUI root based on lib/WebGUI.pm instead of
