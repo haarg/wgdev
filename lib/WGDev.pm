@@ -26,6 +26,8 @@ sub new {
     if ($config) {
         $self->config_file($config);
     }
+    my $wgd_config = $self->_find_wgd_config;
+    $self->{wgd_config} = WGDev::Config->new($wgd_config);
     return $self;
 }
 
@@ -278,153 +280,52 @@ sub version {
     return $self->{version} ||= WGDev::Version->new( $self->root );
 }
 
-sub wgd_config {    ##no critic (ProhibitExcessComplexity)
-    my ( $self, $key_list, $value ) = @_;
-    my $config = \( $self->{wgd_config} );
-    if ( !${$config} ) {
-        $config = \( $self->read_wgd_config );
-    }
-    my @keys;
-    if ( ref $key_list && ref $key_list eq 'ARRAY' ) {
-        @keys = @{$key_list};
-    }
-    else {
-        @keys = split /[.]/msx, $key_list;
-    }
-
-    if ( !${$config} ) {
-        $config = \( $self->{wgd_config} = {} );
-    }
-    while (@keys) {
-        my $key     = shift @keys;
-        my $numeric = $key ne q{} && $key =~ /^[+]?-?\d*$/msx;
-        my $type    = ref ${$config};
-        if (   ( !$type && !defined $value )
-            || $type eq 'SCALAR'
-            || ( $type eq 'ARRAY' && !$numeric ) )
-        {
-            return;
+sub _find_wgd_config {
+    my $self = shift;
+    my $filename = shift;
+    if (! $filename) {
+        $filename = "$ENV{HOME}/.wgdevcfg";
+        if (! -e $filename && -e '/etc/wgdevcfg') {
+            $filename = '/etc/wgdevcfg';
         }
-        elsif ( $type eq 'ARRAY' or ( !$type && $numeric ) ) {
-            if ( !$type ) {
-                ${$config} = [];
-            }
-            my ($insert) = $key =~ s/^([+])//msx;
-            if ( !defined $value
-                && ( $insert || !defined ${$config}->[$key] ) )
-            {
-                return;
-            }
-            if ($insert) {
-                if ( $key ne q{} ) {
-                    if ( $key < 0 ) {
-                        $key += @{ ${$config} };
-                    }
-                    splice @{ ${$config} }, $key, 0, undef;
-                }
-                else {
-                    $key = @{ ${$config} };
-                }
-            }
-            $config = \( ${$config}->[$key] );
-        }
-        else {
-            if ( !$type ) {
-                ${$config} = {};
-            }
-            if ( !defined ${$config}->{$key} && !defined $value ) {
-                return;
-            }
-            $config = \( ${$config}->{$key} );
-        }
-        if (@keys) {
-            next;
-        }
-        if ($value) {
-            return ${$config} = $value;
-        }
-        return ${$config};
     }
-    return;
+    return $filename;
 }
 
-my $json;
+# ideally there would just be one method here, but we're being
+# back-compat friendly
+sub wgd_config {
+    my ( $self, $key_list, $value ) = @_;
+    my $wgd_config = $self->{wgd_config};
+    if ( defined $value ) {
+        # deprecation warning?
+        return $wgd_config->set($key_list, $value);
+    }
+    elsif ( defined $key_list) {
+        # deprecation warning?
+        return $wgd_config->get($key_list);
+    }
+    return $wgd_config;
+}
 
 sub read_wgd_config {
     my $self = shift;
-    for my $config_file ( "$ENV{HOME}/.wgdevcfg", '/etc/wgdevcfg' ) {
-        if ( -e $config_file ) {
-            my $config;
-            open my $fh, '<', $config_file or next;
-            my $content = do { local $/; <$fh> };
-            close $fh or next;
-            $self->{wgd_config_path} = Cwd::realpath($config_file);
-            if ( $content eq q{} ) {
-                $config = {};
-            }
-            else {
-                if ( !$json ) {
-                    require JSON;
-                    $json = JSON->new;
-                    $json->utf8;
-                    $json->relaxed;
-                    $json->canonical;
-                    $json->pretty;
-                }
-                $config = try { $json->decode($content) } || {};
-            }
-            return $self->{wgd_config} = $config;
-        }
-    }
-    return $self->{wgd_config} = {};
+    return $self->{wgd_config}->read_config;
 }
 
 sub write_wgd_config {
     my $self        = shift;
-    my $config_path = $self->{wgd_config_path};
-    if ( !$self->{wgd_config_path} ) {
-        $config_path = $self->{wgd_config_path} = $ENV{HOME} . '/.wgdevcfg';
-    }
-    my $config = $self->{wgd_config} || {};
-    if ( !$json ) {
-        require JSON;
-        $json = JSON->new;
-        $json->utf8;
-        $json->relaxed;
-        $json->canonical;
-        $json->pretty;
-    }
-    my $encoded = $json->encode($config);
-    $encoded =~ s/\n?\z/\n/msx;
-    open my $fh, '>', $config_path
-        or WGDev::X::IO::Write->throw(
-        message => 'Unable to write config file',
-        path    => $config_path,
-        );
-    print {$fh} $encoded;
-    close $fh
-        or WGDev::X::IO::Write->throw(
-        message => 'Unable to write config file',
-        path    => $config_path,
-        );
-    return 1;
+    return $self->{wgd_config}->write_config;
 }
 
+# this gets uglier.  call stack has to be maintained.
 sub my_config {
     my $self = shift;
-    my $key  = shift;
-    my @keys;
-    if ( ref $key && ref $key eq 'ARRAY' ) {
-        @keys = @{$key};
-    }
-    else {
-        @keys = split /[.]/msx, $key;
-    }
-    my $caller = caller;
-    my $remove = ( ref $self ) . q{::};
-    $caller =~ s/^\Q$remove//msx;
-    unshift @keys, map { lcfirst $_ } split /::/msx, $caller;
-    return $self->wgd_config( \@keys, @_ );
+    my $method = @_ > 1 ? 'set_my' : 'get_my';
+    my $wgd_config = $self->{wgd_config};
+    my $code = $wgd_config->can($method);
+    unshift @_, $wgd_config;
+    goto $code;
 }
 
 sub yaml_decode {
