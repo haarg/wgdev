@@ -2,6 +2,7 @@ package WGDev::Command::Trash;
 # ABSTRACT: Trash assets by URL/assetId
 use strict;
 use warnings;
+use WGDev::Command::Ls;
 use 5.008008;
 
 use parent qw(WGDev::Command::Base);
@@ -12,17 +13,29 @@ sub config_options {
     return qw(
         purge
         restore
+        list
     );
 }
 
 sub process {
     my $self = shift;
     my $wgd  = $self->wgd;
-    my @asset_specs = $self->arguments;
+    if ($self->option('list')) {
+        return $self->list_trash;
+    }
+    else {
+        return $self->trash;
+    }
+}
+
+sub trash {
+    my $self = shift;
+    my $wgd  = $self->wgd;
     my $error;
     my $method  = $self->option('purge')   ? 'purge'
                 : $self->option('restore') ? 'restore'
                 : 'trash';
+    my @asset_specs = $self->arguments;
     ASSET:
     while ( my $asset_spec = shift @asset_specs ) {
         my $asset;
@@ -41,15 +54,33 @@ sub process {
     return (! $error);
 }
 
+sub list_trash {
+    my $self = shift;
+    my $wgd  = $self->wgd;
+    my $root = $wgd->asset->root;
+    my $trashed_assets = $root->getAssetsInTrash();
+    my $ls = WGDev::Command::Ls->new($wgd);
+    my $format = '%assetId% %url:-35% %title%';
+    ASSET:
+    foreach my $asset ( @{ $trashed_assets } ) {
+        next ASSET unless $asset;
+        my $output = $ls->format_output( $format, $asset );
+        print $output . "\n";
+    }
+
+    return 1;
+}
+
 1;
 
 =head1 SYNOPSIS
 
     wgd trash [--purge] [--restore] <asset> [<asset> ...]
+    wgd trash [--list]
 
 =head1 DESCRIPTION
 
-Puts assets into the trash, or purges them.
+Methods for working with assets in the trash.
 
 =head1 OPTIONS
 
@@ -62,6 +93,10 @@ Purges the assets from the system instead of putting it into the trash.
 =item C<--restore>
 
 Restores the assets that have been trashed to the regular, published state.
+
+=item C<--list>
+
+Lists all assets in the trash.
 
 =item C<< <asset> >>
 
