@@ -1,6 +1,7 @@
 Change log for WGDev
 
 {{$NEXT}}
+ - New command trash allows trashing, purging, and restoring assets, as well as listing trashed items
 
 0.1110040 - Oct 04 2011
  - fix util command
