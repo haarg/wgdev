@@ -1,6 +1,8 @@
 Change log for WGDev
 
 {{$NEXT}}
+
+0.1201200 - Jan 19 2012
  - New command trash allows trashing, purging, and restoring assets, as well as listing trashed items
 
 0.1110040 - Oct 04 2011
