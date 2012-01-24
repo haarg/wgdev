@@ -7,8 +7,12 @@ use 5.008008;
 use Time::HiRes;
 use Exception::Class;
 
-use constant HEADER_FORMAT = "%-22s\t%12s\t%s\n";
-use constant ASSET_FORMAT  = "%22s\t%12.4f\t%s\n";
+use constant HEADER_FORMAT => "%-22s\t%12s\t%s\n";
+use constant ASSET_FORMAT  => "%22s\t%12.4f\t%s\n";
+
+use constant STAT_MODE => 2;
+use constant STAT_UID  => 4;
+use constant STAT_GID  => 5;
 
 use parent qw(WGDev::Command::Base);
 
@@ -23,6 +27,25 @@ sub process {
     my $session = $wgd->session;
     open( my $null, ">:utf8", "/dev/null" );
     $session->output->setHandle($null);
+
+    my $cache_dir = $self->find_cache_dir;
+    my ($cache_mode, $cache_uid, $cache_gid);
+    if ($cache_dir && -e $cache_dir) {
+        ( $cache_mode, $cache_uid, $cache_gid )
+            = ( stat $cache_dir )[ STAT_MODE, STAT_UID, STAT_GID ];
+    }
+    else {
+        $cache_mode = oct 755;
+        $cache_uid = $>;
+        $cache_gid = $);
+    }
+    my $permissive_umask = oct 7777 & ~$cache_mode;
+    my $initial_umask = umask $permissive_umask;
+
+    # set effective UID and GID, fail silently
+    local ( $>, $) ) = ( $cache_uid, $cache_gid );
+
+    my $error;
 
     my @parents = $self->arguments;
     PARENT:
@@ -86,7 +109,27 @@ sub process {
             'style template';
     }
     close($null);
+    umask $initial_umask;
     return ( !$error );
+}
+
+sub find_cache_dir {
+    my $self = shift;
+    my $wgd  = $self->wgd;
+    my $cache_type = $wgd->config->get('cacheType');
+    if ( $cache_type && $cache_type eq 'WebGUI::Cache::FileCache' ) {
+        my $cache_dir = $wgd->config->get('fileCacheRoot')
+            || '/tmp/WebGUICache';
+        return $cache_dir;
+    }
+    # Assume WebGUI 8 / CHI if no cache type, but with cache config
+    elsif ( ( ! $cache_type || $cache_type eq 'WebGUI::Cache::CHI' )
+        && ( my $cache_config = $wgd->config->get('cache') ) ) {
+        # If there is a root dir, just wipe it so we don't have to load CHI
+        my $cache_dir = $cache_config->{root_dir};
+        return $cache_dir;
+    }
+    return undef;
 }
 
 =head1 SYNOPSIS
