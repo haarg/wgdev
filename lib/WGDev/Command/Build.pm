@@ -117,9 +117,12 @@ sub write_db_structure {
     my $out  = shift;
     my $wgd  = $self->wgd;
 
+    my @options = qw/--compact --no-data/;
+    if ($self->wgd->version->module =~ /^7[.]/msx) {
+        push @options, '--compatible=mysql40';
+    }
     open my $in, q{-|}, 'mysqldump',
-        $wgd->db->command_line( '--compact', '--no-data',
-        '--compatible=mysql40' )
+        $wgd->db->command_line(@options)
         or WGDev::X::System->throw('Unable to run mysqldump');
     my $statement;
     while ( my $line = <$in> ) {
