@@ -131,6 +131,7 @@ sub write_db_structure {
         }
         if ( $statement && $line =~ /;\n?\z/msx ) {
             if ( $statement eq 'CREATE TABLE' ) {
+                $line =~ s/TYPE=(InnoDB|MyISAM)/ENGINE=$1/;
                 $line =~ s/;(\n?)\z/ CHARSET=utf8;$1/msx;
             }
             undef $statement;
