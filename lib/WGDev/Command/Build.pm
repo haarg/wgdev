@@ -129,9 +129,9 @@ sub write_db_structure {
         if ( !$statement && $line =~ /\A(CREATE[ ]TABLE)/msx ) {
             $statement = $1;
         }
-        if ( $statement && $line =~ /;\z/msx ) {
+        if ( $statement && $line =~ /;\n?\z/msx ) {
             if ( $statement eq 'CREATE TABLE' ) {
-                $line =~ s/;\z/ CHARSET=utf8;/msx;
+                $line =~ s/;(\n?)\z/ CHARSET=utf8;$1/msx;
             }
             undef $statement;
         }
