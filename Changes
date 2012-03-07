@@ -2,6 +2,10 @@ Change log for WGDev
 
 {{$NEXT}}
 
+0.1203070 - Mar 06 2012
+ - Fix charset handling in build command output
+ - Use MySQL 5.5 compatible syntax for build command output
+
 0.1201200 - Jan 19 2012
  - New command trash allows trashing, purging, and restoring assets, as well as listing trashed items
 
