@@ -205,7 +205,7 @@ or C<--to> is specified, packages will be output to the current directory.
 
 Either an asset ID or an asset URL to specify an asset.
 
-=item C<--listids=/path/to/package.wgpkg>
+=item C<--listids>
 
 List all of the assetIds in a single package.
 
