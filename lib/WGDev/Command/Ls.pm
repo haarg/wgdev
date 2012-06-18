@@ -8,6 +8,7 @@ use parent qw(WGDev::Command::Base);
 
 sub config_options {
     return qw(
+        directory|d
         format|f=s
         long|l
         recursive|r
@@ -74,36 +75,42 @@ sub process {
             $error++;
             next;
         }
-        if ($show_header) {
-            print "$parent:\n";
+        if ($self->option('directory')) {
+           my $parent_asset = $wgd->asset->find($parent);
+           print $self->format_output( $format, $parent_asset ), "\n";
         }
-        my $child_iter = $asset->getLineageIterator(
-            [$relatives],
-            {
-                $exclude_classes ? ( excludeClasses => $exclude_classes )
-                : (),
-                $include_only_classes
-                ? ( includeOnlyClasses => $include_only_classes )
-                : (),
-                defined $limit
-                    && !defined $self->{filter_match} ? ( limit => $limit )
-                : (),
-                $isa ? ( isa => $isa ) : (),
-            } );
-        while ( my $child = $child_iter->() ) {
-            next
-                if !$self->pass_filter($child);
-
-            # Handle limit ourselves because smartmatch filtering happens
-            # *after* getLineage returns its results
-            last PARENT
-                if defined $limit && $limit-- <= 0;
-
-            my $output = $self->format_output( $format, $child );
-            print $output . "\n";
-        }
-        if (@parents) {
-            print "\n";
+        else {
+           if ($show_header) {
+               print "$parent:\n";
+           }
+           my $child_iter = $asset->getLineageIterator(
+               [$relatives],
+               {
+                   $exclude_classes ? ( excludeClasses => $exclude_classes )
+                   : (),
+                   $include_only_classes
+                   ? ( includeOnlyClasses => $include_only_classes )
+                   : (),
+                   defined $limit
+                       && !defined $self->{filter_match} ? ( limit => $limit )
+                   : (),
+                   $isa ? ( isa => $isa ) : (),
+               } );
+           while ( my $child = $child_iter->() ) {
+               next
+                   if !$self->pass_filter($child);
+   
+               # Handle limit ourselves because smartmatch filtering happens
+               # *after* getLineage returns its results
+               last PARENT
+                   if defined $limit && $limit-- <= 0;
+   
+               my $output = $self->format_output( $format, $child );
+               print $output . "\n";
+           }
+           if (@parents) {
+               print "\n";
+           }
         }
     }
     return (! $error);
@@ -154,15 +161,19 @@ sub format_output {
 
 =head1 SYNOPSIS
 
-    wgd ls [-l] [--format=<format>] [-r] <asset> [<asset> ...]
+    wgd ls [-d] [-l] [--format=<format>] [-r] <asset> [<asset> ...]
 
 =head1 DESCRIPTION
 
-Lists children of WebGUI assets
+Lists children of WebGUI asset(s), or just the asset(s) themselves
 
 =head1 OPTIONS
 
 =over 8
+
+=item C<-d> C<--directory>
+
+Print only the specified asset (similar to '-d' in ls(1)).
 
 =item C<-l> C<--long>
 
@@ -178,18 +189,22 @@ using C<%%>.
 =item C<-r> C<--recursive>
 
 Recursively list all descendants (by default we only list children).
+Ignored when '-d' is set.
 
 =item C<--includeOnlyClass=>
 
 Specify one or more times to limit the results to a certain set of asset classes.
+Ignored when '-d' is set.
 
 =item C<--excludeClass=>
 
 Specify one or more times to filter out certain asset class(es) from the results.
+Ignored when '-d' is set.
 
 =item C<--limit=>
 
-The maximum amount of entries to return
+The maximum amount of entries to return.
+Ignored when '-d' is set.
 
 =item C<--isa=>
 
@@ -197,6 +212,7 @@ A class name where you can look for classes of a similar base class.
 For example, if you're looking for Donations, Subscriptions, Products
 and other subclasses of L<WebGUI::Asset::Sku>, then specify the
 parameter C<--isa=WebGUI::Asset::Sku>.
+Ignored when '-d' is set.
 
 =item C<--filter=>
 
@@ -204,6 +220,7 @@ Apply smart match filtering against the results. Format looks like
 C<%url% ~~ smartmatch>, where C<url> is the field to filter against,
 and C<smartmatch> is either a Perl regular expression such as
 C</(?i:partial_match)/> or a string such as C<my_exact_match>.
+Ignored when '-d' is set.
 
 =back
 
@@ -215,10 +232,12 @@ the format to output as specified in the L<format option|/-f>.
 =method C<option_filter ( $filter )>
 
 Takes a filter specification, verifies that it is specified properly, and saves it.
+Ignored when '-d' is set.
 
 =method C<pass_filter ( $asset )>
 
 Checks if a given asset passes the saved filter.  Returns true or false.
+Ignored when '-d' is set.
 
 =cut
 
