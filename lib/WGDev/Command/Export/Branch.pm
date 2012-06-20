@@ -35,7 +35,7 @@ sub process {
     my $heir = $self->option('hier');
 
     for my $asset_spec ( $self->arguments ) {
-        my $base_asset = eval { $wgd_asset->find($asset_spec) };
+        my $base_asset = do { $wgd_asset->find($asset_spec) };
         if ( !$base_asset ) {
             warn $@;
             next;

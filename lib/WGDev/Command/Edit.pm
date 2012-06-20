@@ -54,7 +54,7 @@ sub process {
         my $asset;
         my $parent;
         if ( $asset_data->{parent} ) {
-            $parent = eval { $wgd->asset->find( $asset_data->{parent} ) };
+            $parent = do { $wgd->asset->find( $asset_data->{parent} ) };
         }
         if ( $file->{asset_id} ) {
             $asset = $wgd->asset->by_id( $file->{asset_id}, undef,
@@ -97,7 +97,7 @@ sub export_asset_data {
     my $wgd  = $self->wgd;
     my @files;
     for my $asset_spec ( $self->arguments ) {
-        my $file_data = eval { $self->write_temp($asset_spec) };
+        my $file_data = do { $self->write_temp($asset_spec) };
         if ( !$file_data ) {
             warn $@;
             next;
@@ -139,8 +139,8 @@ sub write_temp {
 
     my $wgd_asset = $self->wgd->asset;
     if ( !ref $asset ) {
-        $asset = eval { $wgd_asset->find($asset) }
-            || eval { scalar $wgd_asset->validate_class($asset) };
+        $asset = do { $wgd_asset->find($asset) }
+            || do { scalar $wgd_asset->validate_class($asset) };
         if ( !$asset ) {
             die $@;
         }

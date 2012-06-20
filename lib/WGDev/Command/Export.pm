@@ -19,8 +19,8 @@ sub process {
 
     my $wgd_asset = $self->wgd->asset;
     for my $asset_spec ( $self->arguments ) {
-        my $asset = eval { $wgd_asset->find($asset_spec) }
-            || eval { $wgd_asset->validate_class($asset_spec) };
+        my $asset = do { $wgd_asset->find($asset_spec) }
+            || do { $wgd_asset->validate_class($asset_spec) };
         if ( !$asset ) {
             warn $@;
             next;

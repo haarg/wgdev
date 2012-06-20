@@ -58,7 +58,7 @@ sub process {
         my $asset;
         my $parent;
         if ( $asset_data->{parent} ) {
-            $parent = eval { $wgd->asset->find( $asset_data->{parent} ) };
+            $parent = do { $wgd->asset->find( $asset_data->{parent} ) };
         }
         if ( $asset_to_edit->{asset_id} ) {
             $asset = $wgd->asset->by_id( $asset_to_edit->{asset_id}, undef,
@@ -101,7 +101,7 @@ sub get_assets_data {
     my $wgd  = $self->wgd;
     my @assets_data;
     for my $asset_spec ( $self->arguments ) {
-        my $asset_data = eval { $self->get_asset_data($asset_spec) };
+        my $asset_data = do { $self->get_asset_data($asset_spec) };
         if ( !$asset_data ) {
             warn $@;
             next;
@@ -143,7 +143,7 @@ sub get_asset_data {
 
     my $wgd_asset = $self->wgd->asset;
     if ( !ref $asset ) {
-        $asset = eval { $wgd_asset->find($asset) };
+        $asset = do { $wgd_asset->find($asset) };
         if ( !$asset ) {
             die $@;
         }

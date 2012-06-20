@@ -50,7 +50,7 @@ sub command_abstracts {
     $parser->select('NAME');
     for my $command ( keys %abstracts ) {
         my $command_module
-            = eval { WGDev::Command->get_command_module($command) };
+            = do { WGDev::Command->get_command_module($command) };
         next
             if !$command_module;
         my $pod           = WGDev::Help::package_pod($command_module);

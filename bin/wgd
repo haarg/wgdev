@@ -11,7 +11,7 @@ use WGDev::Command;
 our $PACKED;
 our @PACKED;
 
-my $return = eval { WGDev::Command->run(@ARGV) };
+my $return = do { WGDev::Command->run(@ARGV) };
 if ( my $message = $@ ) {
     $message =~ s/\n?\z/\n/msx;
     die $message;

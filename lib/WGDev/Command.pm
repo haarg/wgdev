@@ -26,7 +26,7 @@ sub run {
 
     my $command_name = shift @params;
 
-    my $command_module = eval { $class->get_command_module($command_name) };
+    my $command_module = do { $class->get_command_module($command_name) };
     if ( $command_name && !$command_module ) {
         my $command_exec = $class->_find_cmd_exec($command_name);
         if ($command_exec) {
@@ -132,7 +132,7 @@ sub guess_webgui_paths {
     # if that didn't set the root and we have a config, try to set it.
     # if it is absolute, it will give us a root as well
     if ( !$wgd->root && $webgui_config ) {
-        if ( eval { $class->set_config_by_input( $wgd, $webgui_config ); } ) {
+        if ( do { $class->set_config_by_input( $wgd, $webgui_config ); } ) {
             return $wgd
                 if $wgd->root;
         }
@@ -142,7 +142,7 @@ sub guess_webgui_paths {
     }
 
     if ( !$wgd->root ) {
-        if ( !eval { $class->set_root_relative($wgd); 1 } ) {
+        if ( !do { $class->set_root_relative($wgd); 1 } ) {
 
             # throw error from previous try to set the config
             $e->rethrow
@@ -181,14 +181,14 @@ sub set_config_by_input {
     my ( $class, $wgd, $webgui_config ) = @_;
 
     # first, try the specified config file
-    if ( eval { $wgd->config_file($webgui_config) } ) {
+    if ( do { $wgd->config_file($webgui_config) } ) {
         return $wgd;
     }
     my $e = WGDev::X->caught;
 
     # if that didn't work, try it with .conf appended
     if ( $webgui_config !~ /\Q.conf\E$/msx ) {
-        if ( eval { $wgd->config_file( $webgui_config . '.conf' ) } ) {
+        if ( do { $wgd->config_file( $webgui_config . '.conf' ) } ) {
             return $wgd;
         }
     }
@@ -204,7 +204,7 @@ sub set_config_by_sitename {
     my $found_config;
     my $sitename_regex = qr/ (?:^|[.])  \Q$sitename\E $ /msx;
     for my $config_file (@configs) {
-        my $config = eval { Config::JSON->new($config_file) };
+        my $config = do { Config::JSON->new($config_file) };
         next
             if !$config;
         for my $config_sitename ( @{ $config->get('sitename') } ) {
@@ -260,7 +260,7 @@ sub get_command_module {
     if ( $command_name && $command_name =~ /^\w+(?:-\w+)*$/mxs ) {
         my $module = $class->command_to_module($command_name);
         ( my $module_file = "$module.pm" ) =~ s{::}{/}mxsg;
-        if (   eval { require $module_file; 1 }
+        if (   do { require $module_file; 1 }
             && $module->can('run')
             && $module->can('is_runnable')
             && $module->is_runnable )
@@ -331,7 +331,7 @@ sub command_list {
         $package =~ s/\Q.pm\E$//msx;
         $package = join q{::}, File::Spec->splitdir($package);
         ##no critic (RequireCheckingReturnValueOfEval)
-        eval {
+        do {
             require $module;
             if ( $package->can('run')
                 && $package->can('is_runnable')

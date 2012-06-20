@@ -55,7 +55,7 @@ sub process {
         if ( $self->option('struct') ) {
             $value =~ s/\A \s* ( [[{] ) /--- $1/msx;
             $value .= "\n";
-            eval {
+            do {
                 $value = WGDev::yaml_decode($value);
                 1;
             } or WGDev::X->throw('Invalid or unsupported format.');
