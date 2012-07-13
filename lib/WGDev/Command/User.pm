@@ -10,6 +10,7 @@ use WGDev::X ();
 
 sub config_options {
     return qw(
+        delete
         findByPassword=s
         findByDictionary=s
     );
@@ -27,6 +28,33 @@ sub process {
 
     if ( my $dictionary = $self->option('findByDictionary') ) {
         return $self->find_by_dictionary($dictionary);
+    }
+
+    if ( $self->option('delete') ) {
+        return $self->delete_user();
+    }
+}
+
+# this is named 'delete_user()' because 'delete' is a built-in function in Perl
+sub delete_user {
+    my $self    = shift;
+    my $user    = undef;
+    my $wgd     = $self->wgd;
+    my $session = $wgd->session();
+
+    if ( !$self->arguments ) {
+        WGDev::X->throw("No user to delete!\n");
+    }
+
+    foreach my $userId ( $self->arguments ) {
+        eval {
+            $user = new WebGUI::User($session, $userId);
+        };
+        if ($@ || !$user->validUserId($session, $userId)) {
+            WGDev::X::UserNotFound->throw(userId => $userId);
+        }
+
+        $user->delete();
     }
 }
 
@@ -89,7 +117,7 @@ sub find_by_dictionary {
 
 =head1 SYNOPSIS
 
-    wgd user [--findByPassword <password>] [--findByDictionary <dictionary>]
+    wgd user [--delete userId [userId ...]] [--findByPassword <password>] [--findByDictionary <dictionary>]
 
 =head1 DESCRIPTION
 
@@ -98,6 +126,10 @@ Utilities for manipulating WebGUI Users
 =head1 OPTIONS
 
 =over 8
+
+=item C<--delete>
+
+Delete the specified user(s) by their userId.
 
 =item C<--findByPassword>
 
@@ -112,6 +144,10 @@ module). For example, Linux distributions typically have a dictionary
 file in C</usr/share/dict/> or C</var/lib/dict/>
 
 =back
+
+=method delete_user
+
+Deletes the specified user(s), given a list of userIds on the command line.
 
 =method find_by_password
 
