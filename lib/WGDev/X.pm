@@ -66,6 +66,11 @@ use Exception::Class (
         description => 'Bad asset class specified',
         fields      => ['class'],
     },
+    'WGDev::X::UserNotFound' => {
+        isa         => 'WGDev::X',
+        description => 'Specified user not found',
+        fields      => ['userId'],
+    },
     'WGDev::X::Module' => {
         isa         => 'WGDev::X',
         description => 'Error loading module',
@@ -228,6 +233,15 @@ sub WGDev::X::AssetNotFound::full_message {
     my $message = $self->SUPER::full_message;
     if ( $self->asset ) {
         $message .= ' - ' . $self->asset;
+    }
+    return $message;
+}
+
+sub WGDev::X::UserNotFound::full_message {
+    my $self = shift;
+    my $message = $self->SUPER::full_message;
+    if ( $self->userId ) {
+        $message .= ' FATAL ERROR: User not found - ' . $self->userId;
     }
     return $message;
 }
