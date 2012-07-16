@@ -2,6 +2,11 @@ Change log for WGDev
 
 {{$NEXT}}
 
+0.1207160 - Jul 16 2012
+ - Added batchedit command for pattern matching and replacing on bulk assets
+ - Added -d option to ls command to show specified asset instead of children
+ - Added --delete option to user command to allow removing users
+
 0.1203070 - Mar 06 2012
  - Fix charset handling in build command output
  - Use MySQL 5.5 compatible syntax for build command output
