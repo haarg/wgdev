@@ -112,14 +112,14 @@ sub process {
 
     my $root = $self->wgd->root;
     SITES: for my $config ( $self->wgd->list_site_configs ) {
-        my $wgd = eval { WGDev->new( $root, $config ) };
+        my $wgd = do { WGDev->new( $root, $config ) };
         if ( $wgd ) {
             ##no critic (ProhibitCStyleForLoops ProhibitLocalVars)
             local $self->{wgd} = $wgd;
             COMMANDS: for (my $i = 0; $i <= $#commands; $i += 2) {
                 my $command = $commands[$i];
                 my @params = @{ $commands[$i + 1] };
-                my $success = eval {
+                my $success = do {
                     $self->$command(@params) || 1;
                 };
                 if ( $success ) {

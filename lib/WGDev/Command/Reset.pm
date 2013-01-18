@@ -526,7 +526,7 @@ END_SQL
         if ( !defined $current_revision || $current_revision == $revision ) {
             next;
         }
-        my $asset = eval { $wgd->asset->by_id($id, $revision) };
+        my $asset = do { $wgd->asset->by_id($id, $revision) };
         next
             unless $asset;
 
@@ -684,10 +684,10 @@ sub autologon {
     my @session_ids;
     $self->report('Getting active browser site sessions... ');
     my $success;
-    if ( eval { push @session_ids, $self->get_firefox_sessions; 1 } ) {
+    if ( do { push @session_ids, $self->get_firefox_sessions; 1 } ) {
         $success = 1;
     }
-    if ( eval { push @session_ids, $self->get_safari_sessions; 1 } ) {
+    if ( do { push @session_ids, $self->get_safari_sessions; 1 } ) {
         $success = 1;
     }
     if ($success) {
@@ -724,7 +724,7 @@ sub get_firefox_sessions {
             PrintError => 0,
             RaiseError => 1,
             ##no critic (ProhibitMagicNumbers)
-            eval { DBD::SQLite->VERSION(1.27) }
+            do { DBD::SQLite->VERSION(1.27) }
             ? ( sqlite_unicode => 1 )
             : ( unicode => 1 ),
         } );

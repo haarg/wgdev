@@ -50,7 +50,7 @@ sub process {
             );
         }
         for my $asset_spec ( $self->arguments ) {
-            my $asset = eval { $wgd->asset->find($asset_spec) } || do {
+            my $asset = do { $wgd->asset->find($asset_spec) } || do {
                 warn "Unable to find asset $asset_spec!\n";
                 next;
             };
@@ -67,7 +67,7 @@ sub process {
     if ( $self->option('import') ) {
         my $parent
             = $self->option('parent')
-            ? eval { $wgd->asset->find( $self->option('parent') ) }
+            ? do { $wgd->asset->find( $self->option('parent') ) }
             : $wgd->asset->import_node;
         if ( !$parent ) {
             warn "Unable to find parent node!\n";
@@ -93,7 +93,7 @@ sub process {
                     message => $asset,
                 );
             }
-            elsif ( ! eval { $asset->isa('WebGUI::Asset') } ) {
+            elsif ( ! do { $asset->isa('WebGUI::Asset') } ) {
                 # not an asset or an error?  this shouldn't ever happen.
                 WGDev::X::BadPackage->throw(
                     package => $package,

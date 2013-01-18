@@ -66,26 +66,13 @@ sub find {
     my $asset;
     my $e;
     if ( $session->id->valid($asset_spec) ) {
-        try {
             $asset = $self->by_id($asset_spec);
-        }
-        catch {
-            $e = $_;
-        };
     }
     if ( !$asset ) {
-        try {
             $asset = WebGUI::Asset->newByUrl( $session, $asset_spec );
-        }
-        catch {
-            $e ||= $_;
-        };
     }
     if ( $asset && ref $asset && $asset->isa('WebGUI::Asset') ) {
         return $asset;
-    }
-    if ($e) {
-        WGDev::X->inflate($e);
     }
     WGDev::X::AssetNotFound->throw( asset => $asset_spec );
 }
@@ -340,7 +327,7 @@ sub _get_property_default {
     if ($form_class) {
         $form_class = "WebGUI::Form::\u$form_class";
         my $form_module = join q{/}, ( split /::/msx, $form_class . '.pm' );
-        if ( eval { require $form_module; 1 } ) {
+        if ( do { require $form_module; 1 } ) {
             my $form = $form_class->new( $self->{session},
                 { defaultValue => $default } );
             $default = $form->getDefaultValue;

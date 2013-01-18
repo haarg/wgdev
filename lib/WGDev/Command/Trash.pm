@@ -39,7 +39,7 @@ sub trash {
     ASSET:
     while ( my $asset_spec = shift @asset_specs ) {
         my $asset;
-        if ( !eval { $asset = $wgd->asset->find($asset_spec) } ) {
+        if ( !do { $asset = $wgd->asset->find($asset_spec) } ) {
             warn "wgd trash: $asset_spec: No such asset\n";
             $error++;
             next ASSET;

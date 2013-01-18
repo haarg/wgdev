@@ -24,12 +24,12 @@ sub process {
         my $asset_data = $wgd_asset->deserialize($asset_text);
         my $parent;
         if ( $asset_data->{parent} ) {
-            $parent = eval { $wgd_asset->find( $asset_data->{parent} ) };
+            $parent = do { $wgd_asset->find( $asset_data->{parent} ) };
         }
         my $asset;
         my $mode;
 
-        if ( eval { $asset = $wgd_asset->by_id( $asset_data->{assetId} ) } ) {
+        if ( do { $asset = $wgd_asset->by_id( $asset_data->{assetId} ) } ) {
             $mode = 'Updating';
             $asset->addRevision( $asset_data, undef,
                 { skipAutoCommitWorkflows => 1, skipNotification => 1 } );

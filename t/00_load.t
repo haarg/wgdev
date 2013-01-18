@@ -17,7 +17,7 @@ foreach my $library (@modules) {
     local $SIG{__WARN__} = sub {
         $warnings .= shift;
     };
-    eval { require $library; };
+    do { require $library; };
     chomp $warnings;
     is( $@,        '', "$library compiles successfully" );
     is( $warnings, '', "$library compiles without warnings" );

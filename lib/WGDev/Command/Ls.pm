@@ -33,7 +33,7 @@ sub option_filter {
         WGDev::X->throw("Invalid filter specified: $filter");
     }
     if ( $filter_match =~ m{\A/(.*)/\Z}msx ) {
-        eval { $filter_match = qr/$1/msx; }
+        do { $filter_match = qr/$1/msx; }
             || WGDev::X->throw(
             "Specified filter is not a valid regular expression: $1");
     }
@@ -70,7 +70,7 @@ sub process {
     PARENT:
     while ( my $parent = shift @parents ) {
         my $asset;
-        if ( !eval { $asset = $wgd->asset->find($parent) } ) {
+        if ( !do { $asset = $wgd->asset->find($parent) } ) {
             warn "wgd ls: $parent: No such asset\n";
             $error++;
             next;
