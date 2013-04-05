@@ -14,6 +14,8 @@ sub config_options {
         import|i=s@
         parent=s
         overwrite
+        listids
+        class=s
 
         upgrade|u
         to=s
@@ -25,6 +27,10 @@ sub process {
     my $wgd  = $self->wgd;
     require File::Copy;
     if ( $self->arguments ) {
+        if ($self->option('listids')) {
+            $self->list_ids;
+            return 1;
+        }
         my $package_dir = $self->option('to') || q{.};
         if ( $self->option('upgrade') ) {
             my $version = $wgd->version->module;
@@ -108,12 +114,56 @@ sub process {
     return 1;
 }
 
+sub list_ids {
+    my $self         = shift;
+    my $class        = $self->option('class');
+    foreach my $package_file ( $self->arguments ) {
+        my @asset_ids    = $self->get_ids_from_package($package_file, $class);
+        print $package_file."\n";
+        print join '', map { "\t$_\n" } @asset_ids;
+    }
+    return 1;
+}
+
+sub get_ids_from_package {
+    my $self         = shift;
+    my $wgd          = $self->wgd;
+    my $package_file = shift || $self->option('listids');  ##complete path
+    my $class        = shift;
+    require Archive::Any;
+    require File::Temp;
+    require JSON;
+    my @asset_ids = ();
+    my $tmp_dir = File::Temp->newdir();
+    my $wgpkg = Archive::Any->new($package_file);
+    $wgpkg->extract($tmp_dir->dirname);
+    FILE: foreach my $filename ($wgpkg->files) {
+        next FILE unless $filename =~ /\.json$/;
+        my $abs_filename = File::Spec->catdir( $tmp_dir->dirname, $filename);
+        open my $asset_file, '<', $abs_filename or
+            WebGUI::X::IO->throw(
+                error => 'File does not exist',
+                path  => $abs_filename,
+            );
+        local $/;
+        my $asset_json = <$asset_file>;
+        close $asset_file;
+        my $asset_data = JSON::from_json($asset_json)->{properties}; 
+        my $asset_id   = $asset_data->{assetId};
+        next FILE if $class && $class ne $asset_data->{className};
+        push @asset_ids, $asset_id;
+    }
+    return @asset_ids;
+}
+
+
 1;
 
 =head1 SYNOPSIS
 
     wgd package [--to=<dir>] [--upgrade] [<asset> ...]
     wgd package [--parent=<asset>] [--import=<package file>]
+    wgd package [--listids] [--class=WebGUI::Asset::Template]
 
 =head1 DESCRIPTION
 
@@ -154,6 +204,17 @@ or C<--to> is specified, packages will be output to the current directory.
 =item C<< <asset> >>
 
 Either an asset ID or an asset URL to specify an asset.
+
+=item C<--listids>
+
+List all of the assetIds in a single package.
+
+=item C<--class=WebGUI::Asset::Template>
+
+When used with <--listids>, restricts the list of assets to only those of
+the named class.  Since the package data is textual and there is no actual
+object, this does not support inheritance.
+
 
 =back
 
