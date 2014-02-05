@@ -133,9 +133,14 @@ other parent is specified.
 
 =item C<--overwrite>
 
+<<<<<<< HEAD
+Forces the assets in this package to be the lastest version on the site.  This option only works
+in conjunction with C<--import> and requires WebGUI 7.8.1 or higher.
+=======
 Forces the assets in this package to be the latest version on the
 site.  This option only works in conjunction with C<--import> and
 requires WebGUI 7.8.1 or higher.
+>>>>>>> haarg
 
 =item C<--parent=>
 
